@@ -29,6 +29,10 @@ OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 export * from "./core/types.js";
 export { decide } from "./core/decide.js";
 export { getModel, listModels, registerModel } from "./core/registry.js";
+export { createOrderedModel, EVERYONE } from "./core/models/ordered.js";
+export type { OrderedOptions } from "./core/models/ordered.js";
+export { actionPool } from "./core/pools.js";
+export type { PoolEntry, PoolInput, PoolPerson } from "./core/pools.js";
 export type {
   LegendItem,
   ModelCapabilities,
@@ -55,6 +59,8 @@ export { RulesEditor, impliedActions } from "./react/editor/index.js";
 export type {
   CellSizeTokens,
   CellVariant,
+  EditorMode,
+  HeaderMode,
   RenderCellProps,
   RulesEditorProps,
 } from "./react/editor/index.js";
