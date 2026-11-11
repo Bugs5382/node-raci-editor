@@ -166,41 +166,64 @@ Keys with a variable list their variables in braces. The default text is in the 
 
 ### Rules editor (`editor.*`)
 
-| Key                         | Default                                                                   |
-| --------------------------- | ------------------------------------------------------------------------- |
-| `editor.title`              | Rules for {category} (the heading; {category} is the resource path)       |
-| `editor.pathSeparator`      | " / " (between the labels of the path)                                    |
-| `editor.subject`            | Subject                                                                   |
-| `editor.empty`              | No subjects have rules in this category yet.                              |
-| `editor.allow`              | allow (spoken state in a cell's label)                                    |
-| `editor.deny`               | deny                                                                      |
-| `editor.blank`              | not set                                                                   |
-| `editor.allowText`          | Allow (visible text in a cell)                                            |
-| `editor.denyText`           | Deny                                                                      |
-| `editor.blankText`          | Not set                                                                   |
-| `editor.included`           | included                                                                  |
-| `editor.includedVia`        | Included by {action}                                                      |
-| `editor.cellLabel`          | {subject}, {action}: {state}                                              |
-| `editor.cellLabelIncluded`  | {subject}, {action}: {state}, included by {via}                           |
-| `editor.remove`             | Remove                                                                    |
-| `editor.removeLabel`        | Remove {subject}                                                          |
-| `editor.stopInheriting`     | Stop inheriting                                                           |
-| `editor.stopInheritingHelp` | Ignore rules from parent categories and the all-categories rules.         |
-| `editor.inheritanceStopped` | Inheritance stops at this category.                                       |
-| `editor.inheritedFrom`      | Inherited from {resource}                                                 |
-| `editor.allCategories`      | All categories                                                            |
-| `editor.inheritedNote`      | Read-only. Change these in their own category.                            |
-| `editor.addSubject`         | Add subject                                                               |
-| `editor.kind`               | Subject type                                                              |
-| `editor.search`             | Search                                                                    |
-| `editor.searchPlaceholder`  | Search by name                                                            |
-| `editor.searching`          | Searching...                                                              |
-| `editor.noResults`          | No matches.                                                               |
-| `editor.searchError`        | Search failed. Try again.                                                 |
-| `editor.confirmDenyTitle`   | Confirm deny                                                              |
-| `editor.confirmDenyBody`    | Deny {action} for {subject}? A deny overrides any allow in this category. |
-| `editor.confirm`            | Deny (the confirm button)                                                 |
-| `editor.cancel`             | Cancel                                                                    |
+| Key                         | Default                                                                    |
+| --------------------------- | -------------------------------------------------------------------------- |
+| `editor.title`              | Rules for {category} (the heading; {category} is the resource path)        |
+| `editor.pathSeparator`      | " / " (between the labels of the path)                                     |
+| `editor.subject`            | Subject                                                                    |
+| `editor.empty`              | No subjects have rules in this category yet.                               |
+| `editor.allow`              | allow (spoken state in a cell's label)                                     |
+| `editor.deny`               | deny                                                                       |
+| `editor.blank`              | not set                                                                    |
+| `editor.allowText`          | Allow (visible text in a cell)                                             |
+| `editor.denyText`           | Deny                                                                       |
+| `editor.blankText`          | Not set                                                                    |
+| `editor.included`           | included                                                                   |
+| `editor.includedVia`        | Included by {action}                                                       |
+| `editor.cellLabel`          | {subject}, {action}: {state}                                               |
+| `editor.cellLabelIncluded`  | {subject}, {action}: {state}, included by {via}                            |
+| `editor.remove`             | Remove                                                                     |
+| `editor.removeLabel`        | Remove {subject}                                                           |
+| `editor.stopInheriting`     | Stop inheriting                                                            |
+| `editor.stopInheritingHelp` | Ignore rules from parent categories and the all-categories rules.          |
+| `editor.inheritanceStopped` | Inheritance stops at this category.                                        |
+| `editor.inheritedFrom`      | Inherited from {resource}                                                  |
+| `editor.allCategories`      | All categories                                                             |
+| `editor.inheritedNote`      | Read-only. Change these in their own category.                             |
+| `editor.addSubject`         | Add subject                                                                |
+| `editor.kind`               | Subject type                                                               |
+| `editor.search`             | Search                                                                     |
+| `editor.searchPlaceholder`  | Search by name                                                             |
+| `editor.searching`          | Searching...                                                               |
+| `editor.noResults`          | No matches.                                                                |
+| `editor.searchError`        | Search failed. Try again.                                                  |
+| `editor.confirmDenyTitle`   | Confirm deny                                                               |
+| `editor.confirmDenyBody`    | Deny {action} for {subject}? A deny overrides any allow in this category.  |
+| `editor.confirm`            | Deny (the confirm button)                                                  |
+| `editor.cancel`             | Cancel                                                                     |
+| `editor.rank`               | # (heading of the row numbers; ordered models)                             |
+| `editor.rankLabel`          | Row order (hidden heading of the move controls)                            |
+| `editor.fromCategory`       | from {category} (inherited rows and owners)                                |
+| `editor.moveUp`             | Move {subject} up                                                          |
+| `editor.moveDown`           | Move {subject} down                                                        |
+| `editor.dragHandle`         | Reorder {subject} (the drag handle's name)                                 |
+| `editor.dragPicked`         | Picked up {subject}, position {position} of {total}. Use the arrow keys... |
+| `editor.dragMoved`          | {subject} moved to position {position} of {total}.                         |
+| `editor.dragDropped`        | {subject} dropped at position {position} of {total}.                       |
+| `editor.dragCancelled`      | Move cancelled. {subject} is back at position {position} of {total}.       |
+| `editor.legend`             | Legend                                                                     |
+| `editor.owners`             | Owners (the heading of the owners area; rename it for your product)        |
+| `editor.ownersHelp`         | Owners always have their actions and are not affected by any row.          |
+| `editor.noOwners`           | No owners.                                                                 |
+| `editor.removeOwner`        | Remove {subject} from owners                                               |
+| `editor.addOwner`           | Add owner                                                                  |
+| `editor.searchOwner`        | Search owners                                                              |
+| `legend.allow`              | Allow                                                                      |
+| `legend.deny`               | Deny                                                                       |
+| `legend.own`                | Own                                                                        |
+| `legend.blank`              | Not set, skipped                                                           |
+| `legend.inherited`          | From a parent category                                                     |
+| `legend.locked`             | Locked                                                                     |
 
 ### Simulator (`simulator.*`)
 

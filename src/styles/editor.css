@@ -507,6 +507,248 @@
   font-size: var(--raci-font-size-sm, inherit);
 }
 
+/* Ordered grid: a rank column, then the subject, then the move controls. Sizes of cells never change. */
+.raci-editor .raci-table--ordered .raci-table__rank {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  width: 2.5rem;
+  min-width: 2.5rem;
+  max-width: 2.5rem;
+  padding-inline: var(--raci-space-2);
+  background: var(--raci-bg-raised);
+  color: var(--raci-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.raci-editor .raci-table--ordered thead .raci-table__rank {
+  background: var(--raci-bg-subtle);
+}
+
+.raci-editor .raci-table--ordered .raci-table__subject {
+  left: 2.5rem;
+}
+
+.raci-editor .raci-table--ordered .raci-table__controls {
+  white-space: nowrap;
+  width: 7.5rem;
+  min-width: 7.5rem;
+}
+
+.raci-editor .raci-order {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--raci-space-1);
+}
+
+.raci-editor .raci-iconbutton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 2rem;
+  height: 1.75rem;
+  padding: 0;
+  border: 1px solid var(--raci-border-strong);
+  border-radius: var(--raci-radius-sm);
+  background: var(--raci-bg-raised);
+  color: var(--raci-text);
+  cursor: pointer;
+}
+
+.raci-editor .raci-iconbutton:hover:not(:disabled) {
+  background: var(--raci-bg-subtle);
+}
+
+.raci-editor .raci-iconbutton:disabled {
+  cursor: default;
+  opacity: 0.4;
+}
+
+.raci-editor .raci-iconbutton--handle {
+  cursor: grab;
+  touch-action: none;
+}
+
+.raci-editor .raci-iconbutton--handle[aria-pressed="true"] {
+  background: var(--raci-accent);
+  border-color: var(--raci-accent);
+  color: var(--raci-text-on-accent);
+}
+
+/* Every row has the same border, even the last, so a moved row keeps its exact height. */
+.raci-editor .raci-table--ordered tbody tr:last-child > * {
+  border-bottom: 1px solid transparent;
+}
+
+/* Removal keeps the row as tall as its cells. */
+.raci-editor .raci-table--ordered .raci-button--quiet {
+  min-height: 0;
+  height: min(var(--raci-control-height), var(--raci-cell-height));
+}
+
+.raci-editor .raci-row--over > * {
+  box-shadow: inset 0 2px 0 var(--raci-accent);
+}
+
+/* Inherited rows sit in the same grid, read-only and a little quieter; the cell box is the same. */
+.raci-editor .raci-row--inherited > * {
+  background: var(--raci-bg-subtle);
+}
+
+.raci-editor .raci-table--ordered tbody .raci-row--inherited .raci-table__subject,
+.raci-editor .raci-table--ordered tbody .raci-row--inherited .raci-table__rank {
+  background: var(--raci-bg-subtle);
+}
+
+.raci-editor .raci-subject {
+  display: flex;
+  align-items: center;
+  gap: var(--raci-space-3);
+  min-width: 0;
+}
+
+.raci-editor .raci-subject__name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.raci-editor .raci-tag {
+  flex: none;
+  padding: 0 var(--raci-space-3);
+  border: 1px dotted var(--raci-border-strong);
+  border-radius: var(--raci-radius-sm);
+  color: var(--raci-text-muted);
+  font-size: var(--raci-font-size-xs);
+  font-weight: var(--raci-font-weight-medium);
+  white-space: nowrap;
+}
+
+/* Legend strip under the grid. */
+.raci-editor .raci-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--raci-space-2) var(--raci-space-5);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--raci-text-muted);
+  font-size: var(--raci-font-size-xs);
+}
+
+.raci-editor .raci-legend__item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--raci-space-2);
+}
+
+.raci-editor .raci-legend__swatch {
+  flex: none;
+  width: 1rem;
+  height: 1rem;
+  border: 1px solid var(--raci-blank-border);
+  border-radius: var(--raci-radius-sm);
+  background: var(--raci-blank-bg);
+}
+
+.raci-editor .raci-legend__swatch--allow {
+  background: var(--raci-allow-bg);
+  border-color: var(--raci-allow-border);
+}
+
+.raci-editor .raci-legend__swatch--deny {
+  background: var(--raci-deny-bg);
+  border-color: var(--raci-deny-border);
+}
+
+.raci-editor .raci-legend__swatch--inherited {
+  border-style: dotted;
+  opacity: 0.65;
+}
+
+.raci-editor .raci-legend__swatch--locked {
+  background: var(--raci-bg-subtle);
+  border-style: dashed;
+  border-color: var(--raci-border-strong);
+}
+
+/* Owners: chips above the grid. */
+.raci-editor .raci-owners {
+  display: flex;
+  flex-direction: column;
+  gap: var(--raci-space-3);
+  min-width: 0;
+}
+
+.raci-editor .raci-owners__title {
+  margin: 0;
+  font-size: var(--raci-font-size-sm);
+  font-weight: var(--raci-font-weight-semibold);
+}
+
+.raci-editor .raci-owners p {
+  margin: 0;
+}
+
+.raci-editor .raci-owners__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--raci-space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.raci-editor .raci-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--raci-space-3);
+  max-width: 100%;
+  min-height: 1.75rem;
+  padding: 0 var(--raci-space-3) 0 var(--raci-space-4);
+  border: 1px solid var(--raci-border-strong);
+  border-radius: 999px;
+  background: var(--raci-bg-raised);
+}
+
+.raci-editor .raci-chip--locked {
+  padding-inline-end: var(--raci-space-2);
+  border-style: dashed;
+  background: var(--raci-bg-subtle);
+}
+
+.raci-editor .raci-chip__name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.raci-editor .raci-chip__remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--raci-text-muted);
+  cursor: pointer;
+}
+
+.raci-editor .raci-chip__remove:hover:not(:disabled) {
+  background: var(--raci-bg-subtle);
+}
+
+.raci-editor .raci-chip__remove:disabled {
+  cursor: default;
+  opacity: 0.4;
+}
+
 /* Read-only view: removal keeps its place in the layout but cannot be reached or seen, so nothing moves. */
 .raci-editor--viewing .raci-button--quiet {
   visibility: hidden;

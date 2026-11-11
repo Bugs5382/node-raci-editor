@@ -34,6 +34,10 @@ export interface SubjectPickerProps {
   onPick: (option: SubjectOption) => void;
   /** Greys the whole picker out (read-only view); it keeps its size. */
   disabled?: boolean;
+  /** Names the group; default "Add subject". */
+  label?: string;
+  /** Names the search box; default "Search". */
+  searchLabel?: string;
   t: (key: string, vars?: Record<string, string | number>) => string;
 }
 
@@ -43,6 +47,8 @@ export const SubjectPicker = ({
   existing,
   onPick,
   disabled = false,
+  label,
+  searchLabel,
   t,
 }: SubjectPickerProps) => {
   const uid = useId();
@@ -55,6 +61,7 @@ export const SubjectPicker = ({
   const [active, setActive] = useState(0);
   const requestId = useRef(0);
   const kind = kinds.find((k) => k.kind === kindId) ?? kinds[0];
+  const searchName = searchLabel ?? t("editor.search");
 
   useEffect(() => {
     requestId.current += 1;
@@ -121,7 +128,7 @@ export const SubjectPicker = ({
   };
 
   return (
-    <div className="raci-picker" role="group" aria-label={t("editor.addSubject")}>
+    <div className="raci-picker" role="group" aria-label={label ?? t("editor.addSubject")}>
       {kinds.length > 1 && (
         <label className="raci-picker__kind">
           <span className="raci-visually-hidden">{t("editor.kind")}</span>
@@ -147,7 +154,7 @@ export const SubjectPicker = ({
           className="raci-input"
           type="text"
           role="combobox"
-          aria-label={t("editor.search")}
+          aria-label={searchName}
           aria-autocomplete="list"
           aria-expanded={showPanel}
           aria-controls={listId}
@@ -169,7 +176,7 @@ export const SubjectPicker = ({
         <ul
           id={listId}
           role="listbox"
-          aria-label={t("editor.search")}
+          aria-label={searchName}
           className="raci-listbox"
           hidden={!showPanel}
         >

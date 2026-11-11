@@ -20,8 +20,10 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 */
-import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
+import type { RaciModel } from "@/core/model";
+import { getModel } from "@/core/registry";
 import { defaultSettings } from "@/core/types";
 import type {
   ActionDef,
@@ -31,16 +33,25 @@ import type {
   RaciSettings,
   ResourceNode,
   RuleSet,
+  SubjectKind,
+  SubjectOption,
 } from "@/core/types";
 import { makeT } from "@/react/strings";
 import { EffectIcon, MarkIcon } from "@/react/editor/Icon";
 import {
+  addOwner,
   cellEffect,
   deriveRows,
   impliedActions,
   inheritedGroups,
+  inheritedOwners,
+  inheritedRows,
+  moveItem,
   nextEffect,
+  orderedRows,
+  removeOwner,
   removeSubject,
+  reorderEntries,
   setCell,
   setStopInheriting,
   stableRows,
@@ -110,6 +121,13 @@ export interface RulesEditorProps {
   ruleSet: RuleSet;
   /** The category whose entries are edited. */
   categoryId: string;
+  /**
+   * The rule model, by registered id or as an object. Default: the rule set's `model`, else
+   * `"nearest"`. The model's capabilities decide which affordances are drawn: with `ordering` the
+   * grid is numbered with move controls, inherited rows and a legend; with `owners` the owners
+   * are edited above it. An unknown id throws, as `getModel` does.
+   */
+  model?: string | RaciModel;
   /** Called with a new rule set after each edit. */
   onChange: (next: RuleSet) => void;
   /** Display settings; missing fields use the defaults. */
@@ -263,8 +281,27 @@ export const RulesEditor = (props: RulesEditorProps) => {
   const stop = own?.stopInheriting ?? false;
   // Row order is remembered per category so a row never moves when its cells change.
   const orderRef = useRef<Record<string, string[]>>({});
-  const rows = stableRows(orderRef.current[categoryId] ?? [], deriveRows(entries, extras));
-  orderRef.current[categoryId] = rows;
+  const model =
+    typeof props.model === "object" ? props.model : getModel(props.model ?? savedRuleSet.model);
+  const ordering = model.capabilities.ordering;
+  const showStop = model.capabilities.stopInheriting;
+  const ownerKinds = model.ownerKinds;
+  const showOwners =
+    model.capabilities.owners && (ownerKinds === undefined || ownerKinds.length > 0);
+  const savedRows = ordering
+    ? orderedRows(orderRef.current[categoryId] ?? [], entries, extras)
+    : stableRows(orderRef.current[categoryId] ?? [], deriveRows(entries, extras));
+  orderRef.current[categoryId] = savedRows;
+  // While a row is held with the keyboard, the rows show the proposed order; nothing is saved yet.
+  const [held, setHeld] = useState<{ subject: string; order: string[] } | null>(null);
+  const rows = held && held.order.length === savedRows.length ? held.order : savedRows;
+  const [, setTick] = useState(0);
+  const [announcement, setAnnouncement] = useState("");
+  const [armed, setArmed] = useState<string | null>(null);
+  const [over, setOver] = useState<string | null>(null);
+  const dragging = useRef<string | null>(null);
+  const focusRequest = useRef<{ subject: string; control: string } | null>(null);
+  const rootRef = useRef<HTMLElement>(null);
 
   const visible = new Set(settings.visibleActions);
   const visibleColumns = config.actions.filter((a) => visible.has(a.id));
@@ -372,7 +409,117 @@ export const RulesEditor = (props: RulesEditorProps) => {
     return out;
   };
 
-  const inherited = settings.showInherited ? inheritedGroups(ruleSet, categoryId, stop) : [];
+  const inherited =
+    settings.showInherited && !ordering ? inheritedGroups(ruleSet, categoryId, stop) : [];
+  const parentRows = ordering && settings.showInherited ? inheritedRows(ruleSet, categoryId) : [];
+  const leafLabel = (id: string): string =>
+    findPath(config.resources, id)?.at(-1) ?? resourceLabel(id);
+
+  const say = (key: string, subject: string, at: number) =>
+    setAnnouncement(
+      t(key, { subject: subjectLabel(subject), position: at + 1, total: rows.length }),
+    );
+
+  // Save a new row order: the entries follow it, and a row without cells keeps its place.
+  const commitOrder = (next: string[]) => {
+    orderRef.current[categoryId] = next;
+    const withCells = (list: string[]) => list.filter((s) => entries.some((e) => e.subject === s));
+    if (withCells(next).join("\u0000") !== withCells(savedRows).join("\u0000")) {
+      onChange(reorderEntries(ruleSet, categoryId, next));
+    } else {
+      setTick((n) => n + 1);
+    }
+  };
+
+  const moveBy = (subject: string, delta: number) => {
+    const from = rows.indexOf(subject);
+    const to = from + delta;
+    if (locked || from < 0 || to < 0 || to >= rows.length) return;
+    commitOrder(moveItem(rows, from, to));
+    // keep focus on a control that still works at the new place
+    const control = delta < 0 ? (to === 0 ? "down" : "up") : to === rows.length - 1 ? "up" : "down";
+    focusRequest.current = { subject, control };
+    say("editor.dragMoved", subject, to);
+  };
+
+  const endDrag = () => {
+    dragging.current = null;
+    setArmed(null);
+    setOver(null);
+  };
+
+  const holdKey = (event: React.KeyboardEvent, subject: string) => {
+    if (!held || held.subject !== subject) return;
+    const at = held.order.indexOf(subject);
+    if (event.key === "ArrowUp" || event.key === "ArrowDown") {
+      event.preventDefault();
+      const to = Math.max(
+        0,
+        Math.min(held.order.length - 1, at + (event.key === "ArrowUp" ? -1 : 1)),
+      );
+      if (to === at) return;
+      setHeld({ subject, order: moveItem(held.order, at, to) });
+      focusRequest.current = { subject, control: "handle" };
+      setAnnouncement(
+        t("editor.dragMoved", {
+          subject: subjectLabel(subject),
+          position: to + 1,
+          total: held.order.length,
+        }),
+      );
+    } else if (event.key === "Escape") {
+      event.preventDefault();
+      cancelHold(subject);
+    }
+  };
+
+  const cancelHold = (subject: string) => {
+    setHeld(null);
+    focusRequest.current = { subject, control: "handle" };
+    say("editor.dragCancelled", subject, savedRows.indexOf(subject));
+  };
+
+  const toggleHold = (subject: string) => {
+    if (locked) return;
+    if (held && held.subject === subject) {
+      const to = held.order.indexOf(subject);
+      setHeld(null);
+      focusRequest.current = { subject, control: "handle" };
+      setAnnouncement(
+        t("editor.dragDropped", {
+          subject: subjectLabel(subject),
+          position: to + 1,
+          total: held.order.length,
+        }),
+      );
+      commitOrder(held.order);
+    } else {
+      setHeld({ subject, order: rows });
+      focusRequest.current = { subject, control: "handle" };
+      say("editor.dragPicked", subject, rows.indexOf(subject));
+    }
+  };
+
+  const dropOn = (target: string) => {
+    const from = dragging.current === null ? -1 : rows.indexOf(dragging.current);
+    const to = rows.indexOf(target);
+    const subject = dragging.current;
+    endDrag();
+    if (subject === null || from < 0 || to < 0 || from === to) return;
+    commitOrder(moveItem(rows, from, to));
+    say("editor.dragDropped", subject, to);
+  };
+
+  // After a row moved, put focus back on the control the person was using.
+  useLayoutEffect(() => {
+    const request = focusRequest.current;
+    if (!request) return;
+    focusRequest.current = null;
+    const row = Array.from(
+      rootRef.current?.querySelectorAll<HTMLElement>('tr[data-row="own"]') ?? [],
+    ).find((tr) => tr.dataset.subject === request.subject);
+    row?.querySelector<HTMLElement>(`[data-control="${request.control}"]`)?.focus();
+  });
 
   const rootClass = [
     "raci-root",
@@ -386,7 +533,7 @@ export const RulesEditor = (props: RulesEditorProps) => {
     .join(" ");
 
   return (
-    <section className={rootClass} aria-labelledby={`${uid}-title`}>
+    <section className={rootClass} aria-labelledby={`${uid}-title`} ref={rootRef}>
       <h2 id={`${uid}-title`} className="raci-editor__title">
         {t("editor.title", { category: resourceLabel(categoryId) })}
       </h2>
@@ -429,25 +576,59 @@ export const RulesEditor = (props: RulesEditorProps) => {
           )}
         </div>
       )}
-      <div className="raci-editor__toolbar">
-        <label className="raci-check">
-          <input
-            type="checkbox"
-            checked={stop}
-            disabled={locked}
-            aria-describedby={`${uid}-stop-help`}
-            onChange={() => onChange(setStopInheriting(ruleSet, categoryId, !stop))}
-          />
-          <span>{t("editor.stopInheriting")}</span>
-        </label>
-        <span id={`${uid}-stop-help`} className="raci-muted">
-          {t("editor.stopInheritingHelp")}
-        </span>
-      </div>
+      {showOwners && (
+        <OwnersEditor
+          title={t("editor.owners")}
+          help={t("editor.ownersHelp")}
+          empty={t("editor.noOwners")}
+          own={own?.owners ?? []}
+          inherited={inheritedOwners(ruleSet, categoryId).map((o) => ({
+            owner: o.owner,
+            from: leafLabel(o.categoryId),
+            path: resourceLabel(o.categoryId),
+          }))}
+          kinds={config.subjectKinds.filter((k) => !ownerKinds || ownerKinds.includes(k.kind))}
+          label={subjectLabel}
+          fromText={(from) => t("editor.fromCategory", { category: from })}
+          removeText={(owner) => t("editor.removeOwner", { subject: subjectLabel(owner) })}
+          readOnly={readOnly}
+          disabled={viewing}
+          t={t}
+          onAdd={(option) => {
+            setLabels((prev) => ({ ...prev, [option.id]: option.label }));
+            onChange(addOwner(ruleSet, categoryId, option.id));
+          }}
+          onRemove={(owner) => onChange(removeOwner(ruleSet, categoryId, owner))}
+        />
+      )}
+
+      {showStop && (
+        <div className="raci-editor__toolbar">
+          <label className="raci-check">
+            <input
+              type="checkbox"
+              checked={stop}
+              disabled={locked}
+              aria-describedby={`${uid}-stop-help`}
+              onChange={() => onChange(setStopInheriting(ruleSet, categoryId, !stop))}
+            />
+            <span>{t("editor.stopInheriting")}</span>
+          </label>
+          <span id={`${uid}-stop-help`} className="raci-muted">
+            {t("editor.stopInheritingHelp")}
+          </span>
+        </div>
+      )}
 
       <div className="raci-editor__scroll" ref={scrollRef}>
-        <table className="raci-table" aria-readonly={viewing ? "true" : undefined}>
+        <table
+          className={`raci-table${ordering ? " raci-table--ordered" : ""}`}
+          aria-readonly={viewing ? "true" : undefined}
+        >
           <TableHead
+            ordering={
+              ordering ? { rank: t("editor.rank"), controls: t("editor.rankLabel") } : undefined
+            }
             columns={columns}
             groups={grouped ? groupHeadings : null}
             subject={t("editor.subject")}
@@ -459,19 +640,104 @@ export const RulesEditor = (props: RulesEditorProps) => {
           <tbody>
             {rows.length === 0 && (
               <tr>
-                <td className="raci-empty" colSpan={columns.length + 2}>
+                <td className="raci-empty" colSpan={columns.length + (ordering ? 4 : 2)}>
                   {t("editor.empty")}
                 </td>
               </tr>
             )}
-            {rows.map((subject) => {
+            {rows.map((subject, index) => {
               const label = subjectLabel(subject);
               const included = includedBy(subject);
+              const draggable = ordering && !locked;
               return (
-                <tr key={subject} data-subject={subject}>
+                <tr
+                  key={subject}
+                  data-row="own"
+                  data-subject={subject}
+                  className={over === subject ? "raci-row--over" : undefined}
+                  draggable={draggable && armed === subject ? true : undefined}
+                  onDragStart={
+                    draggable
+                      ? (e) => {
+                          dragging.current = subject;
+                          if (e.dataTransfer) {
+                            e.dataTransfer.effectAllowed = "move";
+                            e.dataTransfer.setData("text/plain", subject);
+                          }
+                        }
+                      : undefined
+                  }
+                  onDragOver={
+                    draggable
+                      ? (e) => {
+                          if (dragging.current === null) return;
+                          e.preventDefault();
+                          if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
+                          setOver(dragging.current === subject ? null : subject);
+                        }
+                      : undefined
+                  }
+                  onDrop={
+                    draggable
+                      ? (e) => {
+                          if (dragging.current === null) return;
+                          e.preventDefault();
+                          dropOn(subject);
+                        }
+                      : undefined
+                  }
+                  onDragEnd={draggable ? endDrag : undefined}
+                >
+                  {ordering && <td className="raci-table__rank">{index + 1}</td>}
                   <th scope="row" className="raci-table__subject">
                     {label}
                   </th>
+                  {ordering && (
+                    <td className="raci-table__controls">
+                      <span className="raci-order">
+                        <button
+                          type="button"
+                          className="raci-iconbutton raci-iconbutton--handle"
+                          data-control="handle"
+                          aria-label={t("editor.dragHandle", { subject: label })}
+                          aria-pressed={held?.subject === subject}
+                          disabled={locked}
+                          onPointerDown={() => setArmed(subject)}
+                          onPointerUp={() => {
+                            if (dragging.current === null) setArmed(null);
+                          }}
+                          onClick={() => toggleHold(subject)}
+                          onKeyDown={(e) => holdKey(e, subject)}
+                          onBlur={(e) => {
+                            // moving on to another control drops the hold without saving
+                            if (held?.subject === subject && e.relatedTarget) cancelHold(subject);
+                          }}
+                        >
+                          <GripIcon />
+                        </button>
+                        <button
+                          type="button"
+                          className="raci-iconbutton"
+                          data-control="up"
+                          aria-label={t("editor.moveUp", { subject: label })}
+                          disabled={locked || index === 0}
+                          onClick={() => moveBy(subject, -1)}
+                        >
+                          <ArrowIcon direction="up" />
+                        </button>
+                        <button
+                          type="button"
+                          className="raci-iconbutton"
+                          data-control="down"
+                          aria-label={t("editor.moveDown", { subject: label })}
+                          disabled={locked || index === rows.length - 1}
+                          onClick={() => moveBy(subject, 1)}
+                        >
+                          <ArrowIcon direction="down" />
+                        </button>
+                      </span>
+                    </td>
+                  )}
                   {columns.map((a) => {
                     const effect = cellEffect(entries, subject, a.id);
                     const via = effect === undefined ? included.get(a.id) : undefined;
@@ -563,9 +829,77 @@ export const RulesEditor = (props: RulesEditorProps) => {
                 </tr>
               );
             })}
+            {parentRows.map((row, index) => {
+              const label = subjectLabel(row.subject);
+              return (
+                <tr
+                  key={`${row.categoryId}\u0000${row.subject}`}
+                  data-row="inherited"
+                  data-subject={row.subject}
+                  className="raci-row--inherited"
+                >
+                  <td className="raci-table__rank">{rows.length + index + 1}</td>
+                  <th
+                    scope="row"
+                    className="raci-table__subject"
+                    aria-labelledby={`${uid}-in-${index}-name`}
+                    aria-describedby={`${uid}-in-${index}-from`}
+                  >
+                    <span className="raci-subject">
+                      <span className="raci-subject__name" id={`${uid}-in-${index}-name`}>
+                        {label}
+                      </span>
+                      <span
+                        className="raci-tag"
+                        id={`${uid}-in-${index}-from`}
+                        title={resourceLabel(row.categoryId)}
+                      >
+                        {t("editor.fromCategory", { category: leafLabel(row.categoryId) })}
+                      </span>
+                    </span>
+                  </th>
+                  <td className="raci-table__controls" />
+                  {columns.map((a) => (
+                    <td key={a.id}>
+                      <StaticCell
+                        entries={row.entries}
+                        subject={row.subject}
+                        subjectLabel={label}
+                        action={a}
+                        marks={marks}
+                        renderCell={renderCell}
+                        stateWord={stateWord}
+                        stateText={stateText}
+                        t={t}
+                      />
+                    </td>
+                  ))}
+                  {!readOnly && <td />}
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
+
+      {ordering && (
+        <>
+          <ul className="raci-legend" role="list" aria-label={t("editor.legend")}>
+            {model.legend().map((item) => (
+              <li key={item.id} className="raci-legend__item" title={item.description}>
+                <span
+                  className={`raci-legend__swatch raci-legend__swatch--${item.id}`}
+                  aria-hidden="true"
+                />
+                {t(item.label)}
+              </li>
+            ))}
+          </ul>
+          <div role="status" className="raci-visually-hidden">
+            {announcement}
+          </div>
+        </>
+      )}
 
       {short && columns.some((a) => a.shortLabel) && (
         <p className="raci-editor__key raci-muted">
@@ -663,8 +997,10 @@ const TableHead = (props: {
   name: (a: ActionDef) => string | undefined;
   /** Set when the grid has a trailing removal column; its hidden heading text. */
   removeLabel?: string;
+  /** Set for an ordered grid: the rank heading and the hidden heading of the move controls. */
+  ordering?: { rank: string; controls: string };
 }) => {
-  const { columns, groups, subject, text, title, name, removeLabel } = props;
+  const { columns, groups, subject, text, title, name, removeLabel, ordering } = props;
   // Column positions where a group after the first starts.
   const starts = new Set<number>();
   let at = 0;
@@ -676,7 +1012,9 @@ const TableHead = (props: {
     <thead>
       {groups && (
         <tr className="raci-table__groups">
+          {ordering && <td className="raci-table__corner" />}
           <td className="raci-table__corner" />
+          {ordering && <td className="raci-table__corner" />}
           {groups.map((g, i) => (
             <th
               scope="colgroup"
@@ -691,9 +1029,15 @@ const TableHead = (props: {
         </tr>
       )}
       <tr>
+        {ordering && <th className="raci-table__rank">{ordering.rank}</th>}
         <th scope="col" className="raci-table__subject">
           {subject}
         </th>
+        {ordering && (
+          <th className="raci-table__controls">
+            <span className="raci-visually-hidden">{ordering.controls}</span>
+          </th>
+        )}
         {columns.map((a, i) => (
           <th
             scope="col"
@@ -770,56 +1114,21 @@ const InheritedTable = (props: InheritedTableProps) => {
                 <th scope="row" className="raci-table__subject">
                   {subjectLabel(subject)}
                 </th>
-                {columns.map((a) => {
-                  const effect = cellEffect(entries, subject, a.id);
-                  const label = t("editor.cellLabel", {
-                    subject: subjectLabel(subject),
-                    action: actionName(a),
-                    state: stateWord(effect),
-                  });
-                  return (
-                    <td key={a.id}>
-                      {renderCell ? (
-                        renderCell({
-                          state: effect ?? "blank",
-                          inherited: true,
-                          action: a,
-                          subject,
-                          subjectLabel: subjectLabel(subject),
-                          label,
-                          title: stateText(effect),
-                          readOnly: true,
-                          onChange: NOOP,
-                          onCycle: NOOP,
-                          size: SIZE,
-                        })
-                      ) : (
-                        <span
-                          className={`raci-cell raci-cell--${effect ?? "blank"} raci-cell--inherited${marks ? " raci-cell--marks" : ""}`}
-                          role="img"
-                          aria-label={label}
-                        >
-                          {marks ? (
-                            <MarkIcon effect={effect} />
-                          ) : (
-                            <>
-                              <span className="raci-cell__primary" aria-hidden="true">
-                                <EffectIcon effect={effect} />
-                                <span className="raci-cell__text">{stateText(effect)}</span>
-                              </span>
-                              <span
-                                className="raci-cell__secondary raci-cell__secondary--off"
-                                aria-hidden="true"
-                              >
-                                {t("editor.included")}
-                              </span>
-                            </>
-                          )}
-                        </span>
-                      )}
-                    </td>
-                  );
-                })}
+                {columns.map((a) => (
+                  <td key={a.id}>
+                    <StaticCell
+                      entries={entries}
+                      subject={subject}
+                      subjectLabel={subjectLabel(subject)}
+                      action={a}
+                      marks={marks}
+                      renderCell={renderCell}
+                      stateWord={stateWord}
+                      stateText={stateText}
+                      t={t}
+                    />
+                  </td>
+                ))}
               </tr>
             ))}
           </tbody>
@@ -828,6 +1137,183 @@ const InheritedTable = (props: InheritedTableProps) => {
     </div>
   );
 };
+
+interface StaticCellProps {
+  entries: Entry[];
+  subject: string;
+  subjectLabel: string;
+  action: ActionDef;
+  marks: boolean;
+  renderCell?: (cell: RenderCellProps) => ReactNode;
+  stateWord: (effect: Effect | undefined) => string;
+  stateText: (effect: Effect | undefined) => string;
+  t: (key: string, vars?: Record<string, string | number>) => string;
+}
+
+/** A read-only cell of an inherited row, in the same fixed box as an editable one. */
+const StaticCell = (props: StaticCellProps) => {
+  const { entries, subject, subjectLabel, action, marks, renderCell, stateWord, stateText, t } =
+    props;
+  const effect = cellEffect(entries, subject, action.id);
+  const label = t("editor.cellLabel", {
+    subject: subjectLabel,
+    action: actionName(action),
+    state: stateWord(effect),
+  });
+  if (renderCell) {
+    return (
+      <>
+        {renderCell({
+          state: effect ?? "blank",
+          inherited: true,
+          action,
+          subject,
+          subjectLabel,
+          label,
+          title: stateText(effect),
+          readOnly: true,
+          onChange: NOOP,
+          onCycle: NOOP,
+          size: SIZE,
+        })}
+      </>
+    );
+  }
+  return (
+    <span
+      className={`raci-cell raci-cell--${effect ?? "blank"} raci-cell--inherited${marks ? " raci-cell--marks" : ""}`}
+      role="img"
+      aria-label={label}
+    >
+      {marks ? (
+        <MarkIcon effect={effect} />
+      ) : (
+        <>
+          <span className="raci-cell__primary" aria-hidden="true">
+            <EffectIcon effect={effect} />
+            <span className="raci-cell__text">{stateText(effect)}</span>
+          </span>
+          <span className="raci-cell__secondary raci-cell__secondary--off" aria-hidden="true">
+            {t("editor.included")}
+          </span>
+        </>
+      )}
+    </span>
+  );
+};
+
+interface OwnersEditorProps {
+  title: string;
+  help: string;
+  empty: string;
+  own: string[];
+  inherited: { owner: string; from: string; path: string }[];
+  kinds: SubjectKind[];
+  label: (subject: string) => string;
+  fromText: (from: string) => string;
+  removeText: (owner: string) => string;
+  readOnly: boolean;
+  disabled: boolean;
+  t: (key: string, vars?: Record<string, string | number>) => string;
+  onAdd: (option: SubjectOption) => void;
+  onRemove: (owner: string) => void;
+}
+
+/** Chips for a category's owners, the locked ones it inherits, and a picker to add more. */
+const OwnersEditor = (props: OwnersEditorProps) => {
+  const { own, inherited, kinds, readOnly, disabled, t } = props;
+  const uid = useId();
+  return (
+    <div className="raci-owners" role="group" aria-labelledby={`${uid}-title`}>
+      <h3 id={`${uid}-title`} className="raci-owners__title">
+        {props.title}
+      </h3>
+      <p className="raci-muted raci-owners__help">{props.help}</p>
+      {own.length + inherited.length === 0 ? (
+        <p className="raci-muted raci-owners__none">{props.empty}</p>
+      ) : (
+        <ul className="raci-owners__list" role="list">
+          {own.map((owner) => (
+            <li key={owner} className="raci-chip">
+              <span className="raci-chip__name">{props.label(owner)}</span>
+              {!readOnly && (
+                <button
+                  type="button"
+                  className="raci-chip__remove"
+                  aria-label={props.removeText(owner)}
+                  disabled={disabled}
+                  onClick={() => props.onRemove(owner)}
+                >
+                  <EffectIcon effect="deny" />
+                </button>
+              )}
+            </li>
+          ))}
+          {inherited.map((item) => (
+            <li key={`${item.from}/${item.owner}`} className="raci-chip raci-chip--locked">
+              <span className="raci-chip__name">{props.label(item.owner)}</span>
+              <span className="raci-tag" title={item.path}>
+                {props.fromText(item.from)}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+      {!readOnly && kinds.length > 0 && (
+        <SubjectPicker
+          kinds={kinds}
+          existing={[...own, ...inherited.map((i) => i.owner)]}
+          disabled={disabled}
+          label={t("editor.addOwner")}
+          searchLabel={t("editor.searchOwner")}
+          t={t}
+          onPick={props.onAdd}
+        />
+      )}
+    </div>
+  );
+};
+
+/** Six dots: the handle for dragging a row. Decorative. */
+const GripIcon = () => (
+  <svg
+    className="raci-icon"
+    viewBox="0 0 16 16"
+    width="14"
+    height="14"
+    aria-hidden="true"
+    focusable="false"
+  >
+    <path
+      d="M6 3.5h.01M10 3.5h.01M6 8h.01M10 8h.01M6 12.5h.01M10 12.5h.01"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.4"
+      strokeLinecap="round"
+    />
+  </svg>
+);
+
+/** An arrow for the move buttons. Decorative. */
+const ArrowIcon = ({ direction }: { direction: "up" | "down" }) => (
+  <svg
+    className="raci-icon"
+    viewBox="0 0 16 16"
+    width="14"
+    height="14"
+    aria-hidden="true"
+    focusable="false"
+  >
+    <path
+      d={direction === "up" ? "M4 10l4-4 4 4" : "M4 6l4 4 4-4"}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
 
 interface ConfirmDenyProps {
   title: string;

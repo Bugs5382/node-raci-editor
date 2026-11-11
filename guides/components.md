@@ -19,23 +19,24 @@ that root so the [theme tokens](theming.md) apply.
 
 A matrix of subjects (rows) by actions (columns) for the entries of one category.
 
-| Prop                        | Type                                   | Notes                                                                                                             |
-| --------------------------- | -------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| `config`                    | `RaciConfig`                           | Actions, subject kinds, resources, strings.                                                                       |
-| `ruleSet`                   | `RuleSet`                              | The whole rule set; the editor reads the entries of `categoryId`.                                                 |
-| `categoryId`                | `string`                               | The category being edited. Change it to move to another category.                                                 |
-| `onChange`                  | `(next: RuleSet) => void`              | Called with the new rule set after each edit.                                                                     |
-| `settings`                  | `Partial<RaciSettings>`                | Optional. Missing fields use `defaultSettings(config)`.                                                           |
-| `readOnly`                  | `boolean`                              | Optional, default `false`. Disables the cells, the checkbox and the picker, and hides Remove.                     |
-| `cellVariant`               | `"box" \| "marks"`                     | Optional, default `"box"`. The look of a cell; see "Cell variants" below.                                         |
-| `renderCell`                | `(cell: RenderCellProps) => ReactNode` | Optional. Draws every cell itself; wins over `cellVariant`. See "Cell variants".                                  |
-| `defaultMode`               | `"edit" \| "view"`                     | Optional, default `"edit"` (today's behaviour). `"view"` starts read-only; see "Read-only start".                 |
-| `mode`, `onModeChange`      | `"edit" \| "view"`, `(mode) => void`   | Optional. Control the mode yourself.                                                                              |
-| `canEdit`, `readOnlyReason` | `boolean`, `string`                    | Optional. When `canEdit` is false, Edit is hidden, or disabled with your reason when you give one.                |
-| `onSave`, `onCancel`        | `(ruleSet) => void`, `() => void`      | Optional. Save hands you the working copy once; Cancel reports that it was discarded.                             |
-| `confirmDiscard`            | `() => boolean \| Promise<boolean>`    | Optional. Asked before unsaved changes are discarded; a built-in dialog is the default.                           |
-| `headerMode`                | `"full" \| "short" \| "auto"`          | Optional, default `"auto"`. Which action heading is shown; see `ActionDef.shortLabel` in the configuration guide. |
-| `className`                 | `string`                               | Optional.                                                                                                         |
+| Prop                        | Type                                   | Notes                                                                                                               |
+| --------------------------- | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `config`                    | `RaciConfig`                           | Actions, subject kinds, resources, strings.                                                                         |
+| `ruleSet`                   | `RuleSet`                              | The whole rule set; the editor reads the entries of `categoryId`.                                                   |
+| `categoryId`                | `string`                               | The category being edited. Change it to move to another category.                                                   |
+| `onChange`                  | `(next: RuleSet) => void`              | Called with the new rule set after each edit.                                                                       |
+| `model`                     | `string \| RaciModel`                  | Optional. A registered model id or a model object. Default: `ruleSet.model`, else `"nearest"`. See "Ordered rules". |
+| `settings`                  | `Partial<RaciSettings>`                | Optional. Missing fields use `defaultSettings(config)`.                                                             |
+| `readOnly`                  | `boolean`                              | Optional, default `false`. Disables the cells, the checkbox and the picker, and hides Remove.                       |
+| `cellVariant`               | `"box" \| "marks"`                     | Optional, default `"box"`. The look of a cell; see "Cell variants" below.                                           |
+| `renderCell`                | `(cell: RenderCellProps) => ReactNode` | Optional. Draws every cell itself; wins over `cellVariant`. See "Cell variants".                                    |
+| `defaultMode`               | `"edit" \| "view"`                     | Optional, default `"edit"` (today's behaviour). `"view"` starts read-only; see "Read-only start".                   |
+| `mode`, `onModeChange`      | `"edit" \| "view"`, `(mode) => void`   | Optional. Control the mode yourself.                                                                                |
+| `canEdit`, `readOnlyReason` | `boolean`, `string`                    | Optional. When `canEdit` is false, Edit is hidden, or disabled with your reason when you give one.                  |
+| `onSave`, `onCancel`        | `(ruleSet) => void`, `() => void`      | Optional. Save hands you the working copy once; Cancel reports that it was discarded.                               |
+| `confirmDiscard`            | `() => boolean \| Promise<boolean>`    | Optional. Asked before unsaved changes are discarded; a built-in dialog is the default.                             |
+| `headerMode`                | `"full" \| "short" \| "auto"`          | Optional, default `"auto"`. Which action heading is shown; see `ActionDef.shortLabel` in the configuration guide.   |
+| `className`                 | `string`                               | Optional.                                                                                                           |
 
 What it does:
 
@@ -85,6 +86,58 @@ Keyboard:
 | Cell       | Enter or Space cycles the state.                                                                                                         |
 | Search box | Type to search; Down and Up move through results (Down also opens the list); Enter picks the highlighted result; Escape closes the list. |
 | Dialog     | Enter or Space on the focused button; Escape cancels.                                                                                    |
+
+## Ordered rules
+
+With a model whose `capabilities.ordering` is true (the built-in `"ordered"`), the editor draws the
+ordered affordances. With `"nearest"` nothing below is drawn and the editor is unchanged. The
+`model` prop picks the model; without it the editor uses `ruleSet.model`. Per action, the preview
+reads the rows from the top: the first row whose subject matches and has a green (allow) or red
+(deny) cell decides, and an empty cell is skipped. The host enforces; the editor only edits and
+shows the rows.
+
+- **Rows and numbers.** A `#` column numbers the category's own rows, then its inherited rows,
+  continuing the count. The order of rows is the order in which each subject first appears in the
+  category's `entries`. A new row joins the end once it has a cell.
+- **Cells.** One entry per subject and action. A click cycles empty, green (allow), red (deny),
+  empty; empty removes the entry. `settings.confirmDeny` still asks before a red cell. Every
+  cell variant (`box`, `marks`, `renderCell`) works, and every state keeps the same fixed size.
+- **Moving.** Each own row has Move up and Move down buttons (disabled at the ends, named like
+  "Move Alice up") and a drag handle. Moving a row moves all of that subject's entries together
+  and keeps their order among themselves. The editor never changes the rule set it was given; it
+  calls `onChange` with a new one.
+- **Drag and keyboard.** Drag a row by its handle and drop it on another own row. The handle is a
+  button, so the same move works from the keyboard: Space or Enter picks the row up, Up and Down
+  move it, Space or Enter drops it, Escape puts it back. Nothing is saved until the drop, and
+  moving focus away cancels. A polite live region announces the pick-up, each step, the drop and a
+  cancel (`editor.dragPicked`, `editor.dragMoved`, `editor.dragDropped`, `editor.dragCancelled`).
+  Rows keep their size while they move.
+- **Inherited rows.** The rows of the parent category, then the grandparent's, and so on, appear in
+  the same grid under the category's own rows. They are read-only (no cell button, no move, no
+  remove), tinted, labelled "from <category>" (`editor.fromCategory`) and have the same cell size.
+  Inherited rows are never switched off, and the "*" category does not exist. Adding the same
+  subject in the category itself overrides it, because own rows come first. `settings.showInherited`
+  hides them.
+- **Stop inheriting.** The checkbox is drawn only when `capabilities.stopInheriting` is true, so it
+  is gone for `"ordered"`.
+- **Legend.** A strip under the grid lists `model.legend()`. Each item's label is a string key
+  (`legend.allow`, `legend.deny`, `legend.blank`, `legend.inherited`, `legend.locked`), resolved
+  through `config.strings`.
+- **Owners.** When `capabilities.owners` is true and the model's `ownerKinds` is not empty, an
+  owners area above the grid lists this category's owners as chips with a remove control, the
+  owners inherited from ancestors as locked chips ("from <category>"), and an add control. The add
+  control offers only subjects of `model.ownerKinds` (default `["user"]` for the built-in model),
+  through the same kind menu and search as the row picker. Owners are saved in
+  `ruleSet.categories[categoryId].owners` through `onChange`. The heading is the string
+  `editor.owners`; override it if your product calls owners something else.
+- **Read-only start.** In view mode the handles, move buttons, cells, owner remove and add
+  controls, and Remove are all disabled, and nothing shifts when you press Edit. The order and
+  the owners are part of the working copy that Save hands to `onSave`; Cancel brings back the
+  saved order.
+
+A model describes its affordances with `capabilities` and, for owners, the optional
+`RaciModel.ownerKinds` list. `createOrderedModel({ ownerKinds })` sets it; `"nearest"` leaves it
+undefined.
 
 ## Read-only start
 
