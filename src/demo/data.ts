@@ -20,6 +20,8 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 */
+import { createOrderedModel } from "@/core/models/ordered";
+import { listModels, registerModel } from "@/core/registry";
 import type { RaciConfig, ResourceNode, RuleSet, SubjectOption } from "@/core/types";
 
 /** A named bundle of host configuration and a seed rule set, to show nothing is hard-coded. */
@@ -324,6 +326,7 @@ const shortPeople: SubjectOption[] = [
   { id: "user:omar", label: "Omar Haddad", detail: "omar@example.test" },
   { id: "user:tess", label: "Tess Walker", detail: "tess@example.test" },
 ];
+const shortAdmins: SubjectOption[] = [{ id: "role:admin", label: "Site administrator" }];
 const shortTeams: SubjectOption[] = [
   { id: "group:secops", label: "Security operations" },
   { id: "group:finance", label: "Finance team" },
@@ -367,6 +370,7 @@ const shortConfig: RaciConfig = {
   subjectKinds: [
     memoryKind("user", "Person", shortPeople),
     memoryKind("group", "Team", shortTeams),
+    memoryKind("role", "Role", shortAdmins),
   ],
   resources: shortTree,
   // The host names and orders the groups: Read, Author and Approve are permissions; Manage and
@@ -377,7 +381,24 @@ const shortConfig: RaciConfig = {
   ],
 };
 
+/**
+ * The "ordered" model for this preset, with site administrators (the `role:admin` subject) who
+ * always have Read, Author and Manage, whatever any row says. Approve and Acknowledge are left
+ * out on purpose: they follow the rows. The demo's simulator evaluates with it.
+ */
+const SHORT_MODEL_ID = "demo-ordered";
+if (!listModels().some((m) => m.id === SHORT_MODEL_ID)) {
+  registerModel(
+    createOrderedModel({
+      id: SHORT_MODEL_ID,
+      label: "Ordered rows with site administrators",
+      superusers: { subjects: ["role:admin"], actions: ["r", "a", "m"] },
+    }),
+  );
+}
+
 const shortSeed: RuleSet = {
+  model: SHORT_MODEL_ID,
   parents: parentsOf(shortTree),
   categories: {
     policies: {
@@ -386,7 +407,11 @@ const shortSeed: RuleSet = {
         { subject: "everyone:*", action: "ack", effect: "allow" },
       ],
     },
-    it: { entries: [{ subject: "group:secops", action: "m", effect: "allow" }] },
+    it: {
+      owners: ["user:omar"],
+      entries: [{ subject: "group:secops", action: "m", effect: "allow" }],
+    },
+    networks: { entries: [{ subject: "group:finance", action: "r", effect: "deny" }] },
     access: {
       entries: [
         { subject: "user:ines", action: "r", effect: "allow" },

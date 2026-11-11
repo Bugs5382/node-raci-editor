@@ -21,6 +21,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 */
 import { describe, expect, it, vi } from "vitest";
+import { getModel } from "@/core/registry";
 import { decide } from "@/index";
 import type { Person } from "@/index";
 import {
@@ -87,6 +88,40 @@ describe("seed validity", () => {
     expect(ask("reports", "read", "user:alice", "group:everyone")).toBe(true); // inherited allow
     expect(ask("contracts", "read", "user:erin", "group:contractors")).toBe(true); // re-allow
     expect(ask("disputes", "read", "user:x", "group:contractors")).toBe(false);
+  });
+
+  it("runs the short-labels preset on the ordered model, with site administrators for Read, Author and Manage", () => {
+    const { config, seed } = presetById("short");
+    expect(seed.model).toBe("demo-ordered");
+    expect(getModel("demo-ordered").capabilities.superuser).toBe(true);
+    const ask = (category: string, action: string, ...subjects: string[]) =>
+      decide({
+        ruleSet: seed,
+        actions: config.actions,
+        person: person(...subjects),
+        category,
+        action,
+      });
+    // Everyone reads and must acknowledge; Ines's own red row above it lifts the duty for her.
+    expect(ask("access", "r", "user:tess").allowed).toBe(true);
+    expect(ask("access", "ack", "user:tess").allowed).toBe(true);
+    expect(ask("access", "ack", "user:ines").allowed).toBe(false);
+    // A finance deny on Read in networks, which a site administrator keeps over.
+    expect(ask("networks", "r", "group:finance").allowed).toBe(false);
+    expect(ask("networks", "r", "group:finance", "role:admin")).toMatchObject({
+      allowed: true,
+      reason: "superuser",
+    });
+    // The administrator's list is Read, Author and Manage: Approve and Acknowledge follow the rows.
+    expect(ask("access", "m", "role:admin").reason).toBe("superuser");
+    expect(ask("access", "apv", "role:admin")).toMatchObject({
+      allowed: false,
+      reason: "default-deny",
+    });
+    expect(ask("access", "ack", "role:admin")).toMatchObject({ allowed: true, reason: "entry" });
+    // An owner of IT, inherited into Door entry, approves through the owner list.
+    expect(ask("access", "apv", "user:omar")).toMatchObject({ allowed: true, reason: "owner" });
+    expect(ask("access", "apv", "user:tess").allowed).toBe(false);
   });
 
   it("falls back to the first preset for an unknown id", () => {

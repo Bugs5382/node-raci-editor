@@ -43,6 +43,11 @@ All optional.
 - A "Short labels" preset that uses the headings R A APV M ACK in two host-named groups (Permissions:
   Read, Author, Approve; Obligations: Manage, Acknowledge) and the built-in Everyone subject, and a
   Heading labels switch (auto, full, short).
+  The preset also runs on the ordered model (the rule set names the model `demo-ordered`): the
+  simulator evaluates with it, a site administrator (the Role "Site administrator", added as an extra
+  membership) always has Read, Author and Manage whatever a row says but not Approve or Acknowledge,
+  and the IT category has an owner who approves through the owner list. The simulator explains each
+  of those reasons.
 - An Editor start switch in the Editor tab: editable (default) or read-only (starts read-only; Edit, Save and
   Cancel). The read-only start is opt-in.
 - A Cell variant switch in the Editor tab: box (default), marks (a check, an X or nothing) and custom

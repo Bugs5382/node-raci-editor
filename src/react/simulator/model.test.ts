@@ -129,3 +129,24 @@ describe("explainDecision", () => {
     expect(explainDecision(d, ctx)).toBe("simulator.reason.default|{}");
   });
 });
+
+describe("explainDecision for the ordered model's reasons", () => {
+  const ctx: ReasonContext = {
+    t: (k, v) => `${k}|${JSON.stringify(v ?? {})}`,
+    category: "fin",
+    categoryLabel: (id) => id.toUpperCase(),
+    subjectLabel: (s) => s,
+    actionLabel: (a) => `<${a}>`,
+  };
+  it("explains an owner, a superuser and a missing requirement", () => {
+    expect(explainDecision({ allowed: true, reason: "owner", path: ["fin"] }, ctx)).toBe(
+      'simulator.reason.owner|{"verdict":"simulator.allowed|{}"}',
+    );
+    expect(explainDecision({ allowed: true, reason: "superuser", path: ["fin"] }, ctx)).toBe(
+      'simulator.reason.superuser|{"verdict":"simulator.allowed|{}"}',
+    );
+    expect(
+      explainDecision({ allowed: false, reason: "requires", gatedBy: "read", path: ["fin"] }, ctx),
+    ).toBe('simulator.reason.requires|{"verdict":"simulator.denied|{}","action":"<read>"}');
+  });
+});
