@@ -8,6 +8,8 @@ const fromRoot = (file: string) => fileURLToPath(new URL(`../${file}`, import.me
 // package uses, so a change in src/ shows up at once.
 export default defineConfig({
   root: fileURLToPath(new URL(".", import.meta.url)),
+  // Relative asset URLs so the built site works from any subfolder.
+  base: "./",
   plugins: [react()],
   resolve: {
     alias: { "@": fromRoot("src") },
