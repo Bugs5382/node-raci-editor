@@ -1,0 +1,260 @@
+/* simulator styles: owned by the simulator component. Tokens only (--raci-*). */
+
+.raci-simulator {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: var(--raci-space-5);
+  padding: var(--raci-space-5);
+  background: var(--raci-bg);
+  color: var(--raci-text);
+  font-family: var(--raci-font-family);
+  font-size: var(--raci-font-size-sm);
+  line-height: var(--raci-line-height);
+  border: 1px solid var(--raci-border);
+  border-radius: var(--raci-radius-lg);
+}
+
+.raci-simulator *,
+.raci-simulator *::before,
+.raci-simulator *::after {
+  box-sizing: border-box;
+}
+
+.raci-simulator .raci-title {
+  margin: 0;
+  font-size: var(--raci-font-size-lg);
+  font-weight: var(--raci-font-weight-semibold);
+}
+
+.raci-simulator .raci-controls {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: var(--raci-space-4);
+}
+
+.raci-simulator .raci-field,
+.raci-simulator .raci-picker {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--raci-space-2);
+  min-width: 0;
+}
+
+.raci-simulator .raci-label {
+  font-weight: var(--raci-font-weight-medium);
+}
+
+.raci-simulator .raci-input {
+  width: 100%;
+  min-height: var(--raci-control-height);
+  padding: 0 var(--raci-space-4);
+  background: var(--raci-bg);
+  color: var(--raci-text);
+  font: inherit;
+  border: 1px solid var(--raci-border-strong);
+  border-radius: var(--raci-radius-md);
+}
+
+.raci-simulator .raci-input::placeholder {
+  color: var(--raci-text-muted);
+}
+
+.raci-simulator :is(.raci-input, .raci-chip-remove):focus-visible {
+  outline: 2px solid var(--raci-focus-ring);
+  outline-offset: 2px;
+}
+
+.raci-simulator .raci-listbox {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: var(--raci-z-dropdown);
+  max-height: 14rem;
+  margin: var(--raci-space-2) 0 0;
+  padding: var(--raci-space-2);
+  overflow-y: auto;
+  list-style: none;
+  background: var(--raci-bg-raised);
+  border: 1px solid var(--raci-border);
+  border-radius: var(--raci-radius-md);
+  box-shadow: var(--raci-shadow-md);
+}
+
+.raci-simulator .raci-option {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--raci-space-3);
+  padding: var(--raci-space-3) var(--raci-space-4);
+  cursor: pointer;
+  border-radius: var(--raci-radius-sm);
+}
+
+.raci-simulator .raci-option:hover,
+.raci-simulator .raci-option[data-active] {
+  background: var(--raci-accent);
+  color: var(--raci-text-on-accent);
+}
+
+.raci-simulator .raci-option-detail,
+.raci-simulator .raci-listbox-empty {
+  color: var(--raci-text-muted);
+}
+
+.raci-simulator .raci-option:hover .raci-option-detail,
+.raci-simulator .raci-option[data-active] .raci-option-detail {
+  color: inherit;
+}
+
+.raci-simulator .raci-listbox-empty {
+  padding: var(--raci-space-3) var(--raci-space-4);
+}
+
+.raci-simulator .raci-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--raci-space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.raci-simulator .raci-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--raci-space-2);
+  padding: var(--raci-space-2) var(--raci-space-2) var(--raci-space-2) var(--raci-space-4);
+  background: var(--raci-info-bg);
+  color: var(--raci-info-fg);
+  border: 1px solid var(--raci-info-border);
+  border-radius: var(--raci-radius-pill);
+}
+
+.raci-simulator .raci-chip-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  color: inherit;
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+  border-radius: var(--raci-radius-pill);
+  transition: background var(--raci-duration) var(--raci-easing);
+}
+
+.raci-simulator .raci-chip-remove:hover {
+  background: var(--raci-bg-subtle);
+}
+
+.raci-simulator .raci-results {
+  min-width: 0;
+  overflow-x: auto;
+}
+
+.raci-simulator .raci-empty {
+  margin: 0;
+  padding: var(--raci-space-5);
+  color: var(--raci-text-muted);
+  background: var(--raci-bg-subtle);
+  border: 1px dashed var(--raci-border);
+  border-radius: var(--raci-radius-md);
+}
+
+.raci-simulator .raci-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.raci-simulator .raci-table :is(th, td) {
+  padding: var(--raci-space-4);
+  text-align: start;
+  vertical-align: top;
+  border-bottom: 1px solid var(--raci-border);
+}
+
+.raci-simulator[data-density="compact"] .raci-table :is(th, td) {
+  padding: var(--raci-space-2) var(--raci-space-4);
+}
+
+.raci-simulator .raci-table thead th {
+  background: var(--raci-bg-subtle);
+  color: var(--raci-text-muted);
+  font-weight: var(--raci-font-weight-semibold);
+}
+
+.raci-simulator .raci-verdict {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--raci-space-2);
+  padding: var(--raci-space-2) var(--raci-space-4);
+  font-weight: var(--raci-font-weight-semibold);
+  border: 1px solid transparent;
+  border-radius: var(--raci-radius-pill);
+}
+
+.raci-simulator .raci-verdict-icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.raci-simulator .raci-verdict-allow {
+  background: var(--raci-allow-bg);
+  color: var(--raci-allow-fg);
+  border-color: var(--raci-allow-border);
+}
+
+.raci-simulator .raci-verdict-deny {
+  background: var(--raci-deny-bg);
+  color: var(--raci-deny-fg);
+  border-color: var(--raci-deny-border);
+}
+
+.raci-simulator .raci-reason {
+  margin: 0 0 var(--raci-space-3);
+}
+
+.raci-simulator .raci-walk {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--raci-space-2);
+  margin: 0;
+  padding: 0;
+  color: var(--raci-text-muted);
+  font-size: var(--raci-font-size-xs);
+  list-style: none;
+}
+
+.raci-simulator .raci-walk li + li::before {
+  content: "/";
+  margin-inline-end: var(--raci-space-2);
+}
+
+.raci-simulator .raci-walk li[data-decided] {
+  color: var(--raci-text);
+  font-weight: var(--raci-font-weight-semibold);
+}
+
+@media (max-width: 40rem) {
+  .raci-simulator {
+    padding: var(--raci-space-4);
+  }
+
+  .raci-simulator .raci-controls {
+    grid-template-columns: 1fr;
+  }
+
+  .raci-simulator .raci-table :is(th, td) {
+    padding: var(--raci-space-3);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .raci-simulator * {
+    transition: none;
+  }
+}

@@ -1,0 +1,53 @@
+  HOST APP (yours)                         PACKAGE (node-raci-editor)
+  ------------------------------------     ---------------------------------------
+
+  +-----------------------------+  resources   +-------------------------------+
+  | Resource tree and picker    |------------->|                               |
+  | ids, parents, labels, which |  categoryId  |  RulesEditor                  |
+  | one is selected             |------------->|  edits the rules of ONE       |
+  +-----------------------------+              |  category                     |
+                                               |                               |
+  +-----------------------------+  subjects    |   props in:  config, ruleSet, |
+  | Subject directory           |------------->|              categoryId       |
+  | people, groups, roles:      |  (search +   |   out:       onChange(ruleSet)|
+  | lookup and labels           |   labels)    +-------------------------------+
+  +-----------------------------+
+   subjects: whatever kinds your app has
+                                               +-------------------------------+
+  +-----------------------------+  actions     |                               |
+  | Actions and what they imply |------------->|  Simulator                    |
+  | read, author, approve,      |              |                               |
+  | manage (author -> read ...) |  rules       |  picks a person, evaluates    |
+  +-----------------------------+------------->|  each action, shows the       |
+                                               |  result and the reason        |
+                                               |   props in:  config, ruleSet, |
+  +-----------------------------+  rules       |              categoryId,      |
+  | Rule storage                |<-------------|              evaluate? (host) |
+  | keeps the rules JSON        |  onChange    +-------------------------------+
+  +--------------+--------------+
+                 |                              +-------------------------------+
+                 | ruleSet                      |  SettingsPanel                |
+                 v                              |  which actions and kinds to   |
+  +-----------------------------+               |  show; onChange(settings)     |
+  | Your enforcement            |  decide()     +-------------------------------+
+  | may call decide() or an     |<-----------   decide(ruleSet, actions, person,
+  | equivalent (same vectors)   |               category, action) -> Decision
+  +-----------------------------+
+
+  The package renders NO resource tree or picker. Your app owns it and passes the
+  selected categoryId plus the resource data (nodes, parents, labels).
+
+  EXAMPLE: a document library
+  ---------------------------
+  resources    library
+                 `-- contracts            (parent of contracts = library)
+  subject      alice = user:alice, member of group:finance-staff, role:approver
+  rules        library:   Allow group:finance-staff  author
+                          Allow role:approver        approve
+               contracts: Deny  group:finance-staff  author
+
+  alice asks:  author  on library    -> Would be allowed (library: Allow finance-staff)
+               author  on contracts  -> Would be denied  (nearest category wins: the Deny)
+               approve on contracts  -> Would be allowed (no entry in contracts, so the
+                                                  parent library: Allow approver)
+               read    on contracts  -> Would be denied  (a Deny on author includes read)

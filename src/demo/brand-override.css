@@ -1,0 +1,33 @@
+/*
+ * Sample host override: a teal brand with squarer corners and a serif face.
+ * Only tokens change, so light and dark keep working. Applied by the demo's
+ * brand toggle through the demo-brand class.
+ */
+.demo-brand.raci-root,
+.demo-brand .raci-root {
+  --raci-accent: #0f766e;
+  --raci-accent-hover: #115e59;
+  --raci-focus-ring: #0f766e;
+  --raci-radius-md: 0.125rem;
+  --raci-radius-lg: 0.25rem;
+  --raci-font-family: Georgia, "Times New Roman", serif;
+}
+
+.demo-brand.raci-root[data-theme="dark"],
+.demo-brand .raci-root[data-theme="dark"],
+.demo-brand[data-theme="dark"] .raci-root {
+  --raci-accent: #5eead4;
+  --raci-accent-hover: #99f6e4;
+  --raci-focus-ring: #5eead4;
+  --raci-text-on-accent: #042f2e;
+}
+
+@media (prefers-color-scheme: dark) {
+  .demo-brand.raci-root:not([data-theme="light"]),
+  .demo-brand .raci-root:not([data-theme="light"], [data-theme="light"] .raci-root) {
+    --raci-accent: #5eead4;
+    --raci-accent-hover: #99f6e4;
+    --raci-focus-ring: #5eead4;
+    --raci-text-on-accent: #042f2e;
+  }
+}

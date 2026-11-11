@@ -1,0 +1,407 @@
+/* Rules editor styles. Tokens only (--raci-*); every class is prefixed raci-. */
+
+.raci-editor {
+  display: flex;
+  flex-direction: column;
+  gap: var(--raci-space-5);
+  padding: var(--raci-space-5);
+  background: var(--raci-bg);
+  color: var(--raci-text);
+  font-family: var(--raci-font-family);
+  font-size: var(--raci-font-size-sm);
+  line-height: var(--raci-line-height);
+  border: 1px solid var(--raci-border);
+  border-radius: var(--raci-radius-md);
+  min-width: 0;
+  /* One fixed box for every cell state; the compact density overrides both once. */
+  --raci-cell-width: 6rem;
+  --raci-cell-height: 3.5rem;
+}
+
+.raci-editor--compact {
+  --raci-cell-width: 9rem;
+  --raci-cell-height: 1.75rem;
+}
+
+.raci-editor *,
+.raci-editor *::before,
+.raci-editor *::after {
+  box-sizing: border-box;
+}
+
+.raci-editor .raci-muted {
+  color: var(--raci-text-muted);
+  font-size: var(--raci-font-size-xs);
+}
+
+.raci-editor .raci-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.raci-editor__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--raci-space-3) var(--raci-space-5);
+}
+
+.raci-editor .raci-check {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--raci-space-3);
+  font-weight: var(--raci-font-weight-medium);
+}
+
+.raci-editor__scroll {
+  overflow-x: auto;
+  border: 1px solid var(--raci-border);
+  border-radius: var(--raci-radius-md);
+}
+
+.raci-editor .raci-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--raci-bg-raised);
+}
+
+.raci-editor .raci-table th,
+.raci-editor .raci-table td {
+  padding: var(--raci-space-3) var(--raci-space-4);
+  border-bottom: 1px solid var(--raci-border);
+  text-align: center;
+  vertical-align: middle;
+}
+
+.raci-editor--compact .raci-table th,
+.raci-editor--compact .raci-table td {
+  padding: var(--raci-space-2) var(--raci-space-3);
+}
+
+.raci-editor .raci-table thead th {
+  background: var(--raci-bg-subtle);
+  color: var(--raci-text-muted);
+  font-size: var(--raci-font-size-xs);
+  font-weight: var(--raci-font-weight-semibold);
+  white-space: nowrap;
+}
+
+.raci-editor .raci-table tbody tr:last-child > * {
+  border-bottom: 0;
+}
+
+.raci-editor .raci-table .raci-table__subject {
+  position: sticky;
+  left: 0;
+  min-width: 8rem;
+  background: inherit;
+  text-align: start;
+  font-weight: var(--raci-font-weight-medium);
+}
+
+.raci-editor .raci-table tbody .raci-table__subject {
+  background: var(--raci-bg-raised);
+}
+
+.raci-editor .raci-empty {
+  padding: var(--raci-space-6);
+  color: var(--raci-text-muted);
+  text-align: center;
+}
+
+/* Cells: state is carried by icon and text as well as colour. Every state has the same fixed box. */
+.raci-editor .raci-cell {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--raci-space-1);
+  width: var(--raci-cell-width);
+  height: var(--raci-cell-height);
+  padding: var(--raci-space-1) var(--raci-space-2);
+  overflow: hidden;
+  line-height: var(--raci-line-height);
+  border: 1px solid var(--raci-blank-border);
+  border-radius: var(--raci-radius-sm);
+  background: var(--raci-blank-bg);
+  color: var(--raci-blank-fg);
+  font: inherit;
+  font-size: var(--raci-font-size-xs);
+  font-weight: var(--raci-font-weight-medium);
+  cursor: pointer;
+  transition:
+    background var(--raci-duration) var(--raci-easing),
+    border-color var(--raci-duration) var(--raci-easing);
+}
+
+.raci-editor--compact .raci-cell {
+  flex-direction: row;
+}
+
+.raci-editor .raci-cell--allow {
+  background: var(--raci-allow-bg);
+  color: var(--raci-allow-fg);
+  border-color: var(--raci-allow-border);
+}
+
+.raci-editor .raci-cell--deny {
+  background: var(--raci-deny-bg);
+  color: var(--raci-deny-fg);
+  border-color: var(--raci-deny-border);
+}
+
+.raci-editor .raci-cell--included {
+  border-style: dashed;
+  background: var(--raci-info-bg);
+  color: var(--raci-info-fg);
+  border-color: var(--raci-info-border);
+  opacity: 0.8;
+}
+
+.raci-editor .raci-cell .raci-icon {
+  flex: none;
+  width: 14px;
+  height: 14px;
+}
+
+/* Primary line: icon and state word. */
+.raci-editor .raci-cell__primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--raci-space-2);
+  max-width: 100%;
+  min-width: 0;
+}
+
+.raci-editor .raci-cell__text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Secondary line: always rendered, so an included cell never changes the box. */
+.raci-editor .raci-cell__secondary {
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-style: italic;
+  line-height: var(--raci-line-height);
+  white-space: nowrap;
+}
+
+.raci-editor .raci-cell__secondary--off {
+  visibility: hidden;
+}
+
+.raci-editor .raci-cell:disabled {
+  cursor: default;
+}
+
+.raci-editor .raci-cell--inherited {
+  cursor: default;
+  opacity: 0.65;
+  border-style: dotted;
+}
+
+/* Controls */
+.raci-editor .raci-button {
+  min-height: var(--raci-control-height);
+  padding: var(--raci-space-2) var(--raci-space-4);
+  border: 1px solid var(--raci-border-strong);
+  border-radius: var(--raci-radius-sm);
+  background: var(--raci-bg-raised);
+  color: var(--raci-text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.raci-editor .raci-button:hover {
+  background: var(--raci-bg-subtle);
+}
+
+.raci-editor .raci-button--quiet {
+  border-color: transparent;
+  background: transparent;
+  color: var(--raci-text-muted);
+}
+
+.raci-editor .raci-button--danger {
+  background: var(--raci-deny-border);
+  border-color: var(--raci-deny-border);
+  color: var(--raci-text-on-accent);
+}
+
+.raci-editor .raci-input,
+.raci-editor .raci-select {
+  min-height: var(--raci-control-height);
+  padding: var(--raci-space-2) var(--raci-space-3);
+  border: 1px solid var(--raci-border-strong);
+  border-radius: var(--raci-radius-sm);
+  background: var(--raci-bg-raised);
+  color: var(--raci-text);
+  font: inherit;
+  width: 100%;
+}
+
+.raci-editor :focus-visible {
+  outline: 2px solid var(--raci-focus-ring);
+  outline-offset: 2px;
+}
+
+/* Subject picker */
+.raci-editor .raci-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--raci-space-3);
+  align-items: flex-start;
+}
+
+.raci-editor .raci-picker__kind {
+  flex: 0 1 10rem;
+}
+
+.raci-editor .raci-picker__search {
+  position: relative;
+  flex: 1 1 14rem;
+}
+
+.raci-editor .raci-listbox {
+  position: absolute;
+  inset-inline: 0;
+  top: 100%;
+  z-index: var(--raci-z-dropdown);
+  margin: var(--raci-space-2) 0 0;
+  padding: var(--raci-space-2);
+  max-height: 16rem;
+  overflow-y: auto;
+  list-style: none;
+  background: var(--raci-bg-raised);
+  border: 1px solid var(--raci-border-strong);
+  border-radius: var(--raci-radius-md);
+  box-shadow: var(--raci-shadow-md);
+}
+
+.raci-editor .raci-listbox[hidden] {
+  display: none;
+}
+
+.raci-editor .raci-listbox__option {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--raci-space-4);
+  padding: var(--raci-space-3) var(--raci-space-4);
+  border-radius: var(--raci-radius-sm);
+  cursor: pointer;
+}
+
+.raci-editor .raci-listbox__option--active {
+  background: var(--raci-accent);
+  color: var(--raci-text-on-accent);
+}
+
+.raci-editor .raci-listbox__detail {
+  color: inherit;
+  opacity: 0.75;
+  font-size: var(--raci-font-size-xs);
+}
+
+.raci-editor .raci-listbox__note {
+  padding: var(--raci-space-3) var(--raci-space-4);
+  color: var(--raci-text-muted);
+}
+
+.raci-editor .raci-listbox__note--error {
+  background: var(--raci-deny-bg);
+  color: var(--raci-deny-fg);
+  border-radius: var(--raci-radius-sm);
+}
+
+/* Inherited */
+.raci-editor__inherited {
+  display: flex;
+  flex-direction: column;
+  gap: var(--raci-space-3);
+  padding: var(--raci-space-4);
+  background: var(--raci-bg-subtle);
+  border-radius: var(--raci-radius-md);
+}
+
+.raci-editor__title {
+  margin: 0;
+  font-size: var(--raci-font-size-md);
+  font-weight: var(--raci-font-weight-semibold);
+  color: var(--raci-text);
+}
+
+.raci-editor__inherited-title {
+  margin: 0;
+  font-size: var(--raci-font-size-sm);
+  font-weight: var(--raci-font-weight-semibold);
+  color: var(--raci-text-muted);
+}
+
+.raci-editor__inherited p {
+  margin: 0;
+}
+
+/* Confirm dialog */
+.raci-editor .raci-modal {
+  position: fixed;
+  inset: 0;
+  z-index: var(--raci-z-modal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--raci-space-5);
+  background: var(--raci-bg-subtle);
+  background: color-mix(in srgb, var(--raci-text) 45%, transparent);
+}
+
+.raci-editor .raci-dialog {
+  width: min(28rem, 100%);
+  padding: var(--raci-space-6);
+  background: var(--raci-bg-raised);
+  color: var(--raci-text);
+  border: 1px solid var(--raci-border-strong);
+  border-radius: var(--raci-radius-lg);
+  box-shadow: var(--raci-shadow-md);
+}
+
+.raci-editor .raci-dialog__title {
+  margin: 0 0 var(--raci-space-3);
+  font-size: var(--raci-font-size-lg);
+}
+
+.raci-editor .raci-dialog__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--raci-space-3);
+  margin-top: var(--raci-space-5);
+}
+
+@media (max-width: 40rem) {
+  .raci-editor {
+    padding: var(--raci-space-4);
+  }
+
+  .raci-editor .raci-picker__kind,
+  .raci-editor .raci-picker__search {
+    flex-basis: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .raci-editor .raci-cell {
+    transition: none;
+  }
+}

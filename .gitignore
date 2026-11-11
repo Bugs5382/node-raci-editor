@@ -13,3 +13,4 @@ plan/
 
 # local environment - copy .env.example to .env
 .env
+demo/dist/

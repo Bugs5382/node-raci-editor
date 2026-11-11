@@ -1,10 +1,37 @@
+/*
+MIT License
+
+Copyright (c) 2026 Shane
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+*/
 import { defineConfig } from "tsdown";
 
+// The JavaScript and declarations are built here (the library and the ./demo
+// subpath); dist/styles.css and dist/demo.css are written by scripts/buildCss.mjs
+// right after (npm run build), which inlines the @imports.
 export default defineConfig({
-  entry: ["src/index.ts"],
+  entry: { index: "src/index.ts", demo: "src/demo/index.ts" },
   format: ["esm", "cjs"],
   dts: true,
   clean: true,
+  // react is a peer dependency; never bundle it.
+  external: ["react", "react-dom", /^react\//, /^react-dom\//],
   // No source maps: they are never published (check:pack rejects them), and a
   // bundle that points at a missing map makes debuggers and bundlers warn.
   sourcemap: false,
