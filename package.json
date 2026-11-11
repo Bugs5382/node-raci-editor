@@ -34,17 +34,16 @@
     },
     "./demo.css": "./dist/demo.css",
     "./styles.css": "./dist/styles.css",
-    "./vectors/decide.json": "./vectors/decide.json",
-    "./vectors/nearest.json": "./vectors/nearest.json",
-    "./vectors/ordered.json": "./vectors/ordered.json"
+    "./vectors/decide.json": "./dist/vectors/nearest.json",
+    "./vectors/nearest.json": "./dist/vectors/nearest.json",
+    "./vectors/ordered.json": "./dist/vectors/ordered.json"
   },
   "files": [
     "bin",
-    "dist",
-    "vectors"
+    "dist"
   ],
   "config": {
-    "packMaxUnpackedBytes": 900000,
+    "packMaxUnpackedBytes": 800000,
     "packMaxGrowthPercent": 25
   },
   "engines": {
@@ -59,7 +58,7 @@
     "url": "https://github.com/Bugs5382/node-raci-editor/issues"
   },
   "scripts": {
-    "build": "tsdown && node scripts/buildCss.mjs && npm run demo:build",
+    "build": "tsdown && node scripts/buildCss.mjs && node scripts/buildVectors.mjs && npm run demo:build",
     "check:pack": "node scripts/checkPack.mjs",
     "check:pack:growth": "node scripts/checkPackGrowth.mjs",
     "check:install": "node scripts/checkInstall.mjs",
