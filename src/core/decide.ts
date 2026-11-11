@@ -3,7 +3,7 @@ import type { ActionDef, Decision, DecideInput, Entry } from "./types.js";
 const STAR = "*";
 
 /** Every action an entry on `id` covers: itself plus all it implies, transitively. Cycle safe. */
-function closure(id: string, byId: Map<string, ActionDef>): Set<string> {
+const closure = (id: string, byId: Map<string, ActionDef>): Set<string> => {
   const seen = new Set<string>([id]);
   const queue = [id];
   while (queue.length > 0) {
@@ -16,7 +16,7 @@ function closure(id: string, byId: Map<string, ActionDef>): Set<string> {
     }
   }
   return seen;
-}
+};
 
 /**
  * Decide whether a person may perform an action in a category.
@@ -27,7 +27,7 @@ function closure(id: string, byId: Map<string, ActionDef>): Set<string> {
  * ends the walk after its own entries, skipping `"*"`. An unknown asked action is denied with an
  * empty path.
  */
-export function decide(input: DecideInput): Decision {
+export const decide = (input: DecideInput): Decision => {
   const { ruleSet, actions, person, category, action } = input;
   const byId = new Map(actions.map((a) => [a.id, a]));
   if (!byId.has(action)) {
@@ -74,4 +74,4 @@ export function decide(input: DecideInput): Decision {
     }
     next = current === STAR ? undefined : ruleSet.parents[current];
   }
-}
+};

@@ -112,7 +112,9 @@ export interface RaciSettings {
   defaultStopInheriting: boolean;
 }
 
-export const defaultSettings = (config: Pick<RaciConfig, "actions" | "subjectKinds">): RaciSettings => ({
+export const defaultSettings = (
+  config: Pick<RaciConfig, "actions" | "subjectKinds">,
+): RaciSettings => ({
   visibleActions: config.actions.map((a) => a.id),
   enabledSubjectKinds: config.subjectKinds.map((k) => k.kind),
   showInherited: true,

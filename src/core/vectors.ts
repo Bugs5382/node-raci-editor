@@ -35,10 +35,10 @@ export interface VectorFile {
 }
 
 /** Derive the subject strings for a vector person: `user:<id>`, `group:<g>`, `role:<r>`. */
-export function vectorSubjects(person: VectorPerson): Person["subjects"] {
+export const vectorSubjects = (person: VectorPerson): Person["subjects"] => {
   return [
     `user:${person.id}`,
     ...person.groups.map((g) => `group:${g}`),
     ...person.roles.map((r) => `role:${r}`),
   ];
-}
+};

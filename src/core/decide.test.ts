@@ -9,19 +9,19 @@ const actions: ActionDef[] = [
   { id: "manage", implies: ["author", "approve", "read"] },
 ];
 
-function e(subject: string, action: string, effect: Effect) {
+const e = (subject: string, action: string, effect: Effect) => {
   return { subject, action, effect };
-}
+};
 
-function input(
+const input = (
   ruleSet: RuleSet,
   category: string,
   action: string,
   subjects: string[] = ["user:alice"],
   defs: ActionDef[] = actions,
-): DecideInput {
+): DecideInput => {
   return { ruleSet, actions: defs, person: { subjects }, category, action };
-}
+};
 
 describe("decide", () => {
   it("denies by default with no rules", () => {
