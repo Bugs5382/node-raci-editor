@@ -21,6 +21,7 @@
 
 #### 📄 Documentation
 
+- docs(models): make the ordered model match the owner's description @Bugs5382 (#26)
 - docs(changelog): leave CHANGELOG.md to the changelog action @Bugs5382 (#20)
 
 ### Extra
