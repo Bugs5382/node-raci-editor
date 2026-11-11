@@ -298,7 +298,9 @@ export const Simulator = (props: SimulatorProps) => {
                     reason:
                       e.reason === "owner"
                         ? t("simulator.by.owner", { category: labelOf(e.category) })
-                        : where(e),
+                        : e.reason === "superuser"
+                          ? t("simulator.by.superuser")
+                          : where(e),
                     everyone: false,
                   },
                 ],

@@ -272,6 +272,29 @@ describe("pool lists", () => {
     expect(items[1]).toHaveTextContent("row #1 of Door entry");
   });
 
+  it("names a superuser in the list by what makes them one, after the owners", async () => {
+    await setup({
+      ruleSet: { ...ruleSet, model: "ordered-admins" },
+      lists: [
+        {
+          id: "appr",
+          action: "approve",
+          people: [
+            { id: "user:carol", subjects: ["user:carol"] },
+            { id: "user:olga", subjects: ["user:olga"] },
+            { id: "user:bob", subjects: ["user:bob", "group:admins"] },
+          ],
+        },
+      ],
+    });
+    const items = within(listed("Who can Approve")).getAllByRole("listitem");
+    expect(items).toHaveLength(3);
+    expect(items[0]).toHaveTextContent("Olga Park");
+    expect(items[1]).toHaveTextContent("Bob Ray");
+    expect(items[1]).toHaveTextContent("always has this action");
+    expect(items[2]).toHaveTextContent("Carol Diaz");
+  });
+
   it("shows everyone instead of names for the Everyone row, with the host's title", async () => {
     await setup({ lists });
     expect(screen.getByRole("heading", { level: 3, name: "Must acknowledge" })).toBeInTheDocument();
