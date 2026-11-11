@@ -119,6 +119,7 @@
 /* Cells: state is carried by icon and text as well as colour. Every state has the same fixed box. */
 .raci-editor .raci-cell {
   display: inline-flex;
+  vertical-align: middle;
   flex-direction: column;
   align-items: center;
   justify-content: center;

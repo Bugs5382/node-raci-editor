@@ -203,3 +203,13 @@ describe("settings.cells", () => {
     expect(cell("user:bob, View").getAttribute("style")).toBeNull();
   });
 });
+
+describe("stylesheet: oversized content never shifts a cell", () => {
+  it("aligns every cell by its middle, not by the baseline of its content", async () => {
+    const { readFileSync } = await import("node:fs");
+    const css = readFileSync("src/styles/editor.css", "utf8");
+    const start = css.indexOf(".raci-editor .raci-cell {");
+    expect(start).toBeGreaterThanOrEqual(0);
+    expect(css.slice(start, css.indexOf("}", start))).toMatch(/vertical-align:\s*middle/);
+  });
+});
