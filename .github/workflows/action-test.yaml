@@ -39,14 +39,25 @@ jobs:
       - name: Install dependencies
         run: npm ci --ignore-scripts --legacy-peer-deps
 
-      - name: Lint
+      - name: Lint (Oxlint)
         run: npm run lint
+
+      - name: Check formatting (oxfmt)
+        run: npm run format:check
+
+      - name: Typecheck
+        run: npm run typecheck
 
       - name: Test
         run: npm test
 
       - name: Build
         run: npm run build
+
+      # The demo app imports the package source, so building it catches a
+      # broken import or JSX type that the library build does not reach.
+      - name: Build the demo
+        run: npm run demo:build
 
       # Fails if the tarball would ship source maps, TypeScript source, tests or
       # another non-runtime folder, misses an entry point, or goes over the
