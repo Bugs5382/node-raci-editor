@@ -5,8 +5,12 @@ The package ships a neutral look built entirely from CSS custom properties
 value, and can be overridden by the host app. Components use only these
 tokens; they never hard-code a colour, size or font.
 
-The tokens live in `src/styles/tokens.css`. Import that stylesheet once in
-the host app (the exact package subpath is set by the package exports).
+The tokens live in `src/styles/tokens.css` and ship inside the single stylesheet the package
+exports. Import it once in the host app:
+
+```ts
+import "node-raci-editor/styles.css";
+```
 
 Render the components inside an element with the `raci-root` class (the
 components add it to their own root, so a host rarely needs to).

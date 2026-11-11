@@ -13,13 +13,19 @@ import {
 import { SubjectPicker } from "@/react/simulator/SubjectPicker";
 import { simulatorStrings } from "@/react/simulator/strings";
 
+/** Props of `Simulator`. */
 export interface SimulatorProps {
+  /** The host configuration. */
   config: RaciConfig;
+  /** The rules to evaluate. */
   ruleSet: RuleSet;
   /** The category to check. When given, the simulator follows it; otherwise it keeps its own. */
   categoryId?: string;
+  /** Called when the user picks another category in the simulator. */
   onCategoryChange?: (id: string) => void;
+  /** Display settings; missing fields use the defaults. */
   settings?: Partial<RaciSettings>;
+  /** Extra class on the root element. */
   className?: string;
 }
 

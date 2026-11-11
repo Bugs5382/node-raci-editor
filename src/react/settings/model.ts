@@ -1,6 +1,7 @@
 import { defaultSettings } from "@/core/types";
 import type { RaciConfig, RaciSettings } from "@/core/types";
 
+/** @inline */
 type ConfigShape = Pick<RaciConfig, "actions" | "subjectKinds">;
 
 /** Move a visible action one place up (-1) or down (1). Returns the same object when nothing moves. */

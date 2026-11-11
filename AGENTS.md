@@ -5,7 +5,10 @@ hook-enforced rules). Keep this file current when the build, layout, or public A
 
 ## What this is
 
-Generic drop-in React rules editor, simulator and settings for RACI-style access rules, with a pure TypeScript decide() and shared test vectors.
+A generic, drop-in React library for editing and testing RACI-style access rules: a matrix editor
+(`RulesEditor`), a simulator (`Simulator`) and a settings panel (`SettingsPanel`), on top of a pure
+TypeScript `decide()` and a language-neutral set of test vectors. The host defines its own actions,
+subject kinds and resource tree through a `RaciConfig`; the package knows no product.
 
 It ships an npm library (ESM and CJS, with declarations) plus a stylesheet. Two things to keep in
 mind before changing it:
@@ -20,17 +23,27 @@ mind before changing it:
 - Entry point: `node-raci-editor` (everything is exported from `src/index.ts`).
 - Stylesheet: `import "node-raci-editor/styles.css"` (built to `dist/styles.css`).
 - Peer dependencies: `react` and `react-dom`, version 18 or newer.
-- Test vectors for `decide()` ship as `vectors/decide.json` when present.
+- Test vectors for `decide()` ship as `vectors/decide.json` (also importable as
+  `node-raci-editor/vectors/decide.json`). Go and mock implementations run the same file.
+- Exports: the types (`RaciConfig`, `RuleSet`, `Entry`, ...), `decide`, `defaultSettings`,
+  `normalizeSettings`, `toggleAction`, `toggleKind`, `moveAction`, `impliedActions`,
+  `vectorSubjects`, and the three components with their props types.
+- Components are controlled: the host owns the `RuleSet` and `RaciSettings` and receives a new
+  object through `onChange`. Nothing is mutated.
+- Usage docs are in `README.md` and `guides/` (getting started, access model, configuration,
+  components, test vectors, extending, theming).
 
 ## Layout
 
 - `src/index.ts` - the public entry point: exports only.
 - `src/core/` - the pure TypeScript domain model and `decide()`; node tests, 100% coverage gate.
 - `src/react/` - the React components; tests run in jsdom.
-- `src/styles/` - `index.css` imports `tokens.css` and `components.css`; built to `dist/styles.css`.
+- `src/styles/` - `index.css` imports `tokens.css` and the component sheets (`components.css`,
+  `editor.css`, `simulator.css`, `settings.css`); built to `dist/styles.css`.
 - `demo/` - a Vite app that imports the package source through the `@/` alias (not published).
-- `tests/` - cross-module tests (optional); unit tests sit next to their module.
-- `vectors/` - shared `decide()` test vectors (published once present).
+- `tests/` - cross-module tests; `docs-snippets.test.tsx` runs the code shown in the README and guides.
+- `vectors/` - shared `decide()` test vectors (published) and their format in `vectors/README.md`.
+- `guides/` - the documentation; `README.md` links to each guide.
 - `scripts/` - repo tooling: CSS build, pack and install checks.
 - Imports use the `@/` alias for `src/` (`@/core/types`), never `../../`.
 
@@ -47,7 +60,7 @@ mind before changing it:
 - Package checks (npm packages), after a build: `npm run check:pack` (contents and ceiling),
   `npm run check:pack:growth` (growth against the last release), `npm run check:install`
   (install the tarball, import ESM and CJS); see CLAUDE.md "npm package contents"
-- License headers / docs: `<command>`
+- Docs: `npm run docs` (typedoc from `src/index.ts`, warnings are errors; output in `docs/`, git-ignored)
 
 ## Logging
 
@@ -69,4 +82,10 @@ Follow the logging rules in `CLAUDE.md`. In short:
   `.claude/hooks` (run `bash .claude/hooks/install.sh` once per clone).
 - Open every PR as a draft. CI skips drafts, so run the full checks locally, push once they pass,
   and mark the PR ready when the work is finished; see CLAUDE.md "CI and Actions minutes".
-- <project-specific conventions, non-obvious constraints, and traps an agent should know>
+- Every exported item needs a TSDoc comment: `npm run docs` fails on warnings.
+- A code block in `README.md` or `guides/` that is also in `tests/docs-snippets.test.tsx` must match
+  the test file exactly (with `@/index` written as `node-raci-editor`). Edit both together.
+- `vectors/decide.json` stays generic and language-neutral; change `vectors/README.md` with it.
+- `decide()` treats a category without `stopInheriting` as false and ignores settings, so
+  `RaciSettings.defaultStopInheriting` only changes what the editor shows.
+- No product or brand names anywhere in the code, docs or vectors.
