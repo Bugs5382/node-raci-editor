@@ -8,7 +8,7 @@ const domTests = [
   "src/react/**/*.test.{ts,tsx}",
   "src/**/*.test.tsx",
   "tests/**/*.test.tsx",
-  "demo/**/*.test.{ts,tsx}",
+  "src/demo/**/*.test.{ts,tsx}",
 ];
 
 export default defineConfig({

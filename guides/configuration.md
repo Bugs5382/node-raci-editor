@@ -79,6 +79,9 @@ The node ids are the category ids in your `RuleSet`. The tree is used for labels
 "Inherited from ..." headings and the simulator's category menu and walk). It is not used to decide:
 `decide()` follows `ruleSet.parents`, so keep `parents` in step with the tree you pass here.
 
+The package ships no tree component: your app renders its own tree (navigation, a file browser,
+whatever fits) and passes the nodes in. The demo's tree is internal to the demo and not exported.
+
 ## Settings
 
 ```ts

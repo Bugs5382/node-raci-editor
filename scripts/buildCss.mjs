@@ -8,8 +8,11 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import process from "node:process";
 
-const entry = path.resolve("src/styles/index.css");
-const output = path.resolve("dist/styles.css");
+// Each stylesheet the package exports: the library, and the optional demo.
+const builds = [
+  { entry: "src/styles/index.css", output: "dist/styles.css" },
+  { entry: "src/demo/index.css", output: "dist/demo.css" },
+];
 const IMPORT = /^\s*@import\s+(?:url\()?["']([^"']+)["']\)?\s*;\s*$/gm;
 
 const inline = (file, seen) => {
@@ -25,8 +28,9 @@ const inline = (file, seen) => {
   });
 };
 
-{
-  const css = inline(entry, []);
+for (const build of builds) {
+  const output = path.resolve(build.output);
+  const css = inline(path.resolve(build.entry), []);
   mkdirSync(path.dirname(output), { recursive: true });
   writeFileSync(output, css.endsWith("\n") ? css : `${css}\n`);
   console.log(`buildCss: wrote ${path.relative(process.cwd(), output)} (${css.length} bytes)`);

@@ -72,6 +72,32 @@ export const App = () => {
 Type a name in the editor's search box, pick Alice, and click a cell to cycle it: not set, allow,
 deny. The simulator needs a `user` subject kind to find the person it simulates.
 
+## 🎬 Demo
+
+A complete, ready-to-render demo ships in the package as a real export: a resource tree, the editor,
+simulator and settings in tabs, the rules as JSON, a theme switch and a brand-override toggle, with
+sample data for two unrelated apps.
+
+```tsx
+import "node-raci-editor/styles.css";
+import "node-raci-editor/demo.css";
+import { RaciDemo } from "node-raci-editor/demo";
+
+export const DemoPage = () => <RaciDemo initialPreset="other" initialTheme="dark" />;
+```
+
+It is a separate subpath and stylesheet, so an app that does not import them pays nothing. To see it
+without writing any code, run the packaged static demo (plain Node, nothing is opened for you):
+
+```bash
+npx raci-editor-demo --port 5179   # prints http://127.0.0.1:5179/
+```
+
+The package ships no tree component: the host renders its own resource tree and passes the nodes
+(`ResourceNode[]` and `RuleSet.parents`) in; the demo's tree is internal to the demo.
+
+See [Demo](guides/demo.md) for the props and the sample data builders.
+
 ## ✨ Features
 
 - 🧮 **A pure `decide()`** — default deny, nearest category wins, deny beats allow, no React, no DOM.
@@ -96,6 +122,7 @@ deny. The simulator needs a `user` subject kind to find the person it simulates.
 | [Test vectors](guides/test-vectors.md)       | The shared `decide()` vectors, with a TypeScript runner and a Go sketch.                              |
 | [Extending](guides/extending.md)             | Adding an action, a subject kind or a settings preset, and layering a token override.                 |
 | [Theming](guides/theming.md)                 | Every `--raci-*` token, light and dark, and how to override them.                                     |
+| [Demo](guides/demo.md)                       | `RaciDemo`, its sample data and the `raci-editor-demo` command.                                       |
 | [Architecture](guides/architecture.md)       | The layout for contributors.                                                                          |
 
 The API reference is generated from the source with `npm run docs`.

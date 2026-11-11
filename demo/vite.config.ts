@@ -17,5 +17,6 @@ export default defineConfig({
   },
   server: { host: "127.0.0.1", port: 5179, strictPort: true, fs: { allow: [fromRoot("")] } },
   preview: { host: "127.0.0.1", port: 5179, strictPort: true },
-  build: { outDir: fromRoot("demo/dist"), emptyOutDir: true },
+  // Built into dist/ so the packed bin (raci-editor-demo) can serve it.
+  build: { outDir: fromRoot("dist/demo-site"), emptyOutDir: true },
 });

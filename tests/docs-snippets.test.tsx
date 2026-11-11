@@ -124,7 +124,17 @@ export const compact = (base: RaciConfig) => ({
 });
 // snippet:end extending
 
+// snippet:start demo
+import "@/styles/index.css";
+import "@/demo/index.css";
+import { RaciDemo } from "@/demo/index";
+
+export const DemoPage = () => <RaciDemo initialPreset="other" initialTheme="dark" />;
+// snippet:end demo
+
 const SPECIFIERS: [string, string][] = [
+  ['"@/demo/index.css"', '"node-raci-editor/demo.css"'],
+  ['"@/demo/index"', '"node-raci-editor/demo"'],
   ['"@/styles/index.css"', '"node-raci-editor/styles.css"'],
   ['"../vectors/decide.json"', '"node-raci-editor/vectors/decide.json"'],
   ['"@/index"', '"node-raci-editor"'],
@@ -162,6 +172,14 @@ describe("quick start", () => {
   });
 });
 
+describe("demo", () => {
+  it("renders the packaged demo on the chosen preset and theme", () => {
+    const { container } = render(<DemoPage />);
+    expect(screen.getByRole("columnheader", { name: "Publish" })).toBeInTheDocument();
+    expect(container.querySelector(".demo-app")).toHaveAttribute("data-theme", "dark");
+  });
+});
+
 describe("vector runner", () => {
   it("passes every shared vector", () => {
     expect(runVectors()).toEqual([]);
@@ -185,6 +203,8 @@ describe("docs", () => {
     ["quickstart", "guides/getting-started.md"],
     ["runner", "guides/test-vectors.md"],
     ["extending", "guides/extending.md"],
+    ["demo", "README.md"],
+    ["demo", "guides/demo.md"],
   ])("shows the %s snippet verbatim in %s", (name, file) => {
     expect(found[name]).toBeTruthy();
     expect(doc(file)).toContain(found[name] as string);
