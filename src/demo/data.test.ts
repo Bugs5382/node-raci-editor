@@ -49,7 +49,7 @@ describe("seed validity", () => {
           if (category !== "*") expect(ids).toContain(category);
           for (const entry of rules.entries) {
             expect(actionIds).toContain(entry.action);
-            expect(kinds).toContain(entry.subject.split(":")[0]);
+            expect([...kinds, "everyone"]).toContain(entry.subject.split(":")[0]);
           }
         }
         for (const [child, parent] of Object.entries(preset.seed.parents)) {
@@ -191,7 +191,7 @@ describe("theme storage", () => {
 describe("public builders", () => {
   it("lists both presets with their seed and first category", () => {
     const list = demoPresets();
-    expect(list.map((p) => p.id)).toEqual(["org", "other"]);
+    expect(list.map((p) => p.id)).toEqual(["org", "other", "short"]);
     expect(list[0]!.seed).toEqual(presetById("org").seed);
     expect(list[1]!.initialCategory).toBe("drafts");
   });

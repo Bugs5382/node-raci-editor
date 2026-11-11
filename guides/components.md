@@ -19,15 +19,16 @@ that root so the [theme tokens](theming.md) apply.
 
 A matrix of subjects (rows) by actions (columns) for the entries of one category.
 
-| Prop         | Type                      | Notes                                                                                         |
-| ------------ | ------------------------- | --------------------------------------------------------------------------------------------- |
-| `config`     | `RaciConfig`              | Actions, subject kinds, resources, strings.                                                   |
-| `ruleSet`    | `RuleSet`                 | The whole rule set; the editor reads the entries of `categoryId`.                             |
-| `categoryId` | `string`                  | The category being edited. Change it to move to another category.                             |
-| `onChange`   | `(next: RuleSet) => void` | Called with the new rule set after each edit.                                                 |
-| `settings`   | `Partial<RaciSettings>`   | Optional. Missing fields use `defaultSettings(config)`.                                       |
-| `readOnly`   | `boolean`                 | Optional, default `false`. Disables the cells, the checkbox and the picker, and hides Remove. |
-| `className`  | `string`                  | Optional.                                                                                     |
+| Prop         | Type                          | Notes                                                                                                             |
+| ------------ | ----------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `config`     | `RaciConfig`                  | Actions, subject kinds, resources, strings.                                                                       |
+| `ruleSet`    | `RuleSet`                     | The whole rule set; the editor reads the entries of `categoryId`.                                                 |
+| `categoryId` | `string`                      | The category being edited. Change it to move to another category.                                                 |
+| `onChange`   | `(next: RuleSet) => void`     | Called with the new rule set after each edit.                                                                     |
+| `settings`   | `Partial<RaciSettings>`       | Optional. Missing fields use `defaultSettings(config)`.                                                           |
+| `readOnly`   | `boolean`                     | Optional, default `false`. Disables the cells, the checkbox and the picker, and hides Remove.                     |
+| `headerMode` | `"full" \| "short" \| "auto"` | Optional, default `"auto"`. Which action heading is shown; see `ActionDef.shortLabel` in the configuration guide. |
+| `className`  | `string`                      | Optional.                                                                                                         |
 
 What it does:
 
@@ -77,6 +78,17 @@ Keyboard:
 | Cell       | Enter or Space cycles the state.                                                                                                         |
 | Search box | Type to search; Down and Up move through results (Down also opens the list); Enter picks the highlighted result; Escape closes the list. |
 | Dialog     | Enter or Space on the focused button; Escape cancels.                                                                                    |
+
+## Headings and groups
+
+- **`headerMode`.** `"full"` shows each action's label, `"short"` its `shortLabel`, and `"auto"` (the
+  default) shows short labels at compact density or when the grid's scroll area is narrower than 40
+  rem, and full labels otherwise. Wherever a short label is shown, the heading's accessible name is
+  the full label and its tooltip is the full label plus the description.
+- **Grouped columns.** With both `access` and `obligation` actions, the columns are grouped under two
+  headings, access first (see `ActionDef.kind` and `config.kindLabels`). Editing, sizes and keyboard
+  behaviour are the same as in an ungrouped grid.
+- **Everyone.** The built-in subject `everyone:*` shows as the string `editor.everyone`.
 
 ## Simulator
 

@@ -40,6 +40,8 @@ All optional.
   (it can be hidden with `show.category=false` once that prop is available).
 - The package area, captioned "package: rules editor, simulator, settings", with tabs: Editor (`RulesEditor`), Simulator (`Simulator`) and Settings (`SettingsPanel`), with arrow
   key navigation.
+- A "Short labels" preset that uses the headings R A M APV ACK, two column groups (Access and
+  Obligations) and the built-in Everyone subject, and a Heading labels switch (auto, full, short).
 - Two presets that differ in actions, subject kinds, tree and strings, to show nothing is hard-coded.
 - The rule set as JSON: copy, download, upload with validation, and reset to the sample.
 - A light, dark and system theme switch, and a "Brand override" toggle that only changes tokens.

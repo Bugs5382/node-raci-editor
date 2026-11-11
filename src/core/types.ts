@@ -55,8 +55,15 @@ export interface RuleSet {
 export interface ActionDef {
   id: string;
   label?: string;
+  /** A short header for narrow or compact grids (for example one to three letters). Falls back to `label`. */
+  shortLabel?: string;
   description?: string;
   implies?: string[];
+  /**
+   * `"access"` (default) states what a subject may do; `"obligation"` states what a subject must
+   * do. The editor groups the columns by kind under two headings when both kinds are present.
+   */
+  kind?: "access" | "obligation";
 }
 
 /** The person asking: every subject string that matches them (own id, groups, roles). */
@@ -160,6 +167,8 @@ export interface RaciConfig {
   resources: ResourceNode[];
   /** Overrides for any UI string, by key; see the configuration guide for the keys. */
   strings?: Partial<Record<string, string>>;
+  /** The headings of the two column groups. Default: the strings `editor.group.access` and `editor.group.obligation`. */
+  kindLabels?: { access?: string; obligation?: string };
 }
 
 /** Display and behaviour settings the SettingsPanel edits; the editor and simulator read them. */

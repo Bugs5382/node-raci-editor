@@ -21,8 +21,10 @@ object changes identity.
 interface ActionDef {
   id: string;
   label?: string;
+  shortLabel?: string;
   description?: string;
   implies?: string[];
+  kind?: "access" | "obligation";
 }
 ```
 
@@ -34,6 +36,16 @@ interface ActionDef {
 - The order of the `actions` array is the default column order. The settings panel can reorder and
   hide them per user.
 - Action ids that appear in `implies` but not in the list match only by id.
+- `shortLabel` is a short column heading (for example `R`, `APV`). Whether it is shown is the
+  editor's `headerMode` (`full`, `short` or `auto`, the default: short at compact density or when the
+  grid is narrow). The full label is always the heading's tooltip and its accessible name, and an
+  action with no `shortLabel` shows its label in every mode.
+- `kind` is `"access"` (default, what a subject may do) or `"obligation"` (what a subject must do).
+  When both kinds are present the editor groups the columns, access first, under two headings. The
+  headings come from `config.kindLabels` (`{ access, obligation }`) or the strings
+  `editor.group.access` ("Access") and `editor.group.obligation` ("Obligations"). One kind alone
+  draws no heading row.
+- The built-in subject `everyone:*` is labelled by the string `editor.everyone` ("Everyone").
 
 ## Subject kinds
 

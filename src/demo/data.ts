@@ -30,6 +30,8 @@ export interface Preset {
   seed: RuleSet;
   /** Category selected first. */
   initialCategory: string;
+  /** Heading labels shown first; the demo switch can change it. Default `"auto"`. */
+  headerMode?: "full" | "short" | "auto";
 }
 
 /** Pretend network latency for subject search, in milliseconds. */
@@ -284,6 +286,94 @@ const docsSeed: RuleSet = {
   },
 };
 
+const shortTree: ResourceNode[] = [
+  {
+    id: "policies",
+    label: "Policies",
+    children: [
+      {
+        id: "it",
+        label: "IT",
+        children: [
+          { id: "access", label: "Door entry" },
+          { id: "networks", label: "Networks" },
+        ],
+      },
+      {
+        id: "hr",
+        label: "People",
+        children: [
+          { id: "onboarding", label: "Onboarding" },
+          { id: "leave", label: "Leave" },
+        ],
+      },
+      {
+        id: "finance",
+        label: "Finance",
+        children: [
+          { id: "expenses", label: "Expenses" },
+          { id: "audit", label: "Audit" },
+        ],
+      },
+    ],
+  },
+];
+
+const shortPeople: SubjectOption[] = [
+  { id: "user:ines", label: "Ines Moreau", detail: "ines@example.test" },
+  { id: "user:omar", label: "Omar Haddad", detail: "omar@example.test" },
+  { id: "user:tess", label: "Tess Walker", detail: "tess@example.test" },
+];
+const shortTeams: SubjectOption[] = [
+  { id: "group:secops", label: "Security operations" },
+  { id: "group:finance", label: "Finance team" },
+];
+
+/** Short headings (R A M APV ACK) and two column groups, with the built-in Everyone subject. */
+const shortConfig: RaciConfig = {
+  actions: [
+    { id: "r", label: "Read", shortLabel: "R", description: "See the document" },
+    { id: "a", label: "Author", shortLabel: "A", description: "Create and change", implies: ["r"] },
+    {
+      id: "m",
+      label: "Manage",
+      shortLabel: "M",
+      description: "Change who has what",
+      implies: ["a", "r"],
+    },
+    { id: "apv", label: "Approve", shortLabel: "APV", kind: "obligation", implies: ["r"] },
+    { id: "ack", label: "Acknowledge", shortLabel: "ACK", kind: "obligation" },
+  ],
+  subjectKinds: [
+    memoryKind("user", "Person", shortPeople),
+    memoryKind("group", "Team", shortTeams),
+  ],
+  resources: shortTree,
+  kindLabels: { access: "Access", obligation: "Obligations" },
+};
+
+const shortSeed: RuleSet = {
+  parents: parentsOf(shortTree),
+  categories: {
+    policies: {
+      entries: [
+        { subject: "everyone:*", action: "r", effect: "allow" },
+        { subject: "everyone:*", action: "ack", effect: "allow" },
+      ],
+    },
+    it: { entries: [{ subject: "group:secops", action: "m", effect: "allow" }] },
+    access: {
+      entries: [
+        { subject: "user:ines", action: "r", effect: "allow" },
+        { subject: "user:ines", action: "a", effect: "allow" },
+        { subject: "user:ines", action: "ack", effect: "deny" },
+        { subject: "group:secops", action: "apv", effect: "allow" },
+      ],
+    },
+    finance: { entries: [{ subject: "group:finance", action: "a", effect: "allow" }] },
+  },
+};
+
 export const presets: Preset[] = [
   {
     id: "org",
@@ -298,6 +388,14 @@ export const presets: Preset[] = [
     config: docsConfig,
     seed: docsSeed,
     initialCategory: "drafts",
+  },
+  {
+    id: "short",
+    label: "Short labels",
+    config: shortConfig,
+    seed: shortSeed,
+    initialCategory: "access",
+    headerMode: "short",
   },
 ];
 

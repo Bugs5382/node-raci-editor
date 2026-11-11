@@ -249,3 +249,33 @@ describe("props", () => {
     expect(document.querySelectorAll(".raci-simulator")).toHaveLength(1);
   });
 });
+
+describe("the short-labels preset", () => {
+  it("shows R A M APV ACK under two group headings, with the full names as names", async () => {
+    const user = userEvent.setup();
+    render(<RaciDemo />);
+    await user.selectOptions(screen.getByRole("combobox", { name: "Preset" }), "short");
+    const heads = Array.from(
+      document.querySelectorAll<HTMLElement>("thead tr:last-child th[scope=col]"),
+    ).map((th) => th.textContent?.trim());
+    expect(heads.slice(1, 6)).toEqual(["R", "A", "M", "APV", "ACK"]);
+    expect(screen.getAllByRole("columnheader", { name: "Acknowledge" })[0]).toHaveTextContent(
+      "ACK",
+    );
+    expect(screen.getByRole("columnheader", { name: "Access" })).toBeInTheDocument();
+    expect(screen.getByRole("columnheader", { name: "Obligations" })).toBeInTheDocument();
+    expect(screen.getByRole("rowheader", { name: "Everyone" })).toBeInTheDocument();
+  });
+
+  it("has a switch for the heading labels", async () => {
+    const user = userEvent.setup();
+    render(<RaciDemo initialPreset="short" />);
+    const group = screen.getByRole("group", { name: "Heading labels" });
+    expect(group.querySelectorAll("button")).toHaveLength(3);
+    await user.click(screen.getByRole("button", { name: "full" }));
+    const heads = Array.from(
+      document.querySelectorAll<HTMLElement>("thead tr:last-child th[scope=col]"),
+    ).map((th) => th.textContent?.trim());
+    expect(heads.slice(1, 6)).toEqual(["Read", "Author", "Manage", "Approve", "Acknowledge"]);
+  });
+});

@@ -47,6 +47,15 @@ import {
 import { SubjectPicker } from "@/react/editor/SubjectPicker";
 import { editorStrings } from "@/react/editor/strings";
 
+/** How action headings read: the full label, the short label, or short when the grid is narrow or compact. */
+export type HeaderMode = "full" | "short" | "auto";
+
+/** Below this width of the grid's scroll area, `auto` switches to short labels. */
+const NARROW_PX = 640;
+
+/** The built-in subject every asker has. */
+const EVERYONE_SUBJECT = "everyone:*";
+
 /** Props of `RulesEditor`. */
 export interface RulesEditorProps {
   /** The host configuration. */
@@ -61,6 +70,12 @@ export interface RulesEditorProps {
   settings?: Partial<RaciSettings>;
   /** When true, nothing can be changed. */
   readOnly?: boolean;
+  /**
+   * Action headings: `"full"`, `"short"` (uses `ActionDef.shortLabel`) or `"auto"` (default: short at
+   * compact density or when the grid is narrow). The full label is always the heading's tooltip
+   * and accessible name.
+   */
+  headerMode?: HeaderMode;
   /** Extra class on the root element. */
   className?: string;
 }
@@ -106,10 +121,50 @@ export const RulesEditor = (props: RulesEditorProps) => {
   orderRef.current[categoryId] = rows;
 
   const visible = new Set(settings.visibleActions);
-  const columns = config.actions.filter((a) => visible.has(a.id));
+  const visibleColumns = config.actions.filter((a) => visible.has(a.id));
+  const kindOf = (a: ActionDef): "access" | "obligation" => a.kind ?? "access";
+  // Access columns first, then obligations, each in the host's order, when both kinds are present.
+  const grouped = new Set(visibleColumns.map(kindOf)).size > 1;
+  const columns = grouped
+    ? [
+        ...visibleColumns.filter((a) => kindOf(a) === "access"),
+        ...visibleColumns.filter((a) => kindOf(a) === "obligation"),
+      ]
+    : visibleColumns;
+  const groupHeadings = (["access", "obligation"] as const)
+    .map((kind) => ({
+      kind,
+      count: columns.filter((a) => kindOf(a) === kind).length,
+      label: config.kindLabels?.[kind] ?? t(`editor.group.${kind}`),
+    }))
+    .filter((g) => g.count > 0);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [narrow, setNarrow] = useState(false);
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (typeof ResizeObserver === "undefined" || !el) return;
+    const observer = new ResizeObserver((entries) => {
+      const width = entries[0]?.contentRect.width;
+      if (width !== undefined) setNarrow(width < NARROW_PX);
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+  const headerMode = props.headerMode ?? "auto";
+  const short =
+    headerMode === "short" || (headerMode === "auto" && (settings.density === "compact" || narrow));
+  const headerText = (a: ActionDef): string =>
+    short && a.shortLabel ? a.shortLabel : actionName(a);
+  const headerTitle = (a: ActionDef): string | undefined =>
+    short && a.shortLabel
+      ? a.description
+        ? `${actionName(a)}: ${a.description}`
+        : actionName(a)
+      : a.description;
   const kinds = config.subjectKinds.filter((k) => settings.enabledSubjectKinds.includes(k.kind));
 
   const subjectLabel = (subject: string): string => {
+    if (subject === EVERYONE_SUBJECT) return t("editor.everyone");
     const kind = config.subjectKinds.find((k) => subject.startsWith(`${k.kind}:`));
     return kind?.resolve?.(subject) ?? labels[subject] ?? subject;
   };
@@ -193,16 +248,32 @@ export const RulesEditor = (props: RulesEditorProps) => {
         </span>
       </div>
 
-      <div className="raci-editor__scroll">
+      <div className="raci-editor__scroll" ref={scrollRef}>
         <table className="raci-table">
           <thead>
+            {grouped && (
+              <tr className="raci-table__groups">
+                <td />
+                {groupHeadings.map((g) => (
+                  <th scope="colgroup" colSpan={g.count} key={g.kind} className="raci-table__group">
+                    {g.label}
+                  </th>
+                ))}
+                {!readOnly && <td />}
+              </tr>
+            )}
             <tr>
               <th scope="col" className="raci-table__subject">
                 {t("editor.subject")}
               </th>
               {columns.map((a) => (
-                <th scope="col" key={a.id} title={a.description}>
-                  {actionName(a)}
+                <th
+                  scope="col"
+                  key={a.id}
+                  title={headerTitle(a)}
+                  aria-label={short && a.shortLabel ? actionName(a) : undefined}
+                >
+                  {headerText(a)}
                 </th>
               ))}
               {!readOnly && (
@@ -323,6 +394,7 @@ export const RulesEditor = (props: RulesEditorProps) => {
           subjectLabel={subjectLabel}
           stateWord={stateWord}
           stateText={stateText}
+          headerText={headerText}
           t={t}
         />
       ))}
@@ -355,11 +427,13 @@ interface InheritedTableProps {
   subjectLabel: (subject: string) => string;
   stateWord: (effect: Effect | undefined) => string;
   stateText: (effect: Effect | undefined) => string;
+  headerText: (a: ActionDef) => string;
   t: (key: string, vars?: Record<string, string | number>) => string;
 }
 
 const InheritedTable = (props: InheritedTableProps) => {
-  const { title, note, entries, columns, subjectLabel, stateWord, stateText, t } = props;
+  const { title, note, entries, columns, subjectLabel, stateWord, stateText, headerText, t } =
+    props;
   return (
     <div className="raci-editor__inherited">
       <h3 className="raci-editor__inherited-title">{title}</h3>
@@ -373,8 +447,12 @@ const InheritedTable = (props: InheritedTableProps) => {
                 {t("editor.subject")}
               </th>
               {columns.map((a) => (
-                <th scope="col" key={a.id}>
-                  {actionName(a)}
+                <th
+                  scope="col"
+                  key={a.id}
+                  aria-label={headerText(a) !== actionName(a) ? actionName(a) : undefined}
+                >
+                  {headerText(a)}
                 </th>
               ))}
             </tr>

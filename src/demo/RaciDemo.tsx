@@ -82,6 +82,7 @@ const Workbench = ({ presetId }: { presetId: string }) => {
   const [categoryId, setCategoryId] = useState(preset.initialCategory);
   const [tab, setTab] = useState<TabId>("editor");
   const [variant, setVariant] = useState<SimulatorVariant>("list");
+  const [headings, setHeadings] = useState<"auto" | "full" | "short">(preset.headerMode ?? "auto");
   const [settings, setSettings] = useState<RaciSettings>(() => defaultSettings(config));
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -171,13 +172,29 @@ const Workbench = ({ presetId }: { presetId: string }) => {
         </div>
         <div role="tabpanel" id={panelId} aria-labelledby={tabId(tab)} className="demo-panel">
           {tab === "editor" && (
-            <RulesEditor
-              config={config}
-              ruleSet={ruleSet}
-              categoryId={categoryId}
-              onChange={setRuleSet}
-              settings={settings}
-            />
+            <>
+              <div className="demo-actions" role="group" aria-label="Heading labels">
+                {(["auto", "full", "short"] as const).map((v) => (
+                  <button
+                    key={v}
+                    type="button"
+                    className="demo-button"
+                    aria-pressed={headings === v}
+                    onClick={() => setHeadings(v)}
+                  >
+                    {v}
+                  </button>
+                ))}
+              </div>
+              <RulesEditor
+                headerMode={headings}
+                config={config}
+                ruleSet={ruleSet}
+                categoryId={categoryId}
+                onChange={setRuleSet}
+                settings={settings}
+              />
+            </>
           )}
           {tab === "simulator" && (
             <>
