@@ -424,6 +424,91 @@ const shortSeed: RuleSet = {
   },
 };
 
+const deskTree: ResourceNode[] = [
+  {
+    id: "support",
+    label: "Support",
+    children: [
+      {
+        id: "tickets",
+        label: "Tickets",
+        children: [
+          { id: "escalated", label: "Escalated" },
+          { id: "billing", label: "Billing" },
+          { id: "spam", label: "Spam" },
+        ],
+      },
+      {
+        id: "kb",
+        label: "Knowledge base",
+        children: [
+          { id: "public", label: "Public articles" },
+          { id: "internal", label: "Internal notes" },
+        ],
+      },
+      { id: "desk-reports", label: "Reports" },
+      { id: "desk-settings", label: "Settings" },
+    ],
+  },
+];
+
+const deskPeople: SubjectOption[] = [
+  { id: "user:lena", label: "Lena Berg", detail: "lena@example.test" },
+  { id: "user:omar", label: "Omar Haddad", detail: "omar@example.test" },
+  { id: "user:ravi", label: "Ravi Patel", detail: "ravi@example.test" },
+  { id: "user:tess", label: "Tess Walker", detail: "tess@example.test" },
+  { id: "user:kim", label: "Kim Sato", detail: "kim@example.test" },
+];
+const deskTeams: SubjectOption[] = [
+  { id: "group:agents", label: "Agents" },
+  { id: "group:leads", label: "Team leads" },
+  { id: "group:vendors", label: "Vendors" },
+];
+
+/** The ordered model with its default owner kind (people). */
+const deskConfig: RaciConfig = {
+  actions: [
+    { id: "read", label: "Read", description: "See the ticket" },
+    { id: "reply", label: "Reply", description: "Answer the customer", implies: ["read"] },
+    { id: "close", label: "Close", description: "Resolve the ticket", implies: ["reply", "read"] },
+  ],
+  subjectKinds: [memoryKind("user", "Person", deskPeople), memoryKind("group", "Team", deskTeams)],
+  resources: deskTree,
+};
+
+// Row order is the rule: Ravi's red cells sit above his team's green ones, so they win for him.
+const deskSeed: RuleSet = {
+  model: "ordered",
+  parents: parentsOf(deskTree),
+  categories: {
+    support: {
+      owners: ["user:lena"],
+      entries: [{ subject: "everyone:*", action: "read", effect: "allow" }],
+    },
+    tickets: {
+      entries: [
+        { subject: "group:agents", action: "read", effect: "allow" },
+        { subject: "group:agents", action: "reply", effect: "allow" },
+      ],
+    },
+    escalated: {
+      entries: [
+        { subject: "user:ravi", action: "read", effect: "deny" },
+        { subject: "user:ravi", action: "reply", effect: "deny" },
+        { subject: "group:leads", action: "close", effect: "allow" },
+        { subject: "group:leads", action: "reply", effect: "allow" },
+        { subject: "group:agents", action: "read", effect: "allow" },
+        { subject: "group:agents", action: "reply", effect: "allow" },
+        { subject: "group:vendors", action: "read", effect: "deny" },
+      ],
+    },
+    billing: {
+      owners: ["user:omar"],
+      entries: [{ subject: "group:leads", action: "close", effect: "allow" }],
+    },
+  },
+};
+
 export const presets: Preset[] = [
   {
     id: "org",
@@ -446,6 +531,13 @@ export const presets: Preset[] = [
     seed: shortSeed,
     initialCategory: "access",
     headerMode: "short",
+  },
+  {
+    id: "ordered",
+    label: "Ordered rules with owners",
+    config: deskConfig,
+    seed: deskSeed,
+    initialCategory: "escalated",
   },
 ];
 

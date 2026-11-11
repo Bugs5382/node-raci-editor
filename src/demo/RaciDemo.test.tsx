@@ -342,6 +342,19 @@ describe("the short-labels preset", () => {
   });
 });
 
+describe("the ordered rules preset", () => {
+  it("shows numbered rows, inherited rows, a legend and the owners", async () => {
+    const user = userEvent.setup();
+    render(<RaciDemo />);
+    await user.selectOptions(screen.getByRole("combobox", { name: "Preset" }), "ordered");
+    expect(screen.getByRole("columnheader", { name: "#" })).toBeInTheDocument();
+    expect(screen.getByRole("group", { name: "Owners" })).toHaveTextContent("Lena Berg");
+    expect(screen.getByRole("list", { name: "Legend" })).toBeInTheDocument();
+    expect(document.querySelectorAll('tr[data-row="inherited"]').length).toBeGreaterThan(0);
+    expect(screen.queryByRole("checkbox", { name: "Stop inheriting" })).toBeNull();
+  });
+});
+
 describe("the short-labels preset on the ordered model", () => {
   it("explains a site administrator in the simulator", async () => {
     const user = userEvent.setup();

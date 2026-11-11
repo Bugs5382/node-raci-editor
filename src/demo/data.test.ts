@@ -124,6 +124,26 @@ describe("seed validity", () => {
     expect(ask("access", "apv", "user:tess").allowed).toBe(false);
   });
 
+  it("runs the ordered preset on the ordered model, where the order of rows decides", () => {
+    const { config, seed } = presetById("ordered");
+    expect(seed.model).toBe("ordered");
+    const ask = (category: string, action: string, ...subjects: string[]) =>
+      decide({
+        ruleSet: seed,
+        actions: config.actions,
+        person: person(...subjects),
+        category,
+        action,
+      });
+    // Ravi's own red rows sit above his team's green ones; any other agent reads.
+    expect(ask("escalated", "read", "user:ravi", "group:agents").allowed).toBe(false);
+    expect(ask("escalated", "read", "user:tess", "group:agents").allowed).toBe(true);
+    // The owner of Support, inherited into Escalated, is not affected by that red row.
+    expect(ask("escalated", "read", "user:lena")).toMatchObject({ allowed: true, reason: "owner" });
+    // Everyone reads in Support; the row is inherited into Escalated as its last row.
+    expect(ask("escalated", "read", "user:kim").allowed).toBe(true);
+  });
+
   it("falls back to the first preset for an unknown id", () => {
     expect(presetById("nope")).toBe(presets[0]);
   });
@@ -226,7 +246,7 @@ describe("theme storage", () => {
 describe("public builders", () => {
   it("lists both presets with their seed and first category", () => {
     const list = demoPresets();
-    expect(list.map((p) => p.id)).toEqual(["org", "other", "short"]);
+    expect(list.map((p) => p.id)).toEqual(["org", "other", "short", "ordered"]);
     expect(list[0]!.seed).toEqual(presetById("org").seed);
     expect(list[1]!.initialCategory).toBe("drafts");
   });
