@@ -14,7 +14,7 @@ interface Block {
 }
 
 /** Minimal parser: top-level rules and one level of at-rule nesting. */
-function parse(src: string): Block[] {
+const parse = (src: string): Block[] => {
   const out: Block[] = [];
   const walk = (text: string, media: string): void => {
     let i = 0;
@@ -35,7 +35,7 @@ function parse(src: string): Block[] {
       } else {
         const decls: Tokens = {};
         for (const m of body.matchAll(/(--[\w-]+)\s*:\s*([^;]+);/g)) {
-          decls[m[1]] = m[2].trim();
+          decls[m[1] as string] = (m[2] as string).trim();
         }
         out.push({ media, selector, decls });
       }
@@ -44,7 +44,7 @@ function parse(src: string): Block[] {
   };
   walk(src, "");
   return out;
-}
+};
 
 const blocks = parse(css);
 const find = (media: string, selector: string): Block => {
@@ -67,7 +67,7 @@ const resolve = (tokens: Tokens, name: string, seen = new Set<string>()): string
   const v = tokens[name];
   if (v === undefined) throw new Error(`undefined token ${name}`);
   const ref = /^var\((--[\w-]+)\)$/.exec(v);
-  return ref ? resolve(tokens, ref[1], seen) : v;
+  return ref ? resolve(tokens, ref[1] as string, seen) : v;
 };
 
 const themes: Record<string, Tokens> = {
@@ -76,20 +76,20 @@ const themes: Record<string, Tokens> = {
   "dark (attribute)": { ...light, ...darkAttr },
 };
 
-function luminance(hex: string): number {
+const luminance = (hex: string): number => {
   const m = /^#([0-9a-f]{6})$/i.exec(hex);
   if (!m) throw new Error(`not a 6-digit hex colour: ${hex}`);
   const [r, g, b] = [0, 2, 4].map((k) => {
-    const c = parseInt(m[1].slice(k, k + 2), 16) / 255;
+    const c = parseInt((m[1] as string).slice(k, k + 2), 16) / 255;
     return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
   });
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
-}
+  return 0.2126 * (r as number) + 0.7152 * (g as number) + 0.0722 * (b as number);
+};
 
-function contrast(a: string, b: string): number {
+const contrast = (a: string, b: string): number => {
   const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x);
-  return (hi + 0.05) / (lo + 0.05);
-}
+  return ((hi as number) + 0.05) / ((lo as number) + 0.05);
+};
 
 /** [foreground, background, minimum ratio] */
 const pairs: Array<[string, string, number]> = [
