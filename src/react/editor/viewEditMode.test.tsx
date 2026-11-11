@@ -278,7 +278,7 @@ describe("view mode with the cell variants", () => {
       />,
     );
     expect(seen.length).toBeGreaterThan(0);
-    expect(seen.every((r) => r)).toBe(true);
+    expect(seen.every(Boolean)).toBe(true);
     seen.length = 0;
     await user.click(screen.getByRole("button", { name: "Edit" }));
     expect(seen.every((r) => !r)).toBe(true);
