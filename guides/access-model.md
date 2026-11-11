@@ -128,3 +128,12 @@ const decision = decide({
 ```
 
 `decide()` is pure: same input, same output, no I/O.
+
+## Models
+
+The rules above are the `"nearest"` model, the built-in default. `decide()` runs it unless the call
+names another model (`decide(input, { model: "id" })`) or the rule set does (`RuleSet.model`);
+`"nearest"` itself ignores that field. Another model registers once with `registerModel(model)`,
+a `RaciModel` with an `id`, `capabilities`, `evaluate()` and a few presentation hooks, and is found
+by `getModel(id)` or `listModels()`. An unknown id throws. A model only describes how rules read and
+preview; the host enforces. The design for more models is in [Pluggable rule models](models-design.md).

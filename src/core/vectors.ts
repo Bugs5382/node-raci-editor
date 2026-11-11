@@ -52,6 +52,8 @@ export interface VectorCase {
 
 export interface VectorFile {
   version: 1;
+  /** Id of the rule model the file's cases belong to. Absent means `"nearest"`. */
+  model?: string;
   actions: ActionDef[];
   cases: VectorCase[];
 }

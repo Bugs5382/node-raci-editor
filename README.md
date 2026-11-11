@@ -170,6 +170,7 @@ The host app owns its resources and checks requests itself: the resource tree an
 - 🌳 **Inheritance you can see** — inherited entries show read-only in the editor, and the simulator prints the walk it took.
 - 🪟 **Three simulator views** — the default list, a `boxes` grid with a per-category walk, and `strips`; plus a results slot and host-side `evaluate`.
 - 🛑 **Stop inheriting** — per category, plus a `"*"` category for rules that apply everywhere.
+- 🔌 **Pluggable rule models** — `nearest` is the default; other models register through `registerModel` and are picked with `decide(input, { model })` or `RuleSet.model`.
 - 🧪 **Shared test vectors** — one JSON file that the TypeScript package, a mock and a Go implementation all run.
 - 🗣️ **Your wording** — every string is a key you can override through `config.strings`.
 - ♿ **Keyboard and screen reader friendly** — real buttons, tables and comboboxes; colour is never the only signal.

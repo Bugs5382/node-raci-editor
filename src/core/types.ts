@@ -47,6 +47,8 @@ export interface RuleSet {
   categories: Record<string, CategoryRules>;
   /** child category id -> parent category id */
   parents: Record<string, string>;
+  /** Id of the rule model that reads these rules. Absent means `"nearest"`. */
+  model?: string;
 }
 
 /** An action the host defines. `implies` lists the actions it includes (one level; closure is computed). */
@@ -101,6 +103,8 @@ export interface TraceStep {
 export interface DecideOptions {
   /** Add `trace` to the decision. Verdicts are identical either way. */
   trace?: boolean;
+  /** Id of a registered rule model. Wins over `ruleSet.model`; the default is `"nearest"`. */
+  model?: string;
 }
 
 /** The result of `decide()`. */
