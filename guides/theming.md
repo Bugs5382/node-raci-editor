@@ -19,12 +19,21 @@ components add it to their own root, so a host rarely needs to).
 
 - Light is the default.
 - Dark applies automatically when the system prefers it
-  (`prefers-color-scheme: dark`), unless the root has `data-theme="light"`.
-- `data-theme="dark"` on the root forces dark regardless of the system.
+  (`prefers-color-scheme: dark`), unless `data-theme="light"` is set on the
+  root or on any ancestor.
+- `data-theme="dark"` forces dark regardless of the system. Set it on a
+  `.raci-root` or on any ancestor (`<body>`, a host app wrapper), because
+  every component renders its own `.raci-root`.
+- The nearest explicit `data-theme` wins: a `.raci-root[data-theme="light"]`
+  inside a `data-theme="dark"` ancestor is light. (A light ancestor nested
+  inside a dark ancestor is not resolved by nearness; set the attribute on the
+  `.raci-root` itself in that case.)
 - `prefers-reduced-motion: reduce` sets `--raci-duration` to `0ms`.
 
-All token rules use `:where(.raci-root)`, which has zero specificity, so any
-host rule that targets `.raci-root` or an ancestor wins without `!important`.
+All theme rules use `:where(...)`, which has zero specificity, so any host
+rule that targets `.raci-root` wins without `!important`. The `:not()` with a
+selector list used for the system-dark rule needs a current browser
+(Chrome/Edge 88+, Firefox 84+, Safari 9+).
 
 ## Tokens
 
@@ -127,13 +136,17 @@ Token names follow the pattern `--raci-allow-bg`, `--raci-deny-fg`,
 
 ## Overriding
 
-Override tokens in a host stylesheet scoped to `.raci-root` or any ancestor.
-Load it after the package CSS, or rely on the zero-specificity defaults.
+Every `.raci-root` re-declares all tokens, so a token set on an ancestor
+(`body`, `.my-app`, `:root`) is shadowed and has no effect on the components.
+Override tokens on `.raci-root` itself, with any selector that has specificity
+(the shipped rules have none, so even `.raci-root { ... }` wins regardless of
+load order). Scope it with an ancestor class to limit it to part of the page.
 
-Brand override (both themes keep working because you only change what you set):
+Brand override. Because it also beats the shipped dark values, a dark accent
+needs its own rule (below):
 
 ```css
-.raci-root {
+.my-app .raci-root {
   --raci-accent: #0f766e;
   --raci-accent-hover: #115e59;
   --raci-focus-ring: #0f766e;
@@ -142,20 +155,34 @@ Brand override (both themes keep working because you only change what you set):
 }
 ```
 
-To brand dark separately, add a second rule:
+To brand dark separately, cover both ways dark can apply (the attribute on
+the root or an ancestor, and the system preference):
 
 ```css
-.raci-root[data-theme="dark"] {
+.my-app .raci-root[data-theme="dark"],
+.my-app[data-theme="dark"] .raci-root {
   --raci-accent: #5eead4;
   --raci-text-on-accent: #042f2e;
 }
+
+@media (prefers-color-scheme: dark) {
+  .my-app .raci-root:not([data-theme="light"], [data-theme="light"] .raci-root) {
+    --raci-accent: #5eead4;
+    --raci-text-on-accent: #042f2e;
+  }
+}
 ```
 
-Force dark (or light) regardless of the system setting:
+Force dark (or light) regardless of the system setting, from an ancestor:
 
 ```html
-<div class="raci-root" data-theme="dark">...</div>
+<div class="my-app" data-theme="dark">
+  <!-- every component inside renders dark -->
+</div>
 ```
+
+or on a root directly: `<div class="raci-root" data-theme="dark">...</div>`.
+Remove the attribute to follow the system preference again.
 
 If you override a foreground or background, keep the pairs at WCAG AA: 4.5:1
 for text, 3:1 for the focus ring and strong borders. The package test

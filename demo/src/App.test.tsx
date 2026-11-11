@@ -13,13 +13,13 @@ beforeEach(() => {
 });
 
 describe("theme and brand", () => {
-  it("sets data-theme on the wrapper and inner roots, and persists it", async () => {
+  it("sets data-theme on the wrapper only, and persists it", async () => {
     const user = userEvent.setup();
     render(<App />);
     expect(appRoot()).not.toHaveAttribute("data-theme");
     await user.click(screen.getByRole("button", { name: "Dark" }));
     expect(appRoot()).toHaveAttribute("data-theme", "dark");
-    expect(document.querySelector(".raci-editor")).toHaveAttribute("data-theme", "dark");
+    expect(document.querySelector(".raci-editor")).not.toHaveAttribute("data-theme");
     expect(window.localStorage.getItem("raci-demo-theme")).toBe("dark");
     await user.click(screen.getByRole("button", { name: "Light" }));
     expect(appRoot()).toHaveAttribute("data-theme", "light");

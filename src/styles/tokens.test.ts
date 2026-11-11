@@ -47,6 +47,10 @@ const parse = (src: string): Block[] => {
 };
 
 const blocks = parse(css);
+
+const MEDIA_SEL = ':where(.raci-root:not([data-theme="light"], [data-theme="light"] .raci-root))';
+const DARK_SEL = ':where(.raci-root[data-theme="dark"], [data-theme="dark"] .raci-root)';
+const LIGHT_SEL = ':where(.raci-root[data-theme="light"])';
 const find = (media: string, selector: string): Block => {
   const b = blocks.find((x) => x.media === media && x.selector === selector);
   if (!b) throw new Error(`missing block: ${media} ${selector}`);
@@ -54,11 +58,9 @@ const find = (media: string, selector: string): Block => {
 };
 
 const light = find("", ":where(.raci-root)").decls;
-const darkMedia = find(
-  "@media (prefers-color-scheme: dark)",
-  ':where(.raci-root:not([data-theme="light"]))',
-).decls;
-const darkAttr = find("", ':where(.raci-root[data-theme="dark"])').decls;
+const darkMedia = find("@media (prefers-color-scheme: dark)", MEDIA_SEL).decls;
+const darkAttr = find("", DARK_SEL).decls;
+const lightAttr = find("", LIGHT_SEL).decls;
 const reduced = find("@media (prefers-reduced-motion: reduce)", ":where(.raci-root)").decls;
 
 const resolve = (tokens: Tokens, name: string, seen = new Set<string>()): string => {
@@ -74,6 +76,7 @@ const themes: Record<string, Tokens> = {
   light,
   "dark (media)": { ...light, ...darkMedia },
   "dark (attribute)": { ...light, ...darkAttr },
+  "light (attribute over dark)": { ...light, ...darkAttr, ...lightAttr },
 };
 
 const luminance = (hex: string): number => {
@@ -184,6 +187,29 @@ describe("token coverage", () => {
       "control-height",
     ];
     for (const n of need) expect(light).toHaveProperty([`--raci-${n}`]);
+  });
+
+  it("honours data-theme on an ancestor as well as on the root", () => {
+    expect(DARK_SEL).toContain('[data-theme="dark"] .raci-root');
+    expect(MEDIA_SEL).toContain('[data-theme="light"] .raci-root');
+    expect(blocks.find((b) => b.selector === DARK_SEL)).toBeDefined();
+  });
+
+  it("keeps every theme selector at zero specificity", () => {
+    for (const b of blocks) expect(b.selector.startsWith(":where("), b.selector).toBe(true);
+  });
+
+  it("light attribute rule repeats the light values", () => {
+    const darkNames = Object.keys(darkAttr);
+    expect(Object.keys(lightAttr).sort()).toEqual(darkNames.sort());
+    for (const name of darkNames) expect(lightAttr[name], name).toBe(light[name]);
+  });
+
+  it("orders light attribute last so the nearest explicit theme wins", () => {
+    const at = (sel: string): number => blocks.findIndex((b) => b.selector === sel);
+    expect(at(LIGHT_SEL)).toBeGreaterThan(at(DARK_SEL));
+    expect(at(LIGHT_SEL)).toBeGreaterThan(at(MEDIA_SEL));
+    expect(at(LIGHT_SEL)).toBe(blocks.length - 2); // only the reduced-motion block follows
   });
 
   it("reduced motion zeroes the duration", () => {
