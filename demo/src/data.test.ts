@@ -65,7 +65,7 @@ describe("seed validity", () => {
   it("gives the second preset different actions and strings", () => {
     const other = presetById("other");
     expect(other.config.actions.map((a) => a.id)).toEqual(["view", "edit", "publish"]);
-    expect(other.config.strings?.["editor.title"]).toBe("Permissions");
+    expect(other.config.strings?.["editor.title"]).toBe("Permissions for {category}");
   });
 });
 

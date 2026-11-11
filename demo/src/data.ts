@@ -233,7 +233,7 @@ const docsConfig: RaciConfig = {
   ],
   resources: docsTree,
   strings: {
-    "editor.title": "Permissions",
+    "editor.title": "Permissions for {category}",
     "editor.subject": "Who",
     "editor.stopInheriting": "Do not inherit",
     "editor.empty": "Nobody has permissions here yet.",
