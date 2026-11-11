@@ -95,3 +95,28 @@ export interface RaciConfig {
   resources: ResourceNode[];
   strings?: Partial<Record<string, string>>;
 }
+
+/** Display and behaviour settings the SettingsPanel edits; the editor and simulator read them. */
+export interface RaciSettings {
+  /** Action ids in column order, and which are shown. */
+  visibleActions: string[];
+  /** Subject kinds offered in the picker (kind ids). */
+  enabledSubjectKinds: string[];
+  /** Show entries inherited from ancestor categories, read-only, in the editor. */
+  showInherited: boolean;
+  /** Ask for confirmation before saving a Deny. */
+  confirmDeny: boolean;
+  /** Row density. */
+  density: "comfortable" | "compact";
+  /** Initial value of stopInheriting for a category that has none. */
+  defaultStopInheriting: boolean;
+}
+
+export const defaultSettings = (config: Pick<RaciConfig, "actions" | "subjectKinds">): RaciSettings => ({
+  visibleActions: config.actions.map((a) => a.id),
+  enabledSubjectKinds: config.subjectKinds.map((k) => k.kind),
+  showInherited: true,
+  confirmDeny: false,
+  density: "comfortable",
+  defaultStopInheriting: false,
+});
