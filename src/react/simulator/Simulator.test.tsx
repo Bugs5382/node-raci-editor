@@ -255,6 +255,31 @@ describe("Simulator", () => {
     expect(await screen.findByText("No matches")).toBeInTheDocument();
   });
 
+  it("finds the person in a kind the settings leave out", async () => {
+    const user = userEvent.setup();
+    render(
+      <Simulator config={config} ruleSet={ruleSet} settings={{ enabledSubjectKinds: ["group"] }} />,
+    );
+    await pick(user, "Person", "ali", /Alice Ng/);
+    expect(screen.getByText("Alice Ng")).toBeInTheDocument();
+  });
+
+  it("takes the person from personKind and offers the user kind as a membership", async () => {
+    const user = userEvent.setup();
+    render(<Simulator config={config} ruleSet={ruleSet} personKind="role" />);
+    await pick(user, "Person", "contr", /Contractor/);
+    expect(screen.getByText("Contractor")).toBeInTheDocument();
+    await user.type(screen.getByRole("combobox", { name: "Extra memberships" }), "ali");
+    expect(await screen.findByRole("option", { name: /Alice Ng/ })).toBeInTheDocument();
+  });
+
+  it("leaves the person picker empty when personKind names no kind", async () => {
+    const user = userEvent.setup();
+    render(<Simulator config={config} ruleSet={ruleSet} personKind="nobody" />);
+    await user.type(screen.getByRole("combobox", { name: "Person" }), "ali");
+    expect(await screen.findByText("No matches")).toBeInTheDocument();
+  });
+
   it("shows empty states for no categories and no actions", async () => {
     const user = userEvent.setup();
     const { rerender } = render(

@@ -9,7 +9,6 @@ import {
   removeSubject,
   setCell,
   setStopInheriting,
-  toggleStopInheriting,
 } from "@/react/editor/model";
 
 const actions: ActionDef[] = [
@@ -129,13 +128,10 @@ describe("removeSubject", () => {
 });
 
 describe("stopInheriting", () => {
-  it("sets and toggles from the stored value or the fallback", () => {
+  it("sets the flag explicitly without mutating", () => {
     const rs = base();
     expect(setStopInheriting(rs, "docs", true).categories.docs!.stopInheriting).toBe(true);
-    expect(toggleStopInheriting(rs, "docs").categories.docs!.stopInheriting).toBe(true);
-    expect(toggleStopInheriting(rs, "docs", true).categories.docs!.stopInheriting).toBe(false);
-    const on = setStopInheriting(rs, "docs", true);
-    expect(toggleStopInheriting(on, "docs").categories.docs!.stopInheriting).toBe(false);
+    expect(setStopInheriting(rs, "docs", false).categories.docs!.stopInheriting).toBe(false);
     expect(rs.categories.docs!.stopInheriting).toBeUndefined();
   });
 });

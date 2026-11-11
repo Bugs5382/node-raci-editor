@@ -75,15 +75,14 @@ describe("normalizeSettings", () => {
     const out = normalizeSettings(config, {
       showInherited: false,
       confirmDeny: true,
-      defaultStopInheriting: true,
       density: "compact",
     });
     expect(out).toMatchObject({
       showInherited: false,
       confirmDeny: true,
-      defaultStopInheriting: true,
       density: "compact",
     });
+    expect(out).not.toHaveProperty("defaultStopInheriting");
     expect(normalizeSettings(config, { density: "huge" as never }).density).toBe("comfortable");
     expect(normalizeSettings(config, { density: "comfortable" }).density).toBe("comfortable");
   });

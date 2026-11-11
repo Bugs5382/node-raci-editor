@@ -148,7 +148,7 @@ describe("quick start", () => {
   it("renders the editor, simulator and settings together", async () => {
     const user = userEvent.setup();
     render(<App />);
-    const editor = screen.getByRole("region", { name: "Rules" });
+    const editor = screen.getByRole("region", { name: /^Rules for / });
     expect(screen.getByRole("group", { name: "Access simulator" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Settings" })).toBeInTheDocument();
 

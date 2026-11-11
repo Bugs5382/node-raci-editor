@@ -41,8 +41,12 @@ What it does:
   Cancel leaves the cell as it was.
 - **Adding a subject.** The picker at the bottom has a kind menu (only the enabled kinds) and a
   search box. Picking a result adds an empty row; the row becomes part of the `RuleSet` only when
-  you set a cell in it. An empty row lives in the editor's own state, so it is forgotten when you
-  switch category or remount.
+  you set a cell in it. An empty row lives in the editor's own state, kept per category: it
+  survives switching to another category and back, and is forgotten only when you remove it or the
+  editor unmounts.
+- **Title.** A heading names the category being edited with its path in `config.resources`, such
+  as "Rules for Company / Documents" (`editor.title`, `editor.pathSeparator`). The `"*"` category
+  shows "All categories"; an id that is not in the tree shows as written.
 - **Removing.** Remove deletes every entry of that subject in this category.
 - **Stop inheriting.** A checkbox above the grid writes `stopInheriting` on the category (an
   explicit `true` or `false`, so it is never lost to a default).
@@ -79,16 +83,18 @@ Pick a person, optionally add memberships, choose a category and see what they c
 
 | Prop               | Type                    | Notes                                                                                                                            |
 | ------------------ | ----------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| `config`           | `RaciConfig`            | Needs a `user` subject kind to find the person.                                                                                  |
+| `config`           | `RaciConfig`            | Needs a subject kind for the person (`user` unless you set `personKind`).                                                        |
 | `ruleSet`          | `RuleSet`               | The rules to evaluate.                                                                                                           |
 | `categoryId`       | `string`                | Optional. When set, the simulator follows it. When omitted it keeps its own choice and starts at the first category of the tree. |
 | `onCategoryChange` | `(id: string) => void`  | Optional. Called when the user picks another category in the menu.                                                               |
+| `personKind`       | `string`                | Optional. The subject kind the person is picked from. Default `"user"`.                                                          |
 | `settings`         | `Partial<RaciSettings>` | Optional. `visibleActions` picks and orders the rows; `enabledSubjectKinds` limits the memberships picker; `density` applies.    |
 | `className`        | `string`                | Optional.                                                                                                                        |
 
 What it does:
 
-- The person is one pick from the `user` kind. The person's subjects are that pick plus every
+- The person is one pick from the `personKind` kind (default `user`). That kind is always offered
+  in the person picker, even when `enabledSubjectKinds` leaves it out. The person's subjects are that pick plus every
   membership added (groups, roles or any other enabled kind), de-duplicated, in the order picked.
 - For each visible action it runs `decide()` with your `ruleSet` and `config.actions` and shows
   Allowed or Denied, a plain-language reason, and the categories that were checked, nearest first,

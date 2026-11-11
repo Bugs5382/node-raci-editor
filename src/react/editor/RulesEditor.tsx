@@ -44,11 +44,12 @@ export interface RulesEditorProps {
 
 const STAR = "*";
 
-const findLabel = (nodes: ResourceNode[], id: string): string | undefined => {
+/** Labels from the root down to the node with this id, or undefined when it is not in the tree. */
+const findPath = (nodes: ResourceNode[], id: string): string[] | undefined => {
   for (const node of nodes) {
-    if (node.id === id) return node.label;
-    const inner = findLabel(node.children ?? [], id);
-    if (inner !== undefined) return inner;
+    if (node.id === id) return [node.label];
+    const inner = findPath(node.children ?? [], id);
+    if (inner !== undefined) return [node.label, ...inner];
   }
   return undefined;
 };
@@ -67,18 +68,15 @@ export const RulesEditor = (props: RulesEditorProps) => {
   const t = useMemo(() => makeT(config, editorStrings), [config]);
   const uid = useId();
 
-  // Subjects added in the UI that have no entry yet, scoped to the category they were added in.
-  const [added, setAdded] = useState<{ category: string; subjects: string[] }>({
-    category: categoryId,
-    subjects: [],
-  });
+  // Subjects added in the UI that have no entry yet, kept per category for the life of the editor.
+  const [added, setAdded] = useState<Record<string, string[]>>({});
   const [labels, setLabels] = useState<Record<string, string>>({});
   const [pending, setPending] = useState<Pending | null>(null);
 
-  const extras = added.category === categoryId ? added.subjects : [];
+  const extras = added[categoryId] ?? [];
   const own = ruleSet.categories[categoryId];
   const entries = own?.entries ?? [];
-  const stop = own?.stopInheriting ?? settings.defaultStopInheriting;
+  const stop = own?.stopInheriting ?? false;
   const rows = deriveRows(entries, extras);
 
   const visible = new Set(settings.visibleActions);
@@ -90,7 +88,9 @@ export const RulesEditor = (props: RulesEditorProps) => {
     return kind?.resolve?.(subject) ?? labels[subject] ?? subject;
   };
   const resourceLabel = (id: string): string =>
-    id === STAR ? t("editor.allCategories") : (findLabel(config.resources, id) ?? id);
+    id === STAR
+      ? t("editor.allCategories")
+      : (findPath(config.resources, id)?.join(t("editor.pathSeparator")) ?? id);
   const stateWord = (effect: Effect | undefined): string =>
     t(effect === "allow" ? "editor.allow" : effect === "deny" ? "editor.deny" : "editor.blank");
   const stateText = (effect: Effect | undefined): string =>
@@ -103,9 +103,9 @@ export const RulesEditor = (props: RulesEditorProps) => {
     );
 
   const keep = (subject: string) =>
-    setAdded({
-      category: categoryId,
-      subjects: extras.includes(subject) ? extras : [...extras, subject],
+    setAdded((prev) => {
+      const current = prev[categoryId] ?? [];
+      return current.includes(subject) ? prev : { ...prev, [categoryId]: [...current, subject] };
     });
 
   const apply = (subject: string, action: ActionDef, effect: Effect | undefined) => {
@@ -147,7 +147,10 @@ export const RulesEditor = (props: RulesEditorProps) => {
     .join(" ");
 
   return (
-    <section className={rootClass} aria-label={t("editor.title")}>
+    <section className={rootClass} aria-labelledby={`${uid}-title`}>
+      <h2 id={`${uid}-title`} className="raci-editor__title">
+        {t("editor.title", { category: resourceLabel(categoryId) })}
+      </h2>
       <div className="raci-editor__toolbar">
         <label className="raci-check">
           <input
@@ -247,10 +250,10 @@ export const RulesEditor = (props: RulesEditorProps) => {
                         className="raci-button raci-button--quiet"
                         aria-label={t("editor.removeLabel", { subject: label })}
                         onClick={() => {
-                          setAdded({
-                            category: categoryId,
-                            subjects: extras.filter((s) => s !== subject),
-                          });
+                          setAdded((prev) => ({
+                            ...prev,
+                            [categoryId]: (prev[categoryId] ?? []).filter((s) => s !== subject),
+                          }));
                           onChange(removeSubject(ruleSet, categoryId, subject));
                         }}
                       >

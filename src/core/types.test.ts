@@ -13,7 +13,6 @@ describe("defaultSettings", () => {
       showInherited: true,
       confirmDeny: false,
       density: "comfortable",
-      defaultStopInheriting: false,
     });
   });
 });

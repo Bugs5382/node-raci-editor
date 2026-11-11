@@ -63,6 +63,5 @@ export const normalizeSettings = (
     showInherited: partial?.showInherited ?? base.showInherited,
     confirmDeny: partial?.confirmDeny ?? base.confirmDeny,
     density,
-    defaultStopInheriting: partial?.defaultStopInheriting ?? base.defaultStopInheriting,
   };
 };

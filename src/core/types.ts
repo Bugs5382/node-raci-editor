@@ -120,8 +120,6 @@ export interface RaciSettings {
   confirmDeny: boolean;
   /** Row density. */
   density: "comfortable" | "compact";
-  /** Initial value of stopInheriting for a category that has none. */
-  defaultStopInheriting: boolean;
 }
 
 /** The settings used when the host passes none: every action and kind on, comfortable density. */
@@ -133,5 +131,4 @@ export const defaultSettings = (
   showInherited: true,
   confirmDeny: false,
   density: "comfortable",
-  defaultStopInheriting: false,
 });

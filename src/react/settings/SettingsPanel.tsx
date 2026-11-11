@@ -105,7 +105,7 @@ export const SettingsPanel = ({
                       disabled={index === 0}
                       onClick={() => emit(moveAction(value, id, -1))}
                     >
-                      Up
+                      {t("settings.moveUp")}
                     </button>
                     <button
                       type="button"
@@ -114,7 +114,7 @@ export const SettingsPanel = ({
                       disabled={index === visible.length - 1}
                       onClick={() => emit(moveAction(value, id, 1))}
                     >
-                      Down
+                      {t("settings.moveDown")}
                     </button>
                   </span>
                 ) : null}
@@ -167,14 +167,6 @@ export const SettingsPanel = ({
             onChange={(e) => set({ confirmDeny: e.target.checked })}
           />
           <span>{t("settings.confirmDeny")}</span>
-        </label>
-        <label className="raci-settings__check">
-          <input
-            type="checkbox"
-            checked={value.defaultStopInheriting}
-            onChange={(e) => set({ defaultStopInheriting: e.target.checked })}
-          />
-          <span>{t("settings.defaultStopInheriting")}</span>
         </label>
       </fieldset>
 
