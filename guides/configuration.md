@@ -61,8 +61,9 @@ interface SubjectOption {
   just pick (rows loaded from storage). Return `undefined` to fall back to the label remembered
   from the last pick, then to the raw subject string. Keep it synchronous and cheap: it runs on
   every render of a row.
-- The simulator finds the person with the kind named `user`. Its "extra memberships" picker offers
-  every other kind that is enabled in the settings.
+- The simulator finds the person with the kind named by its `personKind` prop (default `user`),
+  whether or not the settings enable it. Its "extra memberships" picker offers every other kind that
+  is enabled in the settings.
 
 ## Resource tree
 

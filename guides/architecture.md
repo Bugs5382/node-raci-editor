@@ -4,7 +4,7 @@
 - `vectors/decide.json` shared test vectors, also run by Go and the mock. Do not make it package-specific.
 - `src/react/` the drop-in components. They are controlled: the host owns the `RuleSet` and gets `onChange`.
   - `RulesEditor` props: `config: RaciConfig`, `ruleSet: RuleSet`, `categoryId: string`, `onChange(ruleSet)`, `settings?`, `readOnly?`, `className?`.
-  - `Simulator` props: `config`, `ruleSet`, `categoryId?`, `onCategoryChange?`, `settings?`, `className?`. The person is picked inside the component from the `user` subject kind.
+  - `Simulator` props: `config`, `ruleSet`, `categoryId?`, `onCategoryChange?`, `personKind?` (default `"user"`), `settings?`, `className?`. The person is picked inside the component from the `personKind` subject kind; memberships come from the other enabled kinds.
   - `SettingsPanel` props: `config`, `value: RaciSettings`, `onChange`, `className?`.
 - `src/styles/tokens.css` CSS custom properties `--raci-*`, light and dark; components use only tokens.
 - `demo/` Vite app; `guides/` documentation.

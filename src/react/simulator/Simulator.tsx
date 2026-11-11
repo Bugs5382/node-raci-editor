@@ -23,13 +23,13 @@ export interface SimulatorProps {
   categoryId?: string;
   /** Called when the user picks another category in the simulator. */
   onCategoryChange?: (id: string) => void;
+  /** The subject kind the person is picked from. Defaults to `"user"`. */
+  personKind?: string;
   /** Display settings; missing fields use the defaults. */
   settings?: Partial<RaciSettings>;
   /** Extra class on the root element. */
   className?: string;
 }
-
-const USER_KIND = "user";
 
 const Verdict = ({ allowed, text }: { allowed: boolean; text: string }) => {
   return (
@@ -69,7 +69,7 @@ const Chip = ({
 
 /** Pick a person and see what they may do in a category, using the package's own decide(). */
 export const Simulator = (props: SimulatorProps) => {
-  const { config, ruleSet, categoryId, onCategoryChange, className } = props;
+  const { config, ruleSet, categoryId, onCategoryChange, className, personKind = "user" } = props;
   const t = useMemo(() => makeT(config, simulatorStrings), [config]);
   const titleId = useId();
   const categoryFieldId = useId();
@@ -77,15 +77,15 @@ export const Simulator = (props: SimulatorProps) => {
   const settings: RaciSettings = { ...defaultSettings(config), ...props.settings };
   const enabledKey = settings.enabledSubjectKinds.join("\n");
   const personKinds = useMemo(
-    () => config.subjectKinds.filter((k) => k.kind === USER_KIND),
-    [config.subjectKinds],
+    () => config.subjectKinds.filter((k) => k.kind === personKind),
+    [config.subjectKinds, personKind],
   );
   const memberKinds = useMemo(
     () =>
       config.subjectKinds.filter(
-        (k) => k.kind !== USER_KIND && enabledKey.split("\n").includes(k.kind),
+        (k) => k.kind !== personKind && enabledKey.split("\n").includes(k.kind),
       ),
-    [config.subjectKinds, enabledKey],
+    [config.subjectKinds, enabledKey, personKind],
   );
 
   const [person, setPerson] = useState<SubjectOption | null>(null);

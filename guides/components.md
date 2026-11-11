@@ -79,16 +79,18 @@ Pick a person, optionally add memberships, choose a category and see what they c
 
 | Prop               | Type                    | Notes                                                                                                                            |
 | ------------------ | ----------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| `config`           | `RaciConfig`            | Needs a `user` subject kind to find the person.                                                                                  |
+| `config`           | `RaciConfig`            | Needs a subject kind for the person (`user` unless you set `personKind`).                                                        |
 | `ruleSet`          | `RuleSet`               | The rules to evaluate.                                                                                                           |
 | `categoryId`       | `string`                | Optional. When set, the simulator follows it. When omitted it keeps its own choice and starts at the first category of the tree. |
 | `onCategoryChange` | `(id: string) => void`  | Optional. Called when the user picks another category in the menu.                                                               |
+| `personKind`       | `string`                | Optional. The subject kind the person is picked from. Default `"user"`.                                                          |
 | `settings`         | `Partial<RaciSettings>` | Optional. `visibleActions` picks and orders the rows; `enabledSubjectKinds` limits the memberships picker; `density` applies.    |
 | `className`        | `string`                | Optional.                                                                                                                        |
 
 What it does:
 
-- The person is one pick from the `user` kind. The person's subjects are that pick plus every
+- The person is one pick from the `personKind` kind (default `user`). That kind is always offered
+  in the person picker, even when `enabledSubjectKinds` leaves it out. The person's subjects are that pick plus every
   membership added (groups, roles or any other enabled kind), de-duplicated, in the order picked.
 - For each visible action it runs `decide()` with your `ruleSet` and `config.actions` and shows
   Allowed or Denied, a plain-language reason, and the categories that were checked, nearest first,
