@@ -41,8 +41,12 @@ What it does:
   Cancel leaves the cell as it was.
 - **Adding a subject.** The picker at the bottom has a kind menu (only the enabled kinds) and a
   search box. Picking a result adds an empty row; the row becomes part of the `RuleSet` only when
-  you set a cell in it. An empty row lives in the editor's own state, so it is forgotten when you
-  switch category or remount.
+  you set a cell in it. An empty row lives in the editor's own state, kept per category: it
+  survives switching to another category and back, and is forgotten only when you remove it or the
+  editor unmounts.
+- **Title.** A heading names the category being edited with its path in `config.resources`, such
+  as "Rules for Company / Documents" (`editor.title`, `editor.pathSeparator`). The `"*"` category
+  shows "All categories"; an id that is not in the tree shows as written.
 - **Removing.** Remove deletes every entry of that subject in this category.
 - **Stop inheriting.** A checkbox above the grid writes `stopInheriting` on the category (an
   explicit `true` or `false`, so it is never lost to a default).

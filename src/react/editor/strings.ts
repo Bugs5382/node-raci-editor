@@ -1,6 +1,7 @@
 /** English defaults for the rules editor. Hosts override any key through `config.strings`. */
 export const editorStrings: Record<string, string> = {
-  "editor.title": "Rules",
+  "editor.title": "Rules for {category}",
+  "editor.pathSeparator": " / ",
   "editor.subject": "Subject",
   "editor.empty": "No subjects have rules in this category yet.",
   "editor.allow": "allow",

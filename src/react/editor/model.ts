@@ -92,16 +92,6 @@ export const setStopInheriting = (
   return withCategory(ruleSet, categoryId, (current) => ({ ...current, stopInheriting: value }));
 };
 
-/** Flip the flag, starting from the category's own value or the given fallback. */
-export const toggleStopInheriting = (
-  ruleSet: RuleSet,
-  categoryId: string,
-  fallback = false,
-): RuleSet => {
-  const now = ruleSet.categories[categoryId]?.stopInheriting ?? fallback;
-  return setStopInheriting(ruleSet, categoryId, !now);
-};
-
 export interface InheritedGroup {
   categoryId: string;
   entries: Entry[];

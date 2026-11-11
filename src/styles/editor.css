@@ -294,6 +294,13 @@
   border-radius: var(--raci-radius-md);
 }
 
+.raci-editor__title {
+  margin: 0;
+  font-size: var(--raci-font-size-md);
+  font-weight: var(--raci-font-weight-semibold);
+  color: var(--raci-text);
+}
+
 .raci-editor__inherited-title {
   margin: 0;
   font-size: var(--raci-font-size-sm);

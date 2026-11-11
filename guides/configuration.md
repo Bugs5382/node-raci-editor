@@ -122,7 +122,7 @@ below; an unknown placeholder is left as written. Keys are not namespaced per ho
 ```ts
 const config: RaciConfig = {
   // ...
-  strings: { "editor.title": "Permissions", "editor.deny": "blocked" },
+  strings: { "editor.title": "Permissions for {category}", "editor.deny": "blocked" },
 };
 ```
 
@@ -132,7 +132,8 @@ Keys with a variable list their variables in braces. The default text is in the 
 
 | Key                         | Default                                                                   |
 | --------------------------- | ------------------------------------------------------------------------- |
-| `editor.title`              | Rules                                                                     |
+| `editor.title`              | Rules for {category} (the heading; {category} is the resource path)       |
+| `editor.pathSeparator`      | " / " (between the labels of the path)                                    |
 | `editor.subject`            | Subject                                                                   |
 | `editor.empty`              | No subjects have rules in this category yet.                              |
 | `editor.allow`              | allow (spoken state in a cell's label)                                    |

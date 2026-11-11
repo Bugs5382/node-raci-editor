@@ -64,6 +64,33 @@ const setup = (
 
 const lastRuleSet = (fn: ReturnType<typeof vi.fn>): RuleSet => fn.mock.calls.at(-1)?.[0] as RuleSet;
 
+describe("title", () => {
+  it("names the category with its path in the resource tree", () => {
+    setup();
+    const heading = screen.getByRole("heading", { level: 2 });
+    expect(heading).toHaveTextContent("Rules for Company / Documents");
+    expect(
+      screen.getByRole("region", { name: "Rules for Company / Documents" }),
+    ).toBeInTheDocument();
+  });
+
+  it("labels the all-categories rules and falls back to the raw id", () => {
+    const { rerender, onChange, config, ruleSet } = setup({ categoryId: "*" });
+    expect(screen.getByRole("heading", { level: 2 })).toHaveTextContent("Rules for All categories");
+    rerender(
+      <RulesEditor config={config} ruleSet={ruleSet} categoryId="zzz" onChange={onChange} />,
+    );
+    expect(screen.getByRole("heading", { level: 2 })).toHaveTextContent("Rules for zzz");
+  });
+
+  it("uses editor.title from config.strings with {category}", () => {
+    setup({ config: makeConfig({ strings: { "editor.title": "Access to {category}" } }) });
+    expect(screen.getByRole("heading", { level: 2 })).toHaveTextContent(
+      "Access to Company / Documents",
+    );
+  });
+});
+
 describe("rendering", () => {
   it("renders a row per subject and a column per action", () => {
     const { container } = setup();
@@ -266,6 +293,21 @@ describe("remove", () => {
     await user.click(screen.getByRole("button", { name: "Remove Carol" }));
     expect(screen.queryByRole("rowheader", { name: "Carol" })).not.toBeInTheDocument();
   });
+
+  it("forgets an added row once it is removed", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    const config = makeConfig();
+    const rs = makeRuleSet();
+    const { rerender } = render(
+      <RulesEditor config={config} ruleSet={rs} categoryId="docs" onChange={onChange} />,
+    );
+    await addViaSearch(user, "Car");
+    await user.click(screen.getByRole("button", { name: "Remove Carol" }));
+    rerender(<RulesEditor config={config} ruleSet={rs} categoryId="root" onChange={onChange} />);
+    rerender(<RulesEditor config={config} ruleSet={rs} categoryId="docs" onChange={onChange} />);
+    expect(screen.queryByRole("rowheader", { name: "Carol" })).not.toBeInTheDocument();
+  });
 });
 
 const addViaSearch = async (user: ReturnType<typeof userEvent.setup>, text: string) => {
@@ -438,7 +480,7 @@ describe("add subject", () => {
     expect(screen.queryByRole("combobox", { name: "Search" })).not.toBeInTheDocument();
   });
 
-  it("clears added rows when the category changes", async () => {
+  it("keeps added rows per category across a category switch", async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();
     const config = makeConfig();
@@ -448,6 +490,26 @@ describe("add subject", () => {
     );
     await addViaSearch(user, "Car");
     rerender(<RulesEditor config={config} ruleSet={rs} categoryId="root" onChange={onChange} />);
+    expect(screen.queryByRole("rowheader", { name: "Carol" })).not.toBeInTheDocument();
+    await addViaSearch(user, "Bob");
+    rerender(<RulesEditor config={config} ruleSet={rs} categoryId="docs" onChange={onChange} />);
+    expect(screen.getByRole("rowheader", { name: "Carol" })).toBeInTheDocument();
+    rerender(<RulesEditor config={config} ruleSet={rs} categoryId="root" onChange={onChange} />);
+    expect(screen.getByRole("rowheader", { name: "Bob" })).toBeInTheDocument();
+  });
+
+  it("forgets an added row once it is removed", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    const config = makeConfig();
+    const rs = makeRuleSet();
+    const { rerender } = render(
+      <RulesEditor config={config} ruleSet={rs} categoryId="docs" onChange={onChange} />,
+    );
+    await addViaSearch(user, "Car");
+    await user.click(screen.getByRole("button", { name: "Remove Carol" }));
+    rerender(<RulesEditor config={config} ruleSet={rs} categoryId="root" onChange={onChange} />);
+    rerender(<RulesEditor config={config} ruleSet={rs} categoryId="docs" onChange={onChange} />);
     expect(screen.queryByRole("rowheader", { name: "Carol" })).not.toBeInTheDocument();
   });
 });
