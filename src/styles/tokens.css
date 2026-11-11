@@ -1,0 +1,170 @@
+/*
+ * Design tokens for the RACI editor.
+ *
+ * All tokens are CSS custom properties prefixed --raci- and defined on
+ * :where(.raci-root), which has zero specificity so any host rule wins.
+ * Light is the default. Dark follows the system preference unless the root
+ * (or an ancestor rule) opts out with data-theme="light", and can be forced
+ * with data-theme="dark". Components use only these tokens.
+ */
+
+:where(.raci-root) {
+  /* Surface */
+  --raci-bg: #ffffff;
+  --raci-bg-subtle: #f8fafc;
+  --raci-bg-raised: #ffffff;
+  --raci-border: #cbd5e1;
+  --raci-border-strong: #64748b;
+
+  /* Text */
+  --raci-text: #0f172a;
+  --raci-text-muted: #475569;
+  --raci-text-on-accent: #ffffff;
+
+  /* Accent */
+  --raci-accent: #1d4ed8;
+  --raci-accent-hover: #1e40af;
+  --raci-focus-ring: #1d4ed8;
+
+  /* Semantic: allow */
+  --raci-allow-bg: #dcfce7;
+  --raci-allow-fg: #14532d;
+  --raci-allow-border: #16a34a;
+
+  /* Semantic: deny */
+  --raci-deny-bg: #fee2e2;
+  --raci-deny-fg: #7f1d1d;
+  --raci-deny-border: #dc2626;
+
+  /* Semantic: blank (no rule) */
+  --raci-blank-bg: #f1f5f9;
+  --raci-blank-fg: #475569;
+  --raci-blank-border: #94a3b8;
+
+  /* Semantic: warning */
+  --raci-warning-bg: #fef3c7;
+  --raci-warning-fg: #78350f;
+  --raci-warning-border: #d97706;
+
+  /* Semantic: info */
+  --raci-info-bg: #dbeafe;
+  --raci-info-fg: #1e3a8a;
+  --raci-info-border: #2563eb;
+
+  /* Spacing scale */
+  --raci-space-1: 0.125rem;
+  --raci-space-2: 0.25rem;
+  --raci-space-3: 0.5rem;
+  --raci-space-4: 0.75rem;
+  --raci-space-5: 1rem;
+  --raci-space-6: 1.5rem;
+  --raci-space-7: 2rem;
+  --raci-space-8: 3rem;
+
+  /* Radius */
+  --raci-radius-sm: 0.25rem;
+  --raci-radius-md: 0.5rem;
+  --raci-radius-lg: 0.75rem;
+  --raci-radius-pill: 999px;
+
+  /* Type */
+  --raci-font-family:
+    system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --raci-font-size-xs: 0.75rem;
+  --raci-font-size-sm: 0.875rem;
+  --raci-font-size-md: 1rem;
+  --raci-font-size-lg: 1.125rem;
+  --raci-font-size-xl: 1.5rem;
+  --raci-font-weight-regular: 400;
+  --raci-font-weight-medium: 500;
+  --raci-font-weight-semibold: 600;
+  --raci-font-weight-bold: 700;
+  --raci-line-height: 1.5;
+
+  /* Shadow */
+  --raci-shadow-sm: 0 1px 2px rgb(15 23 42 / 0.08);
+  --raci-shadow-md: 0 4px 12px rgb(15 23 42 / 0.12);
+
+  /* Motion */
+  --raci-duration: 150ms;
+  --raci-easing: cubic-bezier(0.2, 0, 0, 1);
+
+  /* Stacking */
+  --raci-z-dropdown: 1000;
+  --raci-z-sticky: 1100;
+  --raci-z-modal: 1200;
+  --raci-z-toast: 1300;
+
+  /* Controls */
+  --raci-control-height: 2.25rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  :where(.raci-root:not([data-theme="light"])) {
+    --raci-bg: #0b1120;
+    --raci-bg-subtle: #111827;
+    --raci-bg-raised: #1e293b;
+    --raci-border: #334155;
+    --raci-border-strong: #94a3b8;
+    --raci-text: #f1f5f9;
+    --raci-text-muted: #a8b5c8;
+    --raci-text-on-accent: #0b1120;
+    --raci-accent: #60a5fa;
+    --raci-accent-hover: #93c5fd;
+    --raci-focus-ring: #93c5fd;
+    --raci-allow-bg: #052e16;
+    --raci-allow-fg: #bbf7d0;
+    --raci-allow-border: #22c55e;
+    --raci-deny-bg: #450a0a;
+    --raci-deny-fg: #fecaca;
+    --raci-deny-border: #f87171;
+    --raci-blank-bg: #1e293b;
+    --raci-blank-fg: #cbd5e1;
+    --raci-blank-border: #64748b;
+    --raci-warning-bg: #451a03;
+    --raci-warning-fg: #fde68a;
+    --raci-warning-border: #f59e0b;
+    --raci-info-bg: #172554;
+    --raci-info-fg: #bfdbfe;
+    --raci-info-border: #60a5fa;
+    --raci-shadow-sm: 0 1px 2px rgb(0 0 0 / 0.5);
+    --raci-shadow-md: 0 4px 12px rgb(0 0 0 / 0.6);
+  }
+}
+
+:where(.raci-root[data-theme="dark"]) {
+  --raci-bg: #0b1120;
+  --raci-bg-subtle: #111827;
+  --raci-bg-raised: #1e293b;
+  --raci-border: #334155;
+  --raci-border-strong: #94a3b8;
+  --raci-text: #f1f5f9;
+  --raci-text-muted: #a8b5c8;
+  --raci-text-on-accent: #0b1120;
+  --raci-accent: #60a5fa;
+  --raci-accent-hover: #93c5fd;
+  --raci-focus-ring: #93c5fd;
+  --raci-allow-bg: #052e16;
+  --raci-allow-fg: #bbf7d0;
+  --raci-allow-border: #22c55e;
+  --raci-deny-bg: #450a0a;
+  --raci-deny-fg: #fecaca;
+  --raci-deny-border: #f87171;
+  --raci-blank-bg: #1e293b;
+  --raci-blank-fg: #cbd5e1;
+  --raci-blank-border: #64748b;
+  --raci-warning-bg: #451a03;
+  --raci-warning-fg: #fde68a;
+  --raci-warning-border: #f59e0b;
+  --raci-info-bg: #172554;
+  --raci-info-fg: #bfdbfe;
+  --raci-info-border: #60a5fa;
+  --raci-shadow-sm: 0 1px 2px rgb(0 0 0 / 0.5);
+  --raci-shadow-md: 0 4px 12px rgb(0 0 0 / 0.6);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :where(.raci-root) {
+    --raci-duration: 0ms;
+  }
+}
