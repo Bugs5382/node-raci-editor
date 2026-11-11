@@ -365,7 +365,7 @@ Migration notes:
 | Cell model mismatch               | Ordered mode needs one entry per subject and action. `validate` rejects duplicates, the editor edits in place, and the `"nearest"` collapse-to-deny cell is not used in ordered mode.                               |
 | Server and client disagree        | Hosts with server truth use `evaluate`; the client model is a preview. Extra fields (owners, superuser, gating) are mirrored in the host's engine with the shared vectors before a host relies on a client preview. |
 | API surface grows                 | Add only the interface, `registerModel`, the `model` and `models` props and optional fields. Everything else stays internal. Public-surface test updated in the same change; no removals.                           |
-| `DecideReason` union widens       | Hosts that switch exhaustively on `reason` need a default branch. Documented in the changelog; the new values only appear in non-default models.                                                                    |
+| `DecideReason` union widens       | Hosts that switch exhaustively on `reason` need a default branch. Documented in the guides; the new values only appear in non-default models.                                                                       |
 | `implies` vs `requires` confusion | Separate fields, separate steps (4 and 6), separate worked example; never overload `implies`.                                                                                                                       |
 | Open question: confer over deny   | Some hosts let a higher action confer a lower one even over an explicit deny. Not part of `"ordered"`; a host that needs it supplies a custom model or evaluates on its server.                                     |
 
@@ -381,7 +381,7 @@ Estimates in working days, one developer, including tests and docs for the item.
 | 4    | Editor: model-aware capabilities, `#` column, move up and down, one entry per cell, legend   | 3    |
 | 5    | `own` effect: cell state, cycle, legend, `ownOnly` in the simulator                          | 2    |
 | 6    | Owners, superuser, gating: evaluate steps, owners block, simulator steps, `gatedBy`          | 4    |
-| 7    | Docs, an `"ordered"` demo preset, guides and changelog                                       | 1.5  |
+| 7    | Docs, an `"ordered"` demo preset, and guides                                                 | 1.5  |
 
 Total: about 17 days. A Go port of the runner is outside this estimate, about 1 day per model.
 

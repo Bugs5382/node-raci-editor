@@ -38,7 +38,7 @@ import console from "node:console";
 import process from "node:process";
 
 // Used when package.json sets no ceiling. A small library build plus README,
-// LICENSE and CHANGELOG is well under this, and a bundled dependency or stray
+// LICENSE is well under this, and a bundled dependency or stray
 // build output is well over it.
 const DEFAULT_MAX_UNPACKED_BYTES = 250_000;
 
