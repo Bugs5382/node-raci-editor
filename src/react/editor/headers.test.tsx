@@ -290,7 +290,9 @@ describe("the key for short headings", () => {
     show(config(), { headerMode: "short" });
     const key = document.querySelector(".raci-editor__key") as HTMLElement;
     expect(key).not.toBeNull();
-    expect(key.textContent).toBe("Key: R Read, A Author, M Manage, APV Approve, ACK Acknowledge");
+    expect(key.textContent).toBe(
+      "Key: Access: R Read, A Author, M Manage; Obligations: APV Approve, ACK Acknowledge",
+    );
   });
   it("is not shown with full labels, or when no action has a short label", () => {
     show(config(), { headerMode: "full" });
@@ -319,5 +321,128 @@ describe("stylesheet: the group row reads as part of the header", () => {
     expect(rule(".raci-editor .raci-table__corner")).toMatch(/background/);
     expect(rule(".raci-editor .raci-table__group")).toMatch(/border-bottom:\s*2px/);
     expect(rule(".raci-editor .raci-col-group-start")).toMatch(/border-inline-start/);
+  });
+});
+
+describe("host-configured groups", () => {
+  // Read, Author and Approve are permissions; Manage and Acknowledge are obligations.
+  const groupConfig = (extra: Partial<RaciConfig> = {}): RaciConfig => ({
+    actions: [
+      { id: "r", label: "Read", shortLabel: "R", group: "perm" },
+      { id: "a", label: "Author", shortLabel: "A", group: "perm", implies: ["r"] },
+      { id: "m", label: "Manage", shortLabel: "M", group: "duty", implies: ["a", "r"] },
+      { id: "apv", label: "Approve", shortLabel: "APV", group: "perm", implies: ["r"] },
+      { id: "ack", label: "Acknowledge", shortLabel: "ACK", group: "duty" },
+    ],
+    subjectKinds: [],
+    resources: [{ id: "docs", label: "Documents" }],
+    groups: [
+      { id: "perm", label: "Permissions" },
+      { id: "duty", label: "Obligations" },
+    ],
+    ...extra,
+  });
+  const main = () =>
+    document.querySelector("table.raci-table:not(.raci-table--inherited)") as HTMLElement;
+  const headings = () =>
+    Array.from(main().querySelectorAll("thead .raci-table__group")).map((g) => [
+      g.textContent,
+      g.getAttribute("colspan"),
+    ]);
+  const columns = () =>
+    Array.from(main().querySelectorAll("thead tr:last-child th[scope=col]"))
+      .slice(1, 6)
+      .map((t) => t.textContent);
+
+  it("groups the columns by the host's group ids, in the host's order and labels", () => {
+    show(groupConfig(), { headerMode: "short" });
+    expect(headings()).toEqual([
+      ["Permissions", "3"],
+      ["Obligations", "2"],
+    ]);
+    expect(columns()).toEqual(["R", "A", "APV", "M", "ACK"]);
+  });
+
+  it("names the groups whatever the host calls them", () => {
+    show(
+      groupConfig({
+        groups: [
+          { id: "perm", label: "Can do" },
+          { id: "duty", label: "Must do" },
+        ],
+      }),
+    );
+    expect(headings().map((h) => h[0])).toEqual(["Can do", "Must do"]);
+  });
+
+  it("takes a label for a group with none from kindLabels or strings, else shows its id", () => {
+    show(groupConfig({ groups: undefined }));
+    expect(headings().map((h) => h[0])).toEqual(["perm", "duty"]);
+    cleanup();
+    show(groupConfig({ groups: undefined, kindLabels: { perm: "Rights" } as never }));
+    expect(headings().map((h) => h[0])).toEqual(["Rights", "duty"]);
+  });
+
+  it("a group id wins over kind, and kind still groups when there is no group id", () => {
+    const cfg = groupConfig();
+    cfg.actions[0] = { ...cfg.actions[0]!, kind: "obligation" };
+    show(cfg);
+    expect(headings()[0]).toEqual(["Permissions", "3"]);
+    cleanup();
+    show(config()); // kind only: the default words
+    expect(headings().map((h) => h[0])).toEqual(["Access", "Obligations"]);
+  });
+
+  it("supports three groups, with a divider before each group after the first", () => {
+    const cfg = groupConfig({
+      groups: [
+        { id: "perm", label: "Permissions" },
+        { id: "duty", label: "Obligations" },
+        { id: "more", label: "Other" },
+      ],
+    });
+    cfg.actions[4] = { ...cfg.actions[4]!, group: "more" };
+    show(cfg);
+    expect(headings()).toEqual([
+      ["Permissions", "3"],
+      ["Obligations", "1"],
+      ["Other", "1"],
+    ]);
+    const starts = Array.from(main().querySelectorAll("thead .raci-col-group-start")).map(
+      (s) => s.textContent,
+    );
+    expect(starts).toEqual(["Obligations", "Other", "Manage", "Acknowledge"]);
+  });
+
+  it("gives the inherited tables and the key the same groups", () => {
+    render(
+      <RulesEditor
+        config={groupConfig()}
+        ruleSet={{
+          categories: {
+            docs: { entries: [] },
+            parent: { entries: [{ subject: "user:z", action: "r", effect: "allow" }] },
+          },
+          parents: { docs: "parent" },
+        }}
+        categoryId="docs"
+        onChange={() => {}}
+        headerMode="short"
+      />,
+    );
+    const inherited = document.querySelector("table.raci-table--inherited") as HTMLElement;
+    expect(
+      Array.from(inherited.querySelectorAll("thead .raci-table__group")).map((g) => g.textContent),
+    ).toEqual(["Permissions", "Obligations"]);
+    expect(document.querySelector(".raci-editor__key")?.textContent).toBe(
+      "Key: Permissions: R Read, A Author, APV Approve; Obligations: M Manage, ACK Acknowledge",
+    );
+  });
+
+  it("draws no heading row when every action is in the same group", () => {
+    const cfg = groupConfig();
+    cfg.actions = cfg.actions.map((a) => ({ ...a, group: "perm" }));
+    show(cfg);
+    expect(document.querySelectorAll("thead tr")).toHaveLength(1);
   });
 });

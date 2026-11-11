@@ -64,6 +64,11 @@ export interface ActionDef {
    * do. The editor groups the columns by kind under two headings when both kinds are present.
    */
   kind?: "access" | "obligation";
+  /**
+   * The column group this action belongs to, a host-chosen id (see `RaciConfig.groups`). Wins over
+   * `kind`. With no `group` the group is the `kind`, or `"access"` when there is none.
+   */
+  group?: string;
 }
 
 /** The person asking: every subject string that matches them (own id, groups, roles). */
@@ -167,8 +172,18 @@ export interface RaciConfig {
   resources: ResourceNode[];
   /** Overrides for any UI string, by key; see the configuration guide for the keys. */
   strings?: Partial<Record<string, string>>;
-  /** The headings of the two column groups. Default: the strings `editor.group.access` and `editor.group.obligation`. */
-  kindLabels?: { access?: string; obligation?: string };
+  /**
+   * The column groups, in the order they are drawn, each with the host's label ("Permissions",
+   * "Obligations", or anything). A group id used by an action but not listed here comes after the
+   * listed ones.
+   */
+  groups?: { id: string; label: string }[];
+  /**
+   * Group labels by group id, for a group `groups` does not label. The ids `access` and
+   * `obligation` default to the strings `editor.group.access` and `editor.group.obligation`; any
+   * other id with no label shows as the id.
+   */
+  kindLabels?: Partial<Record<string, string>>;
 }
 
 /** Display and behaviour settings the SettingsPanel edits; the editor and simulator read them. */

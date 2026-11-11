@@ -149,9 +149,11 @@ cell, from `node-raci-editor/demo`.
   default) shows short labels at compact density or when the grid's scroll area is narrower than 40
   rem, and full labels otherwise. Wherever a short label is shown, the heading's accessible name is
   the full label and its tooltip is the full label plus the description.
-- **Grouped columns.** With both `access` and `obligation` actions, the columns are grouped under two
-  headings, access first (see `ActionDef.kind` and `config.kindLabels`). Editing, sizes and keyboard
-  behaviour are the same as in an ungrouped grid.
+- **Grouped columns.** The host groups the columns: `ActionDef.group` (an id of your choosing) with
+  `config.groups` for the order and labels, or `ActionDef.kind` with `config.kindLabels`. With more
+  than one group the columns sit under one heading per group, a thin divider marks where each group
+  starts, and the inherited tables and the key for short headings use the same groups. Editing,
+  sizes and keyboard behaviour are the same as in an ungrouped grid.
 - **Everyone.** The built-in subject `everyone:*` shows as the string `editor.everyone`.
 
 ## Simulator

@@ -25,6 +25,7 @@ interface ActionDef {
   description?: string;
   implies?: string[];
   kind?: "access" | "obligation";
+  group?: string;
 }
 ```
 
@@ -40,11 +41,17 @@ interface ActionDef {
   editor's `headerMode` (`full`, `short` or `auto`, the default: short at compact density or when the
   grid is narrow). The full label is always the heading's tooltip and its accessible name, and an
   action with no `shortLabel` shows its label in every mode.
-- `kind` is `"access"` (default, what a subject may do) or `"obligation"` (what a subject must do).
-  When both kinds are present the editor groups the columns, access first, under two headings. The
-  headings come from `config.kindLabels` (`{ access, obligation }`) or the strings
-  `editor.group.access` ("Access") and `editor.group.obligation` ("Obligations"). One kind alone
-  draws no heading row.
+- `group` puts the action's column in a group. It is an id you choose, and the groups and their
+  labels are yours: `config.groups` lists them in the order they are drawn, each with its label, for
+  example `[{ id: "permissions", label: "Permissions" }, { id: "obligations", label: "Obligations" }]`
+  with Read, Author and Approve in the first and Manage and Acknowledge in the second. With more than
+  one group the editor draws a heading row, in the grid and in the inherited tables, and the key for
+  short headings names each group. One group alone draws no heading row.
+- Without `group`, `kind` (`"access"` by default, or `"obligation"`) is the group. The labels of
+  those two come from `config.kindLabels` or the strings `editor.group.access` ("Access") and
+  `editor.group.obligation` ("Obligations"), which are only defaults you can override. A group id
+  with no label in `groups` or `kindLabels` shows as the id. Listed groups come first, in your
+  order; any other group follows, and each group keeps your column order.
 - The built-in subject `everyone:*` is labelled by the string `editor.everyone` ("Everyone").
 
 ## Subject kinds

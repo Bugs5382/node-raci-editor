@@ -329,27 +329,52 @@ const shortTeams: SubjectOption[] = [
   { id: "group:finance", label: "Finance team" },
 ];
 
-/** Short headings (R A M APV ACK) and two column groups, with the built-in Everyone subject. */
+/** Short headings (R A APV M ACK) in two host-named column groups, with the built-in Everyone subject. */
 const shortConfig: RaciConfig = {
   actions: [
-    { id: "r", label: "Read", shortLabel: "R", description: "See the document" },
-    { id: "a", label: "Author", shortLabel: "A", description: "Create and change", implies: ["r"] },
+    {
+      id: "r",
+      label: "Read",
+      shortLabel: "R",
+      description: "See the document",
+      group: "permissions",
+    },
+    {
+      id: "a",
+      label: "Author",
+      shortLabel: "A",
+      description: "Create and change",
+      implies: ["r"],
+      group: "permissions",
+    },
     {
       id: "m",
       label: "Manage",
       shortLabel: "M",
       description: "Change who has what",
       implies: ["a", "r"],
+      group: "obligations",
     },
-    { id: "apv", label: "Approve", shortLabel: "APV", kind: "obligation", implies: ["r"] },
-    { id: "ack", label: "Acknowledge", shortLabel: "ACK", kind: "obligation" },
+    {
+      id: "apv",
+      label: "Approve",
+      shortLabel: "APV",
+      implies: ["r"],
+      group: "permissions",
+    },
+    { id: "ack", label: "Acknowledge", shortLabel: "ACK", group: "obligations" },
   ],
   subjectKinds: [
     memoryKind("user", "Person", shortPeople),
     memoryKind("group", "Team", shortTeams),
   ],
   resources: shortTree,
-  kindLabels: { access: "Access", obligation: "Obligations" },
+  // The host names and orders the groups: Read, Author and Approve are permissions; Manage and
+  // Acknowledge are obligation rules.
+  groups: [
+    { id: "permissions", label: "Permissions" },
+    { id: "obligations", label: "Obligations" },
+  ],
 };
 
 const shortSeed: RuleSet = {

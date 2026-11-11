@@ -282,18 +282,18 @@ describe("cell variants", () => {
 });
 
 describe("the short-labels preset", () => {
-  it("shows R A M APV ACK under two group headings, with the full names as names", async () => {
+  it("shows R A APV M ACK under Permissions and Obligations, with the full names as names", async () => {
     const user = userEvent.setup();
     render(<RaciDemo />);
     await user.selectOptions(screen.getByRole("combobox", { name: "Preset" }), "short");
     const heads = Array.from(
       document.querySelectorAll<HTMLElement>("thead tr:last-child th[scope=col]"),
     ).map((th) => th.textContent?.trim());
-    expect(heads.slice(1, 6)).toEqual(["R", "A", "M", "APV", "ACK"]);
+    expect(heads.slice(1, 6)).toEqual(["R", "A", "APV", "M", "ACK"]);
     expect(screen.getAllByRole("columnheader", { name: "Acknowledge" })[0]).toHaveTextContent(
       "ACK",
     );
-    expect(screen.getAllByRole("columnheader", { name: "Access" }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole("columnheader", { name: "Permissions" }).length).toBeGreaterThan(0);
     expect(screen.getAllByRole("columnheader", { name: "Obligations" }).length).toBeGreaterThan(0);
     expect(screen.getByRole("rowheader", { name: "Everyone" })).toBeInTheDocument();
   });
@@ -307,6 +307,6 @@ describe("the short-labels preset", () => {
     const heads = Array.from(
       document.querySelectorAll<HTMLElement>("thead tr:last-child th[scope=col]"),
     ).map((th) => th.textContent?.trim());
-    expect(heads.slice(1, 6)).toEqual(["Read", "Author", "Manage", "Approve", "Acknowledge"]);
+    expect(heads.slice(1, 6)).toEqual(["Read", "Author", "Approve", "Manage", "Acknowledge"]);
   });
 });

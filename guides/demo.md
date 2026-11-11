@@ -40,8 +40,9 @@ All optional.
   (it can be hidden with `show.category=false` once that prop is available).
 - The package area, captioned "package: rules editor, simulator, settings", with tabs: Editor (`RulesEditor`), Simulator (`Simulator`) and Settings (`SettingsPanel`), with arrow
   key navigation.
-- A "Short labels" preset that uses the headings R A M APV ACK, two column groups (Access and
-  Obligations) and the built-in Everyone subject, and a Heading labels switch (auto, full, short).
+- A "Short labels" preset that uses the headings R A APV M ACK in two host-named groups (Permissions:
+  Read, Author, Approve; Obligations: Manage, Acknowledge) and the built-in Everyone subject, and a
+  Heading labels switch (auto, full, short).
 - A Cell variant switch in the Editor tab: box (default), marks (a check, an X or nothing) and custom
   (a sample host cell, exported as `demoRenderCell`).
 - Two presets that differ in actions, subject kinds, tree and strings, to show nothing is hard-coded.

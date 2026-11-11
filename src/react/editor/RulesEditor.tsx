@@ -141,6 +141,13 @@ const findPath = (nodes: ResourceNode[], id: string): string[] | undefined => {
 
 const actionName = (a: ActionDef): string => a.label ?? a.id;
 
+/** The key for short headings: each short label with its full name. */
+const keyOf = (actions: ActionDef[]): string =>
+  actions
+    .filter((a) => a.shortLabel)
+    .map((a) => `${a.shortLabel} ${actionName(a)}`)
+    .join(", ");
+
 interface Pending {
   subject: string;
   action: ActionDef;
@@ -170,22 +177,29 @@ export const RulesEditor = (props: RulesEditorProps) => {
 
   const visible = new Set(settings.visibleActions);
   const visibleColumns = config.actions.filter((a) => visible.has(a.id));
-  const kindOf = (a: ActionDef): "access" | "obligation" => a.kind ?? "access";
-  // Access columns first, then obligations, each in the host's order, when both kinds are present.
-  const grouped = new Set(visibleColumns.map(kindOf)).size > 1;
+  // The host groups the columns: by `ActionDef.group`, else by `kind`, else all in one group. Groups
+  // are drawn in `config.groups` order (access, then obligation, when there is none), each group's
+  // columns in the host's order, and only when there is more than one group.
+  const groupOf = (a: ActionDef): string => a.group ?? a.kind ?? "access";
+  const present = [...new Set(visibleColumns.map(groupOf))];
+  const order = config.groups?.map((g) => g.id) ?? ["access", "obligation"];
+  const groupIds = [
+    ...order.filter((id) => present.includes(id)),
+    ...present.filter((id) => !order.includes(id)),
+  ];
+  const grouped = groupIds.length > 1;
   const columns = grouped
-    ? [
-        ...visibleColumns.filter((a) => kindOf(a) === "access"),
-        ...visibleColumns.filter((a) => kindOf(a) === "obligation"),
-      ]
+    ? groupIds.flatMap((id) => visibleColumns.filter((a) => groupOf(a) === id))
     : visibleColumns;
-  const groupHeadings = (["access", "obligation"] as const)
-    .map((kind) => ({
-      kind,
-      count: columns.filter((a) => kindOf(a) === kind).length,
-      label: config.kindLabels?.[kind] ?? t(`editor.group.${kind}`),
-    }))
-    .filter((g) => g.count > 0);
+  const groupLabel = (id: string): string =>
+    config.groups?.find((g) => g.id === id)?.label ??
+    config.kindLabels?.[id] ??
+    (id === "access" || id === "obligation" ? t(`editor.group.${id}`) : id);
+  const groupHeadings: GroupHeading[] = groupIds.map((id) => ({
+    id,
+    count: columns.filter((a) => groupOf(a) === id).length,
+    label: groupLabel(id),
+  }));
   const scrollRef = useRef<HTMLDivElement>(null);
   const [narrow, setNarrow] = useState(false);
   useEffect(() => {
@@ -424,10 +438,11 @@ export const RulesEditor = (props: RulesEditorProps) => {
       {short && columns.some((a) => a.shortLabel) && (
         <p className="raci-editor__key raci-muted">
           {t("editor.key")}:{" "}
-          {columns
-            .filter((a) => a.shortLabel)
-            .map((a) => `${a.shortLabel} ${actionName(a)}`)
-            .join(", ")}
+          {grouped
+            ? groupHeadings
+                .map((g) => `${g.label}: ${keyOf(columns.filter((a) => groupOf(a) === g.id))}`)
+                .join("; ")
+            : keyOf(columns)}
         </p>
       )}
 
@@ -489,7 +504,7 @@ export const RulesEditor = (props: RulesEditorProps) => {
 
 /** A column group heading: its kind, how many columns it spans and its label. */
 interface GroupHeading {
-  kind: "access" | "obligation";
+  id: string;
   count: number;
   label: string;
 }
@@ -506,7 +521,13 @@ const TableHead = (props: {
   removeLabel?: string;
 }) => {
   const { columns, groups, subject, text, title, name, removeLabel } = props;
-  const startsAt = groups && groups.length > 1 ? (groups[0]?.count ?? -1) : -1;
+  // Column positions where a group after the first starts.
+  const starts = new Set<number>();
+  let at = 0;
+  for (const g of groups?.slice(0, -1) ?? []) {
+    at += g.count;
+    starts.add(at);
+  }
   return (
     <thead>
       {groups && (
@@ -516,7 +537,7 @@ const TableHead = (props: {
             <th
               scope="colgroup"
               colSpan={g.count}
-              key={g.kind}
+              key={g.id}
               className={`raci-table__group${i > 0 ? " raci-col-group-start" : ""}`}
             >
               {g.label}
@@ -533,7 +554,7 @@ const TableHead = (props: {
           <th
             scope="col"
             key={a.id}
-            className={i === startsAt ? "raci-col-group-start" : undefined}
+            className={starts.has(i) ? "raci-col-group-start" : undefined}
             title={title(a)}
             aria-label={name(a)}
           >
