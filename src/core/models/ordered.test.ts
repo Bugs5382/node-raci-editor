@@ -511,3 +511,15 @@ describe("site administrators (superusers), off unless configured", () => {
     expect(getModel("ordered").capabilities.superuser).toBe(false);
   });
 });
+
+describe("ownerKinds on the model", () => {
+  it("is published for the editor, and left out by nearest", () => {
+    expect(getModel("ordered").ownerKinds).toEqual(["user"]);
+    expect(createOrderedModel({ ownerKinds: ["user", "group"] }).ownerKinds).toEqual([
+      "user",
+      "group",
+    ]);
+    expect(createOrderedModel({ ownerKinds: [] }).ownerKinds).toEqual([]);
+    expect(getModel("nearest").ownerKinds).toBeUndefined();
+  });
+});

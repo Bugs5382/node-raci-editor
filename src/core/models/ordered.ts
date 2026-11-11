@@ -221,6 +221,7 @@ export const createOrderedModel = (options: OrderedOptions = {}): RaciModel => {
     label: options.label ?? "Ordered rows",
     effects,
     categoryOptions: ["owners"],
+    ownerKinds,
     capabilities: {
       ordering: true,
       ownEffect: false,
