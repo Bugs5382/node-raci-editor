@@ -20,6 +20,7 @@ import {
   removeSubject,
   setCell,
   setStopInheriting,
+  stableRows,
 } from "@/react/editor/model";
 import { SubjectPicker } from "@/react/editor/SubjectPicker";
 import { editorStrings } from "@/react/editor/strings";
@@ -77,7 +78,10 @@ export const RulesEditor = (props: RulesEditorProps) => {
   const own = ruleSet.categories[categoryId];
   const entries = own?.entries ?? [];
   const stop = own?.stopInheriting ?? false;
-  const rows = deriveRows(entries, extras);
+  // Row order is remembered per category so a row never moves when its cells change.
+  const orderRef = useRef<Record<string, string[]>>({});
+  const rows = stableRows(orderRef.current[categoryId] ?? [], deriveRows(entries, extras));
+  orderRef.current[categoryId] = rows;
 
   const visible = new Set(settings.visibleActions);
   const columns = config.actions.filter((a) => visible.has(a.id));
@@ -234,11 +238,12 @@ export const RulesEditor = (props: RulesEditorProps) => {
                           <span className="raci-cell__text" aria-hidden="true">
                             {stateText(effect)}
                           </span>
-                          {via && (
-                            <span className="raci-cell__hint" aria-hidden="true">
-                              {t("editor.included")}
-                            </span>
-                          )}
+                          <span
+                            className={`raci-cell__hint${via ? "" : " raci-cell__hint--off"}`}
+                            aria-hidden="true"
+                          >
+                            {t("editor.included")}
+                          </span>
                         </button>
                       </td>
                     );

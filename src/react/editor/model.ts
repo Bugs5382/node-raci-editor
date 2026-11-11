@@ -52,6 +52,17 @@ export const deriveRows = (entries: Entry[], extras: string[] = []): string[] =>
   return rows;
 };
 
+/**
+ * Keep rows where they were: subjects of the previous order that are still wanted keep their
+ * place, new ones follow in the derived order. Editing a cell never reorders rows.
+ */
+export const stableRows = (previous: string[], derived: string[]): string[] => {
+  const wanted = new Set(derived);
+  const kept = previous.filter((s) => wanted.has(s));
+  const known = new Set(kept);
+  return [...kept, ...derived.filter((s) => !known.has(s))];
+};
+
 const withCategory = (
   ruleSet: RuleSet,
   categoryId: string,
@@ -70,8 +81,19 @@ export const setCell = (
   effect: Effect | undefined,
 ): RuleSet => {
   return withCategory(ruleSet, categoryId, (current) => {
-    const kept = current.entries.filter((e) => !(e.subject === subject && e.action === action));
-    return { ...current, entries: effect ? [...kept, { subject, action, effect }] : kept };
+    const entries: Entry[] = [];
+    let placed = false;
+    for (const e of current.entries) {
+      if (e.subject !== subject || e.action !== action) {
+        entries.push(e);
+      } else if (!placed && effect) {
+        // replace in place so the subject keeps its position in the list
+        entries.push({ subject, action, effect });
+        placed = true;
+      }
+    }
+    if (!placed && effect) entries.push({ subject, action, effect });
+    return { ...current, entries };
   });
 };
 
