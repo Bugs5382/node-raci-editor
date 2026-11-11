@@ -175,17 +175,18 @@ The host app owns its resources and checks requests itself: the resource tree an
 
 ## 📚 Guides
 
-| Guide                                        | What is in it                                                                                         |
-| -------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| [Getting started](guides/getting-started.md) | Install, the first screen, and what to wire up to your own data.                                      |
-| [The access model](guides/access-model.md)   | Subjects, actions, entries, the four-step resolution with worked examples, and the JSON wire format.  |
-| [Configuration](guides/configuration.md)     | `RaciConfig`, `RaciSettings`, subject kinds, the resource tree and every string key.                  |
-| [Components](guides/components.md)           | `RulesEditor`, `Simulator` and `SettingsPanel`: props, events, immutability, accessibility, keyboard. |
-| [Test vectors](guides/test-vectors.md)       | The shared `decide()` vectors, with a TypeScript runner and a Go sketch.                              |
-| [Extending](guides/extending.md)             | Adding an action, a subject kind or a settings preset, and layering a token override.                 |
-| [Theming](guides/theming.md)                 | Every `--raci-*` token, light and dark, and how to override them.                                     |
-| [Demo](guides/demo.md)                       | `RaciDemo`, its sample data and the `raci-editor-demo` command.                                       |
-| [Architecture](guides/architecture.md)       | The layout for contributors.                                                                          |
+| Guide                                           | What is in it                                                                                         |
+| ----------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| [Getting started](guides/getting-started.md)    | Install, the first screen, and what to wire up to your own data.                                      |
+| [The access model](guides/access-model.md)      | Subjects, actions, entries, the four-step resolution with worked examples, and the JSON wire format.  |
+| [Configuration](guides/configuration.md)        | `RaciConfig`, `RaciSettings`, subject kinds, the resource tree and every string key.                  |
+| [Components](guides/components.md)              | `RulesEditor`, `Simulator` and `SettingsPanel`: props, events, immutability, accessibility, keyboard. |
+| [Test vectors](guides/test-vectors.md)          | The shared `decide()` vectors, with a TypeScript runner and a Go sketch.                              |
+| [Extending](guides/extending.md)                | Adding an action, a subject kind or a settings preset, and layering a token override.                 |
+| [Theming](guides/theming.md)                    | Every `--raci-*` token, light and dark, and how to override them.                                     |
+| [Demo](guides/demo.md)                          | `RaciDemo`, its sample data and the `raci-editor-demo` command.                                       |
+| [Rule models (design)](guides/models-design.md) | Design for pluggable rule models: `nearest`, `ordered`, vectors per model and the order of work.      |
+| [Architecture](guides/architecture.md)          | The layout for contributors.                                                                          |
 
 The API reference is generated from the source with `npm run docs`.
 
