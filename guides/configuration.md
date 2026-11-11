@@ -21,8 +21,14 @@ object changes identity.
 interface ActionDef {
   id: string;
   label?: string;
+  shortLabel?: string;
   description?: string;
   implies?: string[];
+  kind?: "access" | "obligation";
+  group?: string;
+  requires?: string[];
+  ownerHas?: boolean;
+  outcome?: { allowed: string; denied: string };
 }
 ```
 
@@ -34,6 +40,68 @@ interface ActionDef {
 - The order of the `actions` array is the default column order. The settings panel can reorder and
   hide them per user.
 - Action ids that appear in `implies` but not in the list match only by id.
+- `shortLabel` is a short column heading (for example `R`, `APV`). Whether it is shown is the
+  editor's `headerMode` (`full`, `short` or `auto`, the default: short at compact density or when the
+  grid is narrow). The full label is always the heading's tooltip and its accessible name, and an
+  action with no `shortLabel` shows its label in every mode.
+- `group` puts the action's column in a group. It is an id you choose, and the groups and their
+  labels are yours: `config.groups` lists them in the order they are drawn, each with its label, for
+  example `[{ id: "permissions", label: "Permissions" }, { id: "obligations", label: "Obligations" }]`
+  with Read, Author and Approve in the first and Manage and Acknowledge in the second. With more than
+  one group the editor draws a heading row, in the grid and in the inherited tables, and the key for
+  short headings names each group. One group alone draws no heading row.
+- Without `group`, `kind` (`"access"` by default, or `"obligation"`) is the group. The labels of
+  those two come from `config.kindLabels` or the strings `editor.group.access` ("Access") and
+  `editor.group.obligation` ("Obligations"), which are only defaults you can override. A group id
+  with no label in `groups` or `kindLabels` shows as the id. Listed groups come first, in your
+  order; any other group follows, and each group keeps your column order.
+- The built-in subject `everyone:*` is labelled by the string `editor.everyone` ("Everyone").
+- The fields below are read by the `"ordered"` model (see [Rule models](models-design.md)). The
+  `"nearest"` model ignores them.
+  - `requires` lists actions that must also be allowed for this one to be allowed. It is not
+    `implies`: `implies` widens what a cell covers, `requires` narrows the final answer. An action
+    that requires `read` is denied when `read` is denied, whatever its own row says.
+  - `ownerHas` says whether a category's owners always have the action. It defaults to true, except
+    for an obligation, so owners are not required to acknowledge unless the host says so.
+  - `outcome` holds the words for an allowed and a denied result of this action.
+- Options of the `"ordered"` model, set with `createOrderedModel(options)` (the registered `"ordered"` has the defaults): `ownerKinds` (the subject kinds that may own a category; default `["user"]`, empty switches owners off), `implicitSubjects` (default the built-in Everyone), `ownerActions`, and `superusers: { subjects, actions }` (subjects that always have the listed actions, whatever any row says, like owners but host-supplied and not tied to a category; off unless set, and an action you do not list follows the rows). Manage in a host's config usually implies Read and Author only; list `implies` as you want it.
+
+## Cell appearance
+
+Whoever uses the package can set how the cells look, in two places. Both are optional; nothing
+changes without them.
+
+**Host config, `config.cellStates`.** One entry per state: `allow`, `deny`, `none` (empty),
+`inheritedAllow`, `inheritedDeny` and `included` (an empty cell another cell covers). Every field of
+an entry is optional:
+
+| Field       | Meaning                                                                                                |
+| ----------- | ------------------------------------------------------------------------------------------------------ |
+| `glyph`     | Text, or a function `(state) => ReactNode` for an icon. An empty string draws no glyph.                |
+| `text`      | The word beside the glyph. An empty string hides the word.                                             |
+| `label`     | The state's name in the cell's accessible name ("Alice, Read: yes").                                   |
+| `tooltip`   | The cell's tooltip.                                                                                    |
+| `colors`    | `{ fg, bg, border }`: a CSS colour or `var(--token)`. The green and red defaults are the token values. |
+| `shape`     | `{ radius, borderStyle, borderWidth }`.                                                                |
+| `className` | An extra class on the cell.                                                                            |
+
+**User settings, `settings.cells`.** The serializable part of the same entries (everything except a
+glyph function), plus the cell size: `{ size: { width, height }, states: { allow: { glyph: "Y" } } }`.
+Settings override the host's entry field by field. The size is in px, from 24 to 240 wide and from 16
+to 120 high, so cells can be much smaller than the density defaults (96 by 56 and 144 by 28); empty
+uses the density's size. `normalizeCells(value)` checks any such value and returns what is valid
+with a list of what it dropped; `normalizeSettings` and the settings panel use it, so what you
+store is valid.
+
+**The Settings panel** has a Cells section: a live preview of the six states drawn by the real cell,
+the size, and for each state a glyph, a word, a tooltip and three colour inputs. It emits through
+`onChange` as `settings.cells` and stores nothing; the host persists what it receives and passes it
+back. An empty text field keeps the default (to draw nothing, type a single space).
+
+**Guarantees.** The box size comes from the size tokens (`--raci-cell-width` and
+`--raci-cell-height`) only. A glyph or word that is too big is clipped, never resizes the box, the
+row or the column, and stays centred. The state is still carried by the glyph or word as well as
+colour, so choosing colours with little contrast is only a matter of taste, not of meaning.
 
 ## Subjects without a directory
 

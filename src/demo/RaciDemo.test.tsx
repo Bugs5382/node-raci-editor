@@ -281,6 +281,114 @@ describe("cell variants", () => {
   });
 });
 
+describe("editor start", () => {
+  it("starts editable by default and offers an opt-in read-only start", async () => {
+    const user = userEvent.setup();
+    render(<RaciDemo />);
+    const group = screen.getByRole("group", { name: "Editor start" });
+    expect(group.querySelectorAll("button")).toHaveLength(2);
+    expect(screen.getByRole("button", { name: "editable" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    expect(screen.queryByRole("button", { name: "Edit" })).toBeNull();
+    for (const c of document.querySelectorAll("tbody button.raci-cell")) expect(c).toBeEnabled();
+
+    await user.click(screen.getByRole("button", { name: "read-only" }));
+    expect(screen.getByRole("button", { name: "Edit" })).toBeInTheDocument();
+    for (const c of document.querySelectorAll("tbody button.raci-cell")) expect(c).toBeDisabled();
+  });
+
+  it("Edit, change, Save in the read-only start keeps the change", async () => {
+    const user = userEvent.setup();
+    render(<RaciDemo />);
+    await user.click(screen.getByRole("button", { name: "read-only" }));
+    const before = JSON.stringify(shownJson());
+    await user.click(screen.getByRole("button", { name: "Edit" }));
+    await user.click(document.querySelector("tbody button.raci-cell") as HTMLElement);
+    await user.click(screen.getByRole("button", { name: "Save" }));
+    expect(screen.getByRole("button", { name: "Edit" })).toBeInTheDocument();
+    expect(JSON.stringify(shownJson())).not.toBe(before);
+  });
+});
+
+describe("the short-labels preset", () => {
+  it("shows R A APV M ACK under Permissions and Obligations, with the full names as names", async () => {
+    const user = userEvent.setup();
+    render(<RaciDemo />);
+    await user.selectOptions(screen.getByRole("combobox", { name: "Preset" }), "short");
+    const heads = Array.from(
+      document.querySelectorAll<HTMLElement>("thead tr:last-child th[scope=col]"),
+    ).map((th) => th.textContent?.trim());
+    expect(heads.slice(1, 6)).toEqual(["R", "A", "APV", "M", "ACK"]);
+    expect(screen.getAllByRole("columnheader", { name: "Acknowledge" })[0]).toHaveTextContent(
+      "ACK",
+    );
+    expect(screen.getAllByRole("columnheader", { name: "Permissions" }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole("columnheader", { name: "Obligations" }).length).toBeGreaterThan(0);
+    expect(screen.getByRole("rowheader", { name: "Everyone" })).toBeInTheDocument();
+  });
+
+  it("has a switch for the heading labels", async () => {
+    const user = userEvent.setup();
+    render(<RaciDemo initialPreset="short" />);
+    const group = screen.getByRole("group", { name: "Heading labels" });
+    expect(group.querySelectorAll("button")).toHaveLength(3);
+    await user.click(screen.getByRole("button", { name: "full" }));
+    const heads = Array.from(
+      document.querySelectorAll<HTMLElement>("thead tr:last-child th[scope=col]"),
+    ).map((th) => th.textContent?.trim());
+    expect(heads.slice(1, 6)).toEqual(["Read", "Author", "Approve", "Manage", "Acknowledge"]);
+  });
+});
+
+describe("the short-labels preset on the ordered model", () => {
+  it("explains a site administrator in the simulator", async () => {
+    const user = userEvent.setup();
+    render(<RaciDemo initialPreset="short" />);
+    await user.click(screen.getByRole("tab", { name: "Simulator" }));
+    await user.type(screen.getByRole("combobox", { name: "Person" }), "Ines");
+    await user.click(await screen.findByRole("option", { name: /Ines Moreau/ }, { timeout: 2000 }));
+    await user.type(screen.getByRole("combobox", { name: "Extra memberships" }), "Site");
+    await user.click(
+      await screen.findByRole("option", { name: /Site administrator/ }, { timeout: 2000 }),
+    );
+    const manage = screen.getByRole("rowheader", { name: "Manage" }).closest("tr") as HTMLElement;
+    expect(manage).toHaveTextContent("Would be allowed");
+    expect(manage).toHaveTextContent("always has this action");
+    const approve = screen.getByRole("rowheader", { name: "Approve" }).closest("tr") as HTMLElement;
+    expect(approve).toHaveTextContent("Would be denied");
+  });
+});
+
+describe("the custom cells preset", () => {
+  it("draws the host's glyphs and colours at a smaller cell size", async () => {
+    const user = userEvent.setup();
+    render(<RaciDemo />);
+    await user.selectOptions(screen.getByRole("combobox", { name: "Preset" }), "cells");
+    const glyphs = Array.from(
+      document.querySelectorAll(".raci-editor tbody .raci-cell__glyph"),
+    ).map((g) => g.textContent);
+    expect(glyphs).toContain("Y");
+    const root = document.querySelector(".raci-editor") as HTMLElement;
+    expect(root.style.getPropertyValue("--raci-cell-width")).toBe("64px");
+  });
+
+  it("lets the Settings tab change the look, with a live preview", async () => {
+    const user = userEvent.setup();
+    render(<RaciDemo initialPreset="cells" />);
+    await user.click(screen.getByRole("tab", { name: "Settings" }));
+    const cells = screen.getByRole("group", { name: "Cells" });
+    expect(cells.querySelectorAll("[data-testid=cells-preview] .raci-cell")).toHaveLength(6);
+    await user.type(screen.getByRole("textbox", { name: "Allow glyph" }), "!");
+    await user.click(screen.getByRole("tab", { name: "Editor" }));
+    const glyphs = Array.from(
+      document.querySelectorAll(".raci-editor tbody .raci-cell__glyph"),
+    ).map((g) => g.textContent);
+    expect(glyphs).toContain("!");
+  });
+});
+
 describe("the capabilities-only preset", () => {
   it("edits with a flat choice: no kind chooser, no search, no directory", async () => {
     const user = userEvent.setup();

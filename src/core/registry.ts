@@ -22,11 +22,15 @@ OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 */
 import type { RaciModel } from "./model.js";
 import { nearest } from "./models/nearest.js";
+import { ordered } from "./models/ordered.js";
 
 /** The model used when neither the call nor the rule set names one. */
 export const DEFAULT_MODEL_ID = "nearest";
 
-const models = new Map<string, RaciModel>([[nearest.id, nearest]]);
+const models = new Map<string, RaciModel>([
+  [nearest.id, nearest],
+  [ordered.id, ordered],
+]);
 
 /** Register a model by id. Throws on a duplicate id; built-in models cannot be replaced. */
 export const registerModel = (model: RaciModel): void => {
