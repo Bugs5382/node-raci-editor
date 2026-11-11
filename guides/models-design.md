@@ -210,9 +210,13 @@ Algorithm for one question (`person`, `action`, `category`), numbered:
 3. Rows. Walk the effective list top down. The first row whose subject matches and that speaks to
    the action decides: green allows, red denies. Empty cells are skipped.
 4. Implies. A cell on action `X` also speaks to every action `X` implies (Author and Approve
-   imply Read, Manage implies Author, Approve and Read), with the same colour. Inside one row a
-   cell on the asked action itself beats a cell that only implies it; across rows, position
-   decides. `implies` only widens what a cell covers.
+   imply Read, Manage implies Author, Approve and Read), with the same colour. Rows are
+   read in order, so position decides between rows. `implies` widens what a cell covers, and an
+   allowed higher action also gives the lower ones even over an explicit deny of the lower one:
+   if the answer for an action is not an allow, any other action that implies it and is itself
+   allowed (by a row or an owner) makes it an allow, decided by that action's entry. Author gives
+   Read whatever a row says about Read. This only goes down: Author does not give Approve, and a
+   denied Author gives nothing.
 5. No row decided: denied, reason `default-deny`. For an obligation action that reads "not
    required".
 6. Requires. If the verdict is allowed and `ActionDef.requires` lists actions, answer each required
@@ -314,14 +318,16 @@ are written fresh from this document.
 
 ### 3.4 Differences for the owner to decide
 
-The design does not pick a side on these. Until each is answered, the vectors for it are marked
-`"pending"` and the model follows the owner's notes.
+Decided by the owner: items 1, 2 and 4 below. Acknowledge requires Read (1); an allowed Author or
+Approve gives Read even over a Read deny, as the running product does (2); and the own setting is
+left out of the ordered model (4). The model and its vectors follow those answers. The rest are
+open, and the model follows the owner's notes until each is answered.
 
-1. **Acknowledge and Read.** The running product treats the acknowledge tier as independent of
+1. **Acknowledge and Read (decided: Acknowledge requires Read).** The running product treats the acknowledge tier as independent of
    read: someone with only an acknowledge cell is informed although they cannot read. The notes
    say you must be able to read to acknowledge. The model follows the notes (`requires`). Which is
    right?
-2. **Author or Approve over a Read deny.** The running product decides Read first; if that is not
+2. **Author or Approve over a Read deny (decided: the higher action gives Read).** The running product decides Read first; if that is not
    allowed, an allowed Author or Approve then confers Read, so an explicit Read deny does not stop
    a person who is allowed to author. In this design Author's cell covers Read by position in the
    list, so a red Read row above a green Author row denies Read and Author alike (Author also needs
@@ -329,7 +335,7 @@ The design does not pick a side on these. Until each is answered, the vectors fo
 3. **Site admin read-all.** The running product lets a site admin read everything but never approve
    or author. The notes do not mention it and `"ordered"` has no such step. Should the model have
    one, or is it the host's job (an Everyone row or a host-side override)?
-4. **The `own` setting** (allowed only for what the person created). The running product has it; the
+4. **The `own` setting (decided: left out of the ordered model).** (allowed only for what the person created). The running product has it; the
    notes do not. Should `"ordered"` offer it as an optional effect, or leave it to a custom model?
 5. **Manage.** The notes call Manage a new action. The running product has no separate Manage (its
    author action covers editing and managing). What does Manage imply? This design says Read,
