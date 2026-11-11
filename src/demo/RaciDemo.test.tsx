@@ -249,3 +249,31 @@ describe("props", () => {
     expect(document.querySelectorAll(".raci-simulator")).toHaveLength(1);
   });
 });
+
+describe("the custom cells preset", () => {
+  it("draws the host's glyphs and colours at a smaller cell size", async () => {
+    const user = userEvent.setup();
+    render(<RaciDemo />);
+    await user.selectOptions(screen.getByRole("combobox", { name: "Preset" }), "cells");
+    const glyphs = Array.from(
+      document.querySelectorAll(".raci-editor tbody .raci-cell__glyph"),
+    ).map((g) => g.textContent);
+    expect(glyphs).toContain("Y");
+    const root = document.querySelector(".raci-editor") as HTMLElement;
+    expect(root.style.getPropertyValue("--raci-cell-width")).toBe("64px");
+  });
+
+  it("lets the Settings tab change the look, with a live preview", async () => {
+    const user = userEvent.setup();
+    render(<RaciDemo initialPreset="cells" />);
+    await user.click(screen.getByRole("tab", { name: "Settings" }));
+    const cells = screen.getByRole("group", { name: "Cells" });
+    expect(cells.querySelectorAll("[data-testid=cells-preview] .raci-cell")).toHaveLength(6);
+    await user.type(screen.getByRole("textbox", { name: "Allow glyph" }), "!");
+    await user.click(screen.getByRole("tab", { name: "Editor" }));
+    const glyphs = Array.from(
+      document.querySelectorAll(".raci-editor tbody .raci-cell__glyph"),
+    ).map((g) => g.textContent);
+    expect(glyphs).toContain("!");
+  });
+});

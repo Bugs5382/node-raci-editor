@@ -21,9 +21,13 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 */
 import { useEffect, useId, useMemo, useRef, useState } from "react";
+import type { CSSProperties } from "react";
+import { cellStateId, normalizeCells, resolveCellStyle } from "@/core/cells";
 import { defaultSettings } from "@/core/types";
 import type {
   ActionDef,
+  CellStateId,
+  CellStateStyle,
   Effect,
   Entry,
   RaciConfig,
@@ -32,7 +36,7 @@ import type {
   RuleSet,
 } from "@/core/types";
 import { makeT } from "@/react/strings";
-import { EffectIcon } from "@/react/editor/Icon";
+import { cellGlyph, cellInline } from "@/react/editor/cellFace";
 import {
   cellEffect,
   deriveRows,
@@ -89,6 +93,17 @@ export const RulesEditor = (props: RulesEditorProps) => {
   const { config, ruleSet, categoryId, onChange, readOnly = false, className } = props;
   const settings: RaciSettings = { ...defaultSettings(config), ...props.settings };
   const t = useMemo(() => makeT(config, editorStrings), [config]);
+  const cells = useMemo(() => normalizeCells(settings.cells).value, [settings.cells]);
+  const styleOf = (effect: Effect | undefined, inherited: boolean, included: boolean) => {
+    const id = cellStateId(effect, inherited, included);
+    return { id, st: resolveCellStyle(id, config.cellStates, cells) };
+  };
+  const rootStyle: CSSProperties | undefined = cells.size
+    ? ({
+        "--raci-cell-width": `${cells.size.width}px`,
+        "--raci-cell-height": `${cells.size.height}px`,
+      } as CSSProperties)
+    : undefined;
   const uid = useId();
 
   // Subjects added in the UI that have no entry yet, kept per category for the life of the editor.
@@ -173,7 +188,7 @@ export const RulesEditor = (props: RulesEditorProps) => {
     .join(" ");
 
   return (
-    <section className={rootClass} aria-labelledby={`${uid}-title`}>
+    <section className={rootClass} style={rootStyle} aria-labelledby={`${uid}-title`}>
       <h2 id={`${uid}-title`} className="raci-editor__title">
         {t("editor.title", { category: resourceLabel(categoryId) })}
       </h2>
@@ -231,16 +246,18 @@ export const RulesEditor = (props: RulesEditorProps) => {
                   {columns.map((a) => {
                     const effect = cellEffect(entries, subject, a.id);
                     const via = effect === undefined ? included.get(a.id) : undefined;
+                    const { id: sid, st } = styleOf(effect, false, via !== undefined);
+                    const word = st.label ?? stateWord(effect);
                     const base = t("editor.cellLabel", {
                       subject: label,
                       action: actionName(a),
-                      state: stateWord(effect),
+                      state: word,
                     });
                     const aria = via
                       ? t("editor.cellLabelIncluded", {
                           subject: label,
                           action: actionName(a),
-                          state: stateWord(effect),
+                          state: word,
                           via: actionName(via),
                         })
                       : base;
@@ -248,19 +265,21 @@ export const RulesEditor = (props: RulesEditorProps) => {
                       <td key={a.id}>
                         <button
                           type="button"
-                          className={`raci-cell raci-cell--${effect ?? "blank"}${via ? " raci-cell--included" : ""}`}
+                          className={`raci-cell raci-cell--${effect ?? "blank"}${via ? " raci-cell--included" : ""}${st.className ? ` ${st.className}` : ""}`}
+                          style={cellInline(st)}
                           aria-label={aria}
                           title={
-                            via
+                            st.tooltip ??
+                            (via
                               ? t("editor.includedVia", { action: actionName(via) })
-                              : stateText(effect)
+                              : stateText(effect))
                           }
                           disabled={readOnly}
                           onClick={() => cycle(subject, a)}
                         >
                           <span className="raci-cell__primary" aria-hidden="true">
-                            <EffectIcon effect={effect} />
-                            <span className="raci-cell__text">{stateText(effect)}</span>
+                            {cellGlyph(st, sid, effect)}
+                            <span className="raci-cell__text">{st.text ?? stateText(effect)}</span>
                           </span>
                           <span
                             className={`raci-cell__secondary${via ? "" : " raci-cell__secondary--off"}`}
@@ -323,6 +342,7 @@ export const RulesEditor = (props: RulesEditorProps) => {
           subjectLabel={subjectLabel}
           stateWord={stateWord}
           stateText={stateText}
+          styleOf={styleOf}
           t={t}
         />
       ))}
@@ -355,11 +375,16 @@ interface InheritedTableProps {
   subjectLabel: (subject: string) => string;
   stateWord: (effect: Effect | undefined) => string;
   stateText: (effect: Effect | undefined) => string;
+  styleOf: (
+    effect: Effect | undefined,
+    inherited: boolean,
+    included: boolean,
+  ) => { id: CellStateId; st: CellStateStyle };
   t: (key: string, vars?: Record<string, string | number>) => string;
 }
 
 const InheritedTable = (props: InheritedTableProps) => {
-  const { title, note, entries, columns, subjectLabel, stateWord, stateText, t } = props;
+  const { title, note, entries, columns, subjectLabel, stateWord, stateText, styleOf, t } = props;
   return (
     <div className="raci-editor__inherited">
       <h3 className="raci-editor__inherited-title">{title}</h3>
@@ -387,20 +412,22 @@ const InheritedTable = (props: InheritedTableProps) => {
                 </th>
                 {columns.map((a) => {
                   const effect = cellEffect(entries, subject, a.id);
+                  const { id: sid, st } = styleOf(effect, true, false);
                   return (
                     <td key={a.id}>
                       <span
-                        className={`raci-cell raci-cell--${effect ?? "blank"} raci-cell--inherited`}
+                        className={`raci-cell raci-cell--${effect ?? "blank"} raci-cell--inherited${st.className ? ` ${st.className}` : ""}`}
+                        style={cellInline(st)}
                         role="img"
                         aria-label={t("editor.cellLabel", {
                           subject: subjectLabel(subject),
                           action: actionName(a),
-                          state: stateWord(effect),
+                          state: st.label ?? stateWord(effect),
                         })}
                       >
                         <span className="raci-cell__primary" aria-hidden="true">
-                          <EffectIcon effect={effect} />
-                          <span className="raci-cell__text">{stateText(effect)}</span>
+                          {cellGlyph(st, sid, effect)}
+                          <span className="raci-cell__text">{st.text ?? stateText(effect)}</span>
                         </span>
                         <span
                           className="raci-cell__secondary raci-cell__secondary--off"

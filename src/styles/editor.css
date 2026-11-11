@@ -405,3 +405,14 @@
     transition: none;
   }
 }
+
+/* A custom glyph: clipped to the box, never resizing it. */
+.raci-editor .raci-cell__glyph {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  max-width: 100%;
+  overflow: hidden;
+  line-height: 1;
+}

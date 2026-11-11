@@ -22,6 +22,8 @@ OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 */
 /** Shared contract for the package. Every module builds against these types. */
 
+import type { ReactNode } from "react";
+
 /** Allow or deny. */
 export type Effect = "allow" | "deny";
 
@@ -150,6 +152,65 @@ export interface SubjectKind {
   resolve?: (subject: string) => string | undefined;
 }
 
+/** The states a grid cell can be drawn in. `none` is an empty cell; `included` is an empty cell another cell covers. */
+export type CellStateId =
+  | "allow"
+  | "deny"
+  | "none"
+  | "inheritedAllow"
+  | "inheritedDeny"
+  | "included";
+
+/** Colours of a cell state: CSS colours or `var(--token)`. An absent field keeps the default. */
+export interface CellColors {
+  fg?: string;
+  bg?: string;
+  border?: string;
+}
+
+/** Shape of a cell state. Never changes the box size, which comes from the size tokens only. */
+export interface CellShape {
+  radius?: string;
+  borderStyle?: "solid" | "dashed" | "dotted" | "none";
+  borderWidth?: string;
+}
+
+/** How the host draws one cell state. Every field is optional. */
+export interface CellStateStyle {
+  /** A glyph as text, or a function returning an icon. An empty string draws no glyph. */
+  glyph?: string | ((state: CellStateId) => ReactNode);
+  /** A word shown beside the glyph. An empty string hides the word. */
+  text?: string;
+  /** The state's name in the accessible name and the legend. */
+  label?: string;
+  /** A short form of the label, for narrow grids. */
+  shortLabel?: string;
+  /** The tooltip. */
+  tooltip?: string;
+  colors?: CellColors;
+  shape?: CellShape;
+  /** An extra class on the cell. */
+  className?: string;
+}
+
+/** The serializable part of {@link CellStateStyle}, which a user can edit and a host can store. */
+export interface CellStateSettings {
+  glyph?: string;
+  text?: string;
+  label?: string;
+  tooltip?: string;
+  colors?: CellColors;
+  shape?: CellShape;
+  className?: string;
+}
+
+/** Cell appearance a user chooses. Overrides `RaciConfig.cellStates`; the package stores nothing. */
+export interface CellSettings {
+  /** The cell box in px. When absent, the density's size applies. */
+  size?: { width: number; height: number };
+  states?: Partial<Record<CellStateId, CellStateSettings>>;
+}
+
 /** Everything the host passes to the drop-in pieces. */
 export interface RaciConfig {
   /** The actions, in default column order. */
@@ -160,6 +221,8 @@ export interface RaciConfig {
   resources: ResourceNode[];
   /** Overrides for any UI string, by key; see the configuration guide for the keys. */
   strings?: Partial<Record<string, string>>;
+  /** How each cell state is drawn: glyph, word, label, tooltip, colours, shape and class. */
+  cellStates?: Partial<Record<CellStateId, CellStateStyle>>;
 }
 
 /** Display and behaviour settings the SettingsPanel edits; the editor and simulator read them. */
@@ -174,6 +237,8 @@ export interface RaciSettings {
   confirmDeny: boolean;
   /** Row density. */
   density: "comfortable" | "compact";
+  /** Cell appearance and size; see {@link CellSettings}. Absent means the defaults. */
+  cells?: CellSettings;
 }
 
 /** The settings used when the host passes none: every action and kind on, comfortable density. */
