@@ -33,8 +33,12 @@ All optional.
 
 ## What is on screen
 
-- A resource tree. Picking a node sets the category for the editor and the simulator.
-- Tabs: Editor (`RulesEditor`), Simulator (`Simulator`) and Settings (`SettingsPanel`), with arrow
+- A resource tree in a dashed frame captioned "host app: resource tree, not part of the package".
+  It stands in for your own navigation: the package takes the selected category id plus the
+  resource data (nodes, parents, labels) and renders no resource list of its own. The only
+  exception is the simulator's optional built-in category select, a convenience and not a tree
+  (it can be hidden with `show.category=false` once that prop is available).
+- The package area, captioned "package: rules editor, simulator, settings", with tabs: Editor (`RulesEditor`), Simulator (`Simulator`) and Settings (`SettingsPanel`), with arrow
   key navigation.
 - Two presets that differ in actions, subject kinds, tree and strings, to show nothing is hard-coded.
 - The rule set as JSON: copy, download, upload with validation, and reset to the sample.
@@ -77,7 +81,7 @@ The demo is part of the published package, so the package is bigger. Measured wi
 | Build                                                   | Files | Unpacked | Packed   |
 | ------------------------------------------------------- | ----- | -------- | -------- |
 | Before (library and styles only)                        | 10    | 206.9 kB | 40.0 kB  |
-| After (`./demo`, `demo.css`, static demo site, the bin) | 23    | 544.3 kB | 136.1 kB |
+| After (`./demo`, `demo.css`, static demo site, the bin) | 23    | 546.0 kB | 136.4 kB |
 
 Where the growth is: the static site is 281 kB unpacked, of which about 190 kB is React and React
 DOM bundled into the page (79 kB gzipped; this is the page only, the `./demo` export itself uses your

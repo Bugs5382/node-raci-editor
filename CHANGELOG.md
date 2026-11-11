@@ -8,7 +8,7 @@
 
 - feat(demo): `node-raci-editor/demo` exports `RaciDemo` (a ready-to-render demo with both presets, tabs, JSON view, theme switch and brand override), `demoPresets` and `demoRuleSet`; `node-raci-editor/demo.css` is its stylesheet (#9)
 - feat(demo): the built demo page ships in the package as `dist/demo-site`, served by the new `raci-editor-demo` command (Node standard library only, port 5179 by default); the Vite app in `demo/` now only mounts `RaciDemo` (#9)
-- chore(repo): `config.packMaxUnpackedBytes` raised from 400000 to 600000 for the demo (206.9 kB to 544.3 kB unpacked; see guides/demo.md) (#9)
+- chore(repo): `config.packMaxUnpackedBytes` raised from 400000 to 600000 for the demo (206.9 kB to 546.0 kB unpacked; see guides/demo.md) (#9)
 
 #### Bug Fixes
 

@@ -114,12 +114,16 @@ const Workbench = ({ presetId }: { presetId: string }) => {
 
   return (
     <div className="demo-layout">
-      <nav className="demo-sidebar" aria-label="Resources">
-        <h2 className="demo-h2">Resources</h2>
-        <Tree nodes={config.resources} selected={categoryId} onSelect={setCategoryId} />
-      </nav>
+      <div className="demo-host-frame">
+        <p className="demo-host-caption">host app: resource tree, not part of the package</p>
+        <nav className="demo-sidebar" aria-label="Resources">
+          <h2 className="demo-h2">Resources</h2>
+          <Tree nodes={config.resources} selected={categoryId} onSelect={setCategoryId} />
+        </nav>
+      </div>
 
       <main className="demo-main">
+        <p className="demo-package-caption">package: rules editor, simulator, settings</p>
         <h2 className="demo-h2" data-testid="demo-category">
           Rules for {nodeLabel(config.resources, categoryId)}
         </h2>

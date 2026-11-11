@@ -93,6 +93,21 @@
   padding: var(--raci-space-5);
 }
 
+.demo-host-frame {
+  align-self: start;
+  padding: var(--raci-space-3);
+  border: 2px dashed var(--raci-border-strong);
+  border-radius: var(--raci-radius-lg);
+}
+
+.demo-host-caption,
+.demo-package-caption {
+  margin: 0 0 var(--raci-space-3);
+  color: var(--raci-text-muted);
+  font-size: var(--raci-font-size-sm);
+  font-style: italic;
+}
+
 .demo-sidebar {
   padding: var(--raci-space-4);
   border: 1px solid var(--raci-border);

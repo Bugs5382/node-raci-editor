@@ -61,6 +61,19 @@ describe("presets", () => {
   });
 });
 
+describe("package boundary", () => {
+  it("labels the host-owned tree and the package area", () => {
+    render(<RaciDemo />);
+    const host = screen.getByText("host app: resource tree, not part of the package");
+    expect(host.closest(".demo-host-frame")).toContainElement(
+      screen.getByRole("navigation", { name: "Resources" }),
+    );
+    const pkg = screen.getByText("package: rules editor, simulator, settings");
+    expect(pkg.closest(".demo-main")).toContainElement(screen.getByRole("tablist"));
+    expect(pkg.closest(".demo-host-frame")).toBeNull();
+  });
+});
+
 describe("tree selection", () => {
   it("updates the category shown by the editor", async () => {
     const user = userEvent.setup();
