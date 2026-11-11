@@ -490,3 +490,24 @@
   margin: var(--raci-space-2) 0 0;
   font-size: var(--raci-font-size-xs);
 }
+
+/* Mode bar: Edit, or Cancel and Save, with a marker for unsaved changes. */
+.raci-editor__modebar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--raci-space-3);
+  min-height: var(--raci-control-height);
+}
+
+.raci-editor__unsaved {
+  margin-inline-end: auto;
+  min-height: 1lh;
+  color: var(--raci-text-muted);
+  font-size: var(--raci-font-size-sm, inherit);
+}
+
+/* Read-only view: removal keeps its place in the layout but cannot be reached or seen, so nothing moves. */
+.raci-editor--viewing .raci-button--quiet {
+  visibility: hidden;
+}

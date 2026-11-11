@@ -43,6 +43,8 @@ All optional.
 - A "Short labels" preset that uses the headings R A APV M ACK in two host-named groups (Permissions:
   Read, Author, Approve; Obligations: Manage, Acknowledge) and the built-in Everyone subject, and a
   Heading labels switch (auto, full, short).
+- An Editor start switch in the Editor tab: editable (default) or read-only (starts read-only; Edit, Save and
+  Cancel). The read-only start is opt-in.
 - A Cell variant switch in the Editor tab: box (default), marks (a check, an X or nothing) and custom
   (a sample host cell, exported as `demoRenderCell`).
 - Two presets that differ in actions, subject kinds, tree and strings, to show nothing is hard-coded.

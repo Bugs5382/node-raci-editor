@@ -34,8 +34,13 @@ export interface Entry {
 
 /** The rules of one category. */
 export interface CategoryRules {
-  /** When true, the walk up to the parent ends at this category. */
+  /** When true, the walk up to the parent ends at this category. Ignored by the "ordered" model. */
   stopInheriting?: boolean;
+  /**
+   * Subjects that own this category and everything below it. Read by models that have owners
+   * (`"ordered"`); only subjects of the kinds the model allows count. Absent means none.
+   */
+  owners?: string[];
   entries: Entry[];
 }
 
@@ -61,7 +66,7 @@ export interface ActionDef {
   implies?: string[];
   /**
    * `"access"` (default) states what a subject may do; `"obligation"` states what a subject must
-   * do. The editor groups the columns by kind under two headings when both kinds are present.
+   * do. The editor groups the columns by kind when no `group` is given and both kinds are present.
    */
   kind?: "access" | "obligation";
   /**
@@ -69,13 +74,25 @@ export interface ActionDef {
    * `kind`. With no `group` the group is the `kind`, or `"access"` when there is none.
    */
   group?: string;
+  /** Actions that must also be allowed for this one to be allowed (distinct from `implies`). */
+  requires?: string[];
+  /** Whether a category's owners always have this action. Default: true, except for an obligation. */
+  ownerHas?: boolean;
+  /** The words for an allowed and a denied result of this action. */
+  outcome?: { allowed: string; denied: string };
 }
 
 /** The person asking: every subject string that matches them (own id, groups, roles). */
 export interface Person {
-  /** Subjects that match this person, such as `user:alice`, `group:finance`, `role:approver`. */
+  /**
+   * The matchers that apply to the asker, resolved by the host: `user:alice`, `group:finance`,
+   * `can:ack` or any other `kind:id` string. The package never learns how a match is computed.
+   */
   subjects: string[];
 }
+
+/** The same as `Person`: the list of matchers that apply to whoever or whatever is asking. */
+export type Context = Person;
 
 /** Everything `decide()` needs: the rules, the action definitions, who asks, and the question. */
 export interface DecideInput {
@@ -89,7 +106,10 @@ export interface DecideInput {
 /** Why a decision came out the way it did. */
 export type DecideReason =
   | "entry" // a matching entry decided
-  | "default-deny"; // nothing matched on the walk
+  | "default-deny" // nothing matched on the walk
+  | "owner" // the category's owner list decided ("ordered" model)
+  | "requires" // a required action was not allowed ("ordered" model)
+  | "superuser"; // a host-listed superuser subject always has this action ("ordered" model)
 
 /** One entry that matched the asked action while walking a category. */
 export interface TraceMatch {
@@ -100,6 +120,8 @@ export interface TraceMatch {
   via: "direct" | "implied";
   /** True for the entry that produced the verdict. */
   decisive: boolean;
+  /** 0-based position of the entry's row in the category (the "ordered" model). */
+  row?: number;
 }
 
 /** What `decide()` saw in one visited category. */
@@ -109,6 +131,14 @@ export interface TraceStep {
   matches: TraceMatch[];
   /** True when the category stops inheriting, which ends the walk here. */
   stopInheriting?: boolean;
+  /** `"category"` when absent. `"owners"`, `"gate"`, `"confer"` and `"superuser"` come from the "ordered" model. */
+  kind?: "category" | "owners" | "gate" | "confer" | "superuser";
+  /** 0-based position of the step in the evaluation. */
+  order?: number;
+  /** For a gate step, the required action examined; for a confer step, the higher action that gave the asked one. */
+  action?: string;
+  /** For an owners or superuser step, the subject that matched. */
+  matched?: string;
 }
 
 /** Options of `decide()`. */
@@ -129,6 +159,8 @@ export interface Decision {
   path: string[];
   /** True when a stopInheriting category ended the walk without a match. */
   stoppedAt?: string;
+  /** The required action that was not allowed, when reason is "requires". */
+  gatedBy?: string;
   /** One step per visited category, nearest first. Only present when `decide()` was asked for it. */
   trace?: TraceStep[];
 }

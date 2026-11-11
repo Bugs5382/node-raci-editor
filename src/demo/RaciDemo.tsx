@@ -84,6 +84,7 @@ const Workbench = ({ presetId }: { presetId: string }) => {
   const [tab, setTab] = useState<TabId>("editor");
   const [variant, setVariant] = useState<SimulatorVariant>("list");
   const [cell, setCell] = useState<"box" | "marks" | "custom">("box");
+  const [start, setStart] = useState<"edit" | "view">("edit");
   const [headings, setHeadings] = useState<"auto" | "full" | "short">(preset.headerMode ?? "auto");
   const [settings, setSettings] = useState<RaciSettings>(() => defaultSettings(config));
   const [message, setMessage] = useState("");
@@ -188,6 +189,19 @@ const Workbench = ({ presetId }: { presetId: string }) => {
                   </button>
                 ))}
               </div>
+              <div className="demo-actions" role="group" aria-label="Editor start">
+                {(["edit", "view"] as const).map((v) => (
+                  <button
+                    key={v}
+                    type="button"
+                    className="demo-button"
+                    aria-pressed={start === v}
+                    onClick={() => setStart(v)}
+                  >
+                    {v === "edit" ? "editable" : "read-only"}
+                  </button>
+                ))}
+              </div>
               <div className="demo-actions" role="group" aria-label="Cell variant">
                 {(["box", "marks", "custom"] as const).map((v) => (
                   <button
@@ -202,12 +216,15 @@ const Workbench = ({ presetId }: { presetId: string }) => {
                 ))}
               </div>
               <RulesEditor
+                key={start}
                 headerMode={headings}
                 config={config}
                 ruleSet={ruleSet}
                 categoryId={categoryId}
                 onChange={setRuleSet}
                 settings={settings}
+                defaultMode={start === "view" ? "view" : undefined}
+                onSave={start === "view" ? () => setMessage("Saved.") : undefined}
                 cellVariant={cell === "marks" ? "marks" : "box"}
                 renderCell={cell === "custom" ? demoRenderCell : undefined}
               />
