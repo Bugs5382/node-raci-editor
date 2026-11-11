@@ -105,7 +105,7 @@ export const SettingsPanel = ({
                       disabled={index === 0}
                       onClick={() => emit(moveAction(value, id, -1))}
                     >
-                      Up
+                      {t("settings.moveUp")}
                     </button>
                     <button
                       type="button"
@@ -114,7 +114,7 @@ export const SettingsPanel = ({
                       disabled={index === visible.length - 1}
                       onClick={() => emit(moveAction(value, id, 1))}
                     >
-                      Down
+                      {t("settings.moveDown")}
                     </button>
                   </span>
                 ) : null}

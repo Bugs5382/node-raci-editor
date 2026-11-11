@@ -202,6 +202,8 @@ Keys with a variable list their variables in braces. The default text is in the 
 | `settings.actions.hint`        | Choose which actions are shown and in what order. |
 | `settings.actions.implies`     | Implies: {list}                                   |
 | `settings.actions.impliesNone` | Implies no other action                           |
+| `settings.moveUp`              | Up                                                |
+| `settings.moveDown`            | Down                                              |
 | `settings.actions.moveUp`      | Move {label} up                                   |
 | `settings.actions.moveDown`    | Move {label} down                                 |
 | `settings.actions.lastHint`    | At least one action must stay visible.            |
@@ -216,6 +218,7 @@ Keys with a variable list their variables in braces. The default text is in the 
 | `settings.density.compact`     | Compact                                           |
 | `settings.reset`               | Reset to defaults                                 |
 
-Two pieces of text are not configurable: the "Up" and "Down" button captions in the settings panel
-(their accessible names, `settings.actions.moveUp` and `moveDown`, are), and the action and kind
-labels themselves, which come from your `ActionDef.label` and `SubjectKind.label`.
+The "Up" and "Down" captions use `settings.moveUp` and `settings.moveDown`; the accessible names of
+those buttons, which carry the action label, use `settings.actions.moveUp` and `moveDown`. The one
+piece of text you do not set through `strings` is the action and kind labels themselves, which come
+from your `ActionDef.label` and `SubjectKind.label`.

@@ -7,6 +7,8 @@ export const settingsStrings: Record<string, string> = {
   "settings.actions.impliesNone": "Implies no other action",
   "settings.actions.moveUp": "Move {label} up",
   "settings.actions.moveDown": "Move {label} down",
+  "settings.moveUp": "Up",
+  "settings.moveDown": "Down",
   "settings.actions.lastHint": "At least one action must stay visible.",
   "settings.kinds.legend": "Subject kinds",
   "settings.kinds.hint": "Choose which kinds of subject can be picked.",

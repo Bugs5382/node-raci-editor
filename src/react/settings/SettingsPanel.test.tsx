@@ -39,6 +39,26 @@ describe("SettingsPanel", () => {
     expect(screen.getByRole("button", { name: "Start over" })).toBeInTheDocument();
   });
 
+  it("shows the Up and Down captions and lets config.strings override them", () => {
+    const view = setup();
+    const up = screen.getByRole("button", { name: "Move Edit up" });
+    expect(up).toHaveTextContent("Up");
+    expect(screen.getByRole("button", { name: "Move Edit down" })).toHaveTextContent("Down");
+    view.unmount();
+    render(
+      <SettingsPanel
+        config={{
+          ...config,
+          strings: { "settings.moveUp": "Hoch", "settings.moveDown": "Runter" },
+        }}
+        value={defaultSettings(config)}
+        onChange={() => {}}
+      />,
+    );
+    expect(screen.getByRole("button", { name: "Move Edit up" })).toHaveTextContent("Hoch");
+    expect(screen.getByRole("button", { name: "Move Edit down" })).toHaveTextContent("Runter");
+  });
+
   it("works without a className", () => {
     const { container } = render(
       <SettingsPanel config={config} value={defaultSettings(config)} onChange={() => {}} />,
