@@ -250,3 +250,37 @@ describe("stylesheet: toggling does not resize anything", () => {
     expect(viewing).not.toMatch(/(?:^|[\s;{])(width|height|padding|margin)[\w-]*\s*:/);
   });
 });
+
+describe("view mode with the cell variants", () => {
+  it("disables the marks cells while viewing and enables them in edit", async () => {
+    const user = userEvent.setup();
+    render(<RulesEditor {...base({ defaultMode: "view", cellVariant: "marks" })} />);
+    for (const c of cells()) {
+      expect(c).toHaveClass("raci-cell--marks");
+      expect(c).toBeDisabled();
+    }
+    await user.click(screen.getByRole("button", { name: "Edit" }));
+    for (const c of cells()) expect(c).toBeEnabled();
+  });
+
+  it("tells a host's renderCell it is read-only while viewing", async () => {
+    const seen: boolean[] = [];
+    const user = userEvent.setup();
+    render(
+      <RulesEditor
+        {...base({
+          defaultMode: "view",
+          renderCell: (cell) => {
+            seen.push(cell.readOnly);
+            return <span data-testid="mine">{cell.state}</span>;
+          },
+        })}
+      />,
+    );
+    expect(seen.length).toBeGreaterThan(0);
+    expect(seen.every((r) => r)).toBe(true);
+    seen.length = 0;
+    await user.click(screen.getByRole("button", { name: "Edit" }));
+    expect(seen.every((r) => !r)).toBe(true);
+  });
+});
