@@ -25,6 +25,7 @@ import type { ChangeEvent, KeyboardEvent, RefObject } from "react";
 import { defaultSettings } from "@/core/types";
 import type { RaciSettings, ResourceNode, RuleSet } from "@/core/types";
 import { RulesEditor } from "@/react/editor/index";
+import { demoRenderCell } from "@/demo/cells";
 import { SettingsPanel } from "@/react/settings/index";
 import { Simulator } from "@/react/simulator/Simulator";
 import type { SimulatorVariant } from "@/react/simulator/view";
@@ -82,6 +83,7 @@ const Workbench = ({ presetId }: { presetId: string }) => {
   const [categoryId, setCategoryId] = useState(preset.initialCategory);
   const [tab, setTab] = useState<TabId>("editor");
   const [variant, setVariant] = useState<SimulatorVariant>("list");
+  const [cell, setCell] = useState<"box" | "marks" | "custom">("box");
   const [settings, setSettings] = useState<RaciSettings>(() => defaultSettings(config));
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -171,13 +173,30 @@ const Workbench = ({ presetId }: { presetId: string }) => {
         </div>
         <div role="tabpanel" id={panelId} aria-labelledby={tabId(tab)} className="demo-panel">
           {tab === "editor" && (
-            <RulesEditor
-              config={config}
-              ruleSet={ruleSet}
-              categoryId={categoryId}
-              onChange={setRuleSet}
-              settings={settings}
-            />
+            <>
+              <div className="demo-actions" role="group" aria-label="Cell variant">
+                {(["box", "marks", "custom"] as const).map((v) => (
+                  <button
+                    key={v}
+                    type="button"
+                    className="demo-button"
+                    aria-pressed={cell === v}
+                    onClick={() => setCell(v)}
+                  >
+                    {v}
+                  </button>
+                ))}
+              </div>
+              <RulesEditor
+                config={config}
+                ruleSet={ruleSet}
+                categoryId={categoryId}
+                onChange={setRuleSet}
+                settings={settings}
+                cellVariant={cell === "marks" ? "marks" : "box"}
+                renderCell={cell === "custom" ? demoRenderCell : undefined}
+              />
+            </>
           )}
           {tab === "simulator" && (
             <>

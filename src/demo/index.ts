@@ -28,6 +28,7 @@ OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 export { RaciDemo } from "./RaciDemo.js";
 export type { RaciDemoProps } from "./RaciDemo.js";
+export { demoRenderCell } from "./cells.js";
 export { demoPresets, demoRuleSet } from "./data.js";
 export type { Preset as DemoPreset } from "./data.js";
 export type { ThemeChoice as DemoTheme } from "./io.js";
