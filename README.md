@@ -99,6 +99,65 @@ The package ships no tree component: the host renders its own resource tree and 
 
 See [Demo](guides/demo.md) for the props and the sample data builders.
 
+## 🧭 How a host app uses it
+
+The host app owns what it is protecting: the resource tree and picker, the subject directory, the rule storage and the enforcement. The package is the rules editor, the simulator and the settings panel, plus the pure `decide()`. Resources are data you pass in (ids, parents, labels, the selected `categoryId`); the package renders no resource list or picker of its own.
+
+```text
+  HOST APP (yours)                         PACKAGE (node-raci-editor)
+  ------------------------------------     ---------------------------------------
+
+  +-----------------------------+  resources   +-------------------------------+
+  | Resource tree and picker    |------------->|                               |
+  | ids, parents, labels, which |  categoryId  |  RulesEditor                  |
+  | one is selected             |------------->|  edits the rules of ONE       |
+  +-----------------------------+              |  category                     |
+                                               |                               |
+  +-----------------------------+  subjects    |   props in:  config, ruleSet, |
+  | Subject directory           |------------->|              categoryId       |
+  | people, groups, roles:      |  (search +   |   out:       onChange(ruleSet)|
+  | lookup and labels           |   labels)    +-------------------------------+
+  +-----------------------------+
+                                               +-------------------------------+
+  +-----------------------------+  actions     |                               |
+  | Actions and what they imply |------------->|  Simulator                    |
+  | read, author, approve,      |              |                               |
+  | manage (author -> read ...) |  rules       |  picks a person, evaluates    |
+  +-----------------------------+------------->|  each action, shows the       |
+                                               |  result and the reason        |
+                                               |   props in:  config, ruleSet, |
+  +-----------------------------+  rules       |              categoryId,      |
+  | Rule storage                |<-------------|              evaluate? (host) |
+  | keeps the rules JSON        |  onChange    +-------------------------------+
+  +--------------+--------------+
+                 |                              +-------------------------------+
+                 | ruleSet                      |  SettingsPanel                |
+                 v                              |  which actions and kinds to   |
+  +-----------------------------+               |  show; onChange(settings)     |
+  | Enforcement                 |  decide()     +-------------------------------+
+  | decide() here, or go-authz  |<-----------   decide(ruleSet, actions, person,
+  | in Go, same test vectors    |               category, action) -> Decision
+  +-----------------------------+
+
+  The package renders NO resource tree or picker. Your app owns it and passes the
+  selected categoryId plus the resource data (nodes, parents, labels).
+
+  EXAMPLE: a document library
+  ---------------------------
+  resources    library
+                 `-- contracts            (parent of contracts = library)
+  subject      alice = user:alice, member of group:finance-staff, role:approver
+  rules        library:   Allow group:finance-staff  author
+                          Allow role:approver        approve
+               contracts: Deny  group:finance-staff  author
+
+  alice asks:  author  on library    -> Allowed  (library: Allow finance-staff)
+               author  on contracts  -> Denied   (nearest category wins: the Deny)
+               approve on contracts  -> Allowed  (no entry in contracts, so the
+                                                  parent library: Allow approver)
+               read    on contracts  -> Denied   (a Deny on author includes read)
+```
+
 ## ✨ Features
 
 - 🧮 **A pure `decide()`** — default deny, nearest category wins, deny beats allow, no React, no DOM.
