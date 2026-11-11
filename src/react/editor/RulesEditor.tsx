@@ -229,17 +229,19 @@ export const RulesEditor = (props: RulesEditorProps) => {
                           className={`raci-cell raci-cell--${effect ?? "blank"}${via ? " raci-cell--included" : ""}`}
                           aria-label={aria}
                           title={
-                            via ? t("editor.includedVia", { action: actionName(via) }) : undefined
+                            via
+                              ? t("editor.includedVia", { action: actionName(via) })
+                              : stateText(effect)
                           }
                           disabled={readOnly}
                           onClick={() => cycle(subject, a)}
                         >
-                          <EffectIcon effect={effect} />
-                          <span className="raci-cell__text" aria-hidden="true">
-                            {stateText(effect)}
+                          <span className="raci-cell__primary" aria-hidden="true">
+                            <EffectIcon effect={effect} />
+                            <span className="raci-cell__text">{stateText(effect)}</span>
                           </span>
                           <span
-                            className={`raci-cell__hint${via ? "" : " raci-cell__hint--off"}`}
+                            className={`raci-cell__secondary${via ? "" : " raci-cell__secondary--off"}`}
                             aria-hidden="true"
                           >
                             {t("editor.included")}
@@ -374,9 +376,15 @@ const InheritedTable = (props: InheritedTableProps) => {
                           state: stateWord(effect),
                         })}
                       >
-                        <EffectIcon effect={effect} />
-                        <span className="raci-cell__text" aria-hidden="true">
-                          {stateText(effect)}
+                        <span className="raci-cell__primary" aria-hidden="true">
+                          <EffectIcon effect={effect} />
+                          <span className="raci-cell__text">{stateText(effect)}</span>
+                        </span>
+                        <span
+                          className="raci-cell__secondary raci-cell__secondary--off"
+                          aria-hidden="true"
+                        >
+                          {t("editor.included")}
                         </span>
                       </span>
                     </td>

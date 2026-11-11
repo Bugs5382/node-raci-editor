@@ -59,7 +59,7 @@ const stateOf = (el: Element): string =>
 describe.each(["comfortable", "compact"] as const)("state boxes in %s density", (density) => {
   it("covers every state: allow, deny, blank and blank included", () => {
     renderEditor(density);
-    expect(new Set(cells().map(stateOf))).toEqual(new Set(["allow", "deny", "blank", "included"]));
+    expect(new Set(cells().map(stateOf))).toEqual(new Set(["allow", "blank", "deny", "included"]));
   });
 
   it("gives every state the same box classes and no inline size", () => {

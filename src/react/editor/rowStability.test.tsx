@@ -180,10 +180,10 @@ describe("reserved space in every state", () => {
     const check = () => {
       for (const subject of order()) {
         for (const cell of cellsOf(subject)) {
-          const hint = cell.querySelector(".raci-cell__hint");
+          const hint = cell.querySelector(".raci-cell__secondary");
           expect(hint).not.toBeNull();
           const included = cell.classList.contains("raci-cell--included");
-          expect(hint!.classList.contains("raci-cell__hint--off")).toBe(!included);
+          expect(hint!.classList.contains("raci-cell__secondary--off")).toBe(!included);
           // same text in both states so the slot is the same size
           expect(hint!.textContent).toBe("included");
           expect(cell.querySelectorAll("svg").length).toBe(1);
@@ -258,11 +258,11 @@ describe("stylesheet reserves the same box for every state", () => {
     const cell = rule(".raci-editor .raci-cell");
     expect(cell).toMatch(/border: 1px solid/);
     expect(cell).toMatch(/line-height:/);
-    expect(cell).toMatch(/min-height:/);
+    expect(cell).toMatch(/\sheight:/);
     expect(rule(".raci-editor .raci-cell .raci-icon")).toMatch(/flex: none/);
-    const hint = rule(".raci-editor .raci-cell__hint");
+    const hint = rule(".raci-editor .raci-cell__secondary");
     expect(hint).toMatch(/line-height:/);
     expect(hint).toMatch(/white-space: nowrap/);
-    expect(rule(".raci-editor .raci-cell__hint--off")).toMatch(/visibility: hidden/);
+    expect(rule(".raci-editor .raci-cell__secondary--off")).toMatch(/visibility: hidden/);
   });
 });

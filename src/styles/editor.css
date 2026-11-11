@@ -13,6 +13,14 @@
   border: 1px solid var(--raci-border);
   border-radius: var(--raci-radius-md);
   min-width: 0;
+  /* One fixed box for every cell state; the compact density overrides both once. */
+  --raci-cell-width: 6rem;
+  --raci-cell-height: 3.5rem;
+}
+
+.raci-editor--compact {
+  --raci-cell-width: 9rem;
+  --raci-cell-height: 1.75rem;
 }
 
 .raci-editor *,
@@ -108,16 +116,17 @@
   text-align: center;
 }
 
-/* Cells: state is carried by icon and text as well as colour. */
+/* Cells: state is carried by icon and text as well as colour. Every state has the same fixed box. */
 .raci-editor .raci-cell {
   display: inline-flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: var(--raci-space-1);
-  min-width: 4.5rem;
-  min-height: var(--raci-control-height);
-  padding: var(--raci-space-2) var(--raci-space-3);
+  width: var(--raci-cell-width);
+  height: var(--raci-cell-height);
+  padding: var(--raci-space-1) var(--raci-space-2);
+  overflow: hidden;
   line-height: var(--raci-line-height);
   border: 1px solid var(--raci-blank-border);
   border-radius: var(--raci-radius-sm);
@@ -133,7 +142,6 @@
 }
 
 .raci-editor--compact .raci-cell {
-  min-height: 1.75rem;
   flex-direction: row;
 }
 
@@ -163,19 +171,35 @@
   height: 14px;
 }
 
+/* Primary line: icon and state word. */
+.raci-editor .raci-cell__primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--raci-space-2);
+  max-width: 100%;
+  min-width: 0;
+}
+
 .raci-editor .raci-cell__text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-/* The hint slot is always rendered so an included cell never changes the row height. */
-.raci-editor .raci-cell__hint {
-  font-size: var(--raci-font-size-xs);
+/* Secondary line: always rendered, so an included cell never changes the box. */
+.raci-editor .raci-cell__secondary {
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
   font-style: italic;
   line-height: var(--raci-line-height);
   white-space: nowrap;
 }
 
-.raci-editor .raci-cell__hint--off {
+.raci-editor .raci-cell__secondary--off {
   visibility: hidden;
 }
 
