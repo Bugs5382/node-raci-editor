@@ -352,6 +352,10 @@ describe("stylesheet: marks keep the fixed size", () => {
     expect(marks).toMatch(/background:\s*transparent/);
     expect(marks).toMatch(/border-color:\s*transparent/);
   });
+  it("aligns every cell by its middle, so an empty cell never sits a pixel off a filled one", () => {
+    // An empty inline-flex button aligns by its baseline, 1px off a button that holds a mark.
+    expect(rule(".raci-editor .raci-cell")).toMatch(/vertical-align:\s*middle/);
+  });
   it("keeps the mark centred", () => {
     const mark = rule(".raci-editor .raci-cell--marks");
     expect(mark).toMatch(/justify-content:\s*center/);
