@@ -202,6 +202,10 @@ Algorithm for one question (`person`, `action`, `category`), numbered:
 
 1. Unknown asked action: denied, reason `default-deny`, empty path. Build `subjects` from the
    person plus the implicit subjects.
+   1b. Superusers. If the model option `superusers` is set, the action is in its `actions` and one of its
+   `subjects` is among the asker's subjects, answer allowed, reason `superuser`, and stop, whatever any
+   row says. It is host-supplied, not tied to a category, and off unless configured. An action it does
+   not list (an obligation, say) follows the rows, so an Everyone row still covers a site administrator.
 2. Owners. If the action is one owners have and any category in the chain lists
    an owner that is in `subjects`, answer allowed, reason `owner`, and stop. Which actions owners have is each
    action's `ownerHas`; it defaults to true except for an obligation, so owners are not required to
@@ -210,7 +214,7 @@ Algorithm for one question (`person`, `action`, `category`), numbered:
 3. Rows. Walk the effective list top down. The first row whose subject matches and that speaks to
    the action decides: green allows, red denies. Empty cells are skipped.
 4. Implies. A cell on action `X` also speaks to every action `X` implies (Author and Approve
-   imply Read, Manage implies Author, Approve and Read), with the same colour. Rows are
+   imply Read, Manage implies Author and Read, never Approve or Acknowledge), with the same colour. Rows are
    read in order, so position decides between rows. `implies` widens what a cell covers, and an
    allowed higher action also gives the lower ones even over an explicit deny of the lower one:
    if the answer for an action is not an allow, any other action that implies it and is itself
@@ -240,8 +244,8 @@ subject in `owners` whose kind is not in `ownerKinds` is an error; `stopInheriti
 
 ### Worked examples
 
-Actions: `read`, `author` (implies read), `approve` (implies read), `manage` (implies read, author
-and approve), and `ack` (kind obligation, requires read). Category `it-policies` is top level.
+Actions: `read`, `author` (implies read), `approve` (implies read), `manage` (implies read and author
+only), and `ack` (kind obligation, requires read). Category `it-policies` is top level.
 
 Example 1, an outside consultant. Rows of `it-policies`, top down:
 
@@ -318,9 +322,9 @@ are written fresh from this document.
 
 ### 3.4 Differences for the owner to decide
 
-Decided by the owner: items 1, 2 and 4 below. Acknowledge requires Read (1); an allowed Author or
+Decided by the owner: items 1, 2, 3, 4, 5 and 8 below. Acknowledge requires Read (1); an allowed Author or
 Approve gives Read even over a Read deny, as the running product does (2); and the own setting is
-left out of the ordered model (4). The model and its vectors follow those answers. The rest are
+left out of the ordered model (4). Site administrators are a host-supplied option that nothing can override (3); Manage implies Read and Author only (5); approval levels stay in the host's workflow (8). The model and its vectors follow those answers. The rest are
 open, and the model follows the owner's notes until each is answered.
 
 1. **Acknowledge and Read (decided: Acknowledge requires Read).** The running product treats the acknowledge tier as independent of
@@ -332,12 +336,12 @@ open, and the model follows the owner's notes until each is answered.
    a person who is allowed to author. In this design Author's cell covers Read by position in the
    list, so a red Read row above a green Author row denies Read and Author alike (Author also needs
    Read). Which should win?
-3. **Site admin read-all.** The running product lets a site admin read everything but never approve
+3. **Site admin read-all (decided: nothing can take a site admin's access away; a host option, off unless configured).** The running product lets a site admin read everything but never approve
    or author. The notes do not mention it and `"ordered"` has no such step. Should the model have
    one, or is it the host's job (an Everyone row or a host-side override)?
 4. **The `own` setting (decided: left out of the ordered model).** (allowed only for what the person created). The running product has it; the
    notes do not. Should `"ordered"` offer it as an optional effect, or leave it to a custom model?
-5. **Manage.** The notes call Manage a new action. The running product has no separate Manage (its
+5. **Manage (decided: implies Read and Author only, never Approve or Acknowledge).** The notes call Manage a new action. The running product has no separate Manage (its
    author action covers editing and managing). What does Manage imply? This design says Read,
    Author and Approve, and not Acknowledge, because acknowledging is a duty and owners are not
    required to acknowledge by default. Confirm that, and confirm that owners get Manage.
@@ -346,7 +350,7 @@ open, and the model follows the owner's notes until each is answered.
    added must acknowledge. The obligation listing here includes Everyone and says "everyone"
    instead of listing people. Confirm.
 7. **No match.** Both deny. Confirm that no row means "not required" for an obligation too.
-8. **Owners and approval.** The running product exempts owners from approval on an approval-required
+8. **Owners and approval (decided: stays in the host's workflow, no level field).** The running product exempts owners from approval on an approval-required
    secret and always asks owners on an always-approve one. That is the host's workflow, outside
    the package; the pool only lists who may be asked.
 
