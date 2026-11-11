@@ -21,8 +21,13 @@ object changes identity.
 interface ActionDef {
   id: string;
   label?: string;
+  shortLabel?: string;
   description?: string;
   implies?: string[];
+  kind?: "access" | "obligation";
+  requires?: string[];
+  ownerHas?: boolean;
+  outcome?: { allowed: string; denied: string };
 }
 ```
 
@@ -34,6 +39,17 @@ interface ActionDef {
 - The order of the `actions` array is the default column order. The settings panel can reorder and
   hide them per user.
 - Action ids that appear in `implies` but not in the list match only by id.
+- The fields below are read by the `"ordered"` model (see [Rule models](models-design.md)). The
+  `"nearest"` model ignores them.
+  - `requires` lists actions that must also be allowed for this one to be allowed. It is not
+    `implies`: `implies` widens what a cell covers, `requires` narrows the final answer. An action
+    that requires `read` is denied when `read` is denied, whatever its own row says.
+  - `kind` is `"access"` (default, what a person may do) or `"obligation"` (what a person must do).
+  - `ownerHas` says whether a category's owners always have the action. It defaults to true, except
+    for an obligation, so owners are not required to acknowledge unless the host says so.
+  - `outcome` holds the words for an allowed and a denied result of this action.
+  - `shortLabel` is a short heading for narrow grids; it falls back to `label`.
+- Options of the `"ordered"` model, set with `createOrderedModel(options)` (the registered `"ordered"` has the defaults): `ownerKinds` (the subject kinds that may own a category; default `["user"]`, empty switches owners off), `implicitSubjects` (default the built-in Everyone), `ownerActions`, and `superusers: { subjects, actions }` (subjects that always have the listed actions, whatever any row says, like owners but host-supplied and not tied to a category; off unless set, and an action you do not list follows the rows). Manage in a host's config usually implies Read and Author only; list `implies` as you want it.
 
 ## Subject kinds
 

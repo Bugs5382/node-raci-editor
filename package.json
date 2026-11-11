@@ -35,7 +35,8 @@
     "./demo.css": "./dist/demo.css",
     "./styles.css": "./dist/styles.css",
     "./vectors/decide.json": "./vectors/decide.json",
-    "./vectors/nearest.json": "./vectors/nearest.json"
+    "./vectors/nearest.json": "./vectors/nearest.json",
+    "./vectors/ordered.json": "./vectors/ordered.json"
   },
   "files": [
     "bin",
