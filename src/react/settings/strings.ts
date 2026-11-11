@@ -14,7 +14,6 @@ export const settingsStrings: Record<string, string> = {
   "settings.behavior.legend": "Behavior",
   "settings.showInherited": "Show inherited entries",
   "settings.confirmDeny": "Confirm before saving a Deny",
-  "settings.defaultStopInheriting": "Stop inheriting by default for categories without a setting",
   "settings.density.legend": "Density",
   "settings.density.comfortable": "Comfortable",
   "settings.density.compact": "Compact",

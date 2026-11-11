@@ -78,7 +78,7 @@ export const RulesEditor = (props: RulesEditorProps) => {
   const extras = added.category === categoryId ? added.subjects : [];
   const own = ruleSet.categories[categoryId];
   const entries = own?.entries ?? [];
-  const stop = own?.stopInheriting ?? settings.defaultStopInheriting;
+  const stop = own?.stopInheriting ?? false;
   const rows = deriveRows(entries, extras);
 
   const visible = new Set(settings.visibleActions);

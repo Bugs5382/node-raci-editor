@@ -119,10 +119,7 @@ describe("SettingsPanel", () => {
     expect(onChange).toHaveBeenLastCalledWith(expect.objectContaining({ showInherited: false }));
     fireEvent.click(screen.getByRole("checkbox", { name: "Confirm before saving a Deny" }));
     expect(onChange).toHaveBeenLastCalledWith(expect.objectContaining({ confirmDeny: true }));
-    fireEvent.click(screen.getByRole("checkbox", { name: /Stop inheriting by default/ }));
-    expect(onChange).toHaveBeenLastCalledWith(
-      expect.objectContaining({ defaultStopInheriting: true }),
-    );
+    expect(screen.queryByRole("checkbox", { name: /Stop inheriting/ })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("radio", { name: "Compact" }));
     expect(onChange).toHaveBeenLastCalledWith(expect.objectContaining({ density: "compact" }));
   });

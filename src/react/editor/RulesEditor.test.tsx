@@ -477,9 +477,9 @@ describe("stopInheriting", () => {
     expect(lastRuleSet(onChange).categories.docs!.stopInheriting).toBe(false);
   });
 
-  it("falls back to defaultStopInheriting when the category has no flag", () => {
-    setup({ settings: { defaultStopInheriting: true } });
-    expect(screen.getByRole("checkbox", { name: "Stop inheriting" })).toBeChecked();
+  it("is off when the category has no flag", () => {
+    setup({ categoryId: "root" });
+    expect(screen.getByRole("checkbox", { name: "Stop inheriting" })).not.toBeChecked();
   });
 });
 

@@ -168,14 +168,6 @@ export const SettingsPanel = ({
           />
           <span>{t("settings.confirmDeny")}</span>
         </label>
-        <label className="raci-settings__check">
-          <input
-            type="checkbox"
-            checked={value.defaultStopInheriting}
-            onChange={(e) => set({ defaultStopInheriting: e.target.checked })}
-          />
-          <span>{t("settings.defaultStopInheriting")}</span>
-        </label>
       </fieldset>
 
       <fieldset className="raci-settings__group">

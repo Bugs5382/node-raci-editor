@@ -87,18 +87,16 @@ interface RaciSettings {
   showInherited: boolean;
   confirmDeny: boolean;
   density: "comfortable" | "compact";
-  defaultStopInheriting: boolean;
 }
 ```
 
-| Field                   | Default         | Effect                                                                                     |
-| ----------------------- | --------------- | ------------------------------------------------------------------------------------------ |
-| `visibleActions`        | every action id | Which action columns show, in this order.                                                  |
-| `enabledSubjectKinds`   | every kind      | Kinds offered in the editor's picker and as simulator memberships.                         |
-| `showInherited`         | `true`          | Show inherited entries, read-only, under the editor's grid.                                |
-| `confirmDeny`           | `false`         | Ask before saving a Deny from the editor.                                                  |
-| `density`               | `"comfortable"` | Row spacing of the editor and the simulator.                                               |
-| `defaultStopInheriting` | `false`         | What the editor's "Stop inheriting" box shows for a category that has no value of its own. |
+| Field                 | Default         | Effect                                                             |
+| --------------------- | --------------- | ------------------------------------------------------------------ |
+| `visibleActions`      | every action id | Which action columns show, in this order.                          |
+| `enabledSubjectKinds` | every kind      | Kinds offered in the editor's picker and as simulator memberships. |
+| `showInherited`       | `true`          | Show inherited entries, read-only, under the editor's grid.        |
+| `confirmDeny`         | `false`         | Ask before saving a Deny from the editor.                          |
+| `density`             | `"comfortable"` | Row spacing of the editor and the simulator.                       |
 
 Helpers exported for hosts that store settings:
 
@@ -112,10 +110,6 @@ Helpers exported for hosts that store settings:
 
 `RulesEditor` and `Simulator` take `settings` as a `Partial<RaciSettings>` and fill in the rest from
 `defaultSettings`. `SettingsPanel` takes a complete `RaciSettings`.
-
-`defaultStopInheriting` only changes what the editor shows. `decide()` has no access to settings and
-treats a category without `stopInheriting` as false. If you turn this on, write the flag into your
-rule sets so the server decides the same way the editor displays.
 
 ## Strings
 
@@ -201,27 +195,26 @@ Keys with a variable list their variables in braces. The default text is in the 
 
 ### Settings panel (`settings.*`)
 
-| Key                              | Default                                                     |
-| -------------------------------- | ----------------------------------------------------------- |
-| `settings.title`                 | Settings                                                    |
-| `settings.actions.legend`        | Actions                                                     |
-| `settings.actions.hint`          | Choose which actions are shown and in what order.           |
-| `settings.actions.implies`       | Implies: {list}                                             |
-| `settings.actions.impliesNone`   | Implies no other action                                     |
-| `settings.actions.moveUp`        | Move {label} up                                             |
-| `settings.actions.moveDown`      | Move {label} down                                           |
-| `settings.actions.lastHint`      | At least one action must stay visible.                      |
-| `settings.kinds.legend`          | Subject kinds                                               |
-| `settings.kinds.hint`            | Choose which kinds of subject can be picked.                |
-| `settings.kinds.lastHint`        | At least one subject kind must stay enabled.                |
-| `settings.behavior.legend`       | Behavior                                                    |
-| `settings.showInherited`         | Show inherited entries                                      |
-| `settings.confirmDeny`           | Confirm before saving a Deny                                |
-| `settings.defaultStopInheriting` | Stop inheriting by default for categories without a setting |
-| `settings.density.legend`        | Density                                                     |
-| `settings.density.comfortable`   | Comfortable                                                 |
-| `settings.density.compact`       | Compact                                                     |
-| `settings.reset`                 | Reset to defaults                                           |
+| Key                            | Default                                           |
+| ------------------------------ | ------------------------------------------------- |
+| `settings.title`               | Settings                                          |
+| `settings.actions.legend`      | Actions                                           |
+| `settings.actions.hint`        | Choose which actions are shown and in what order. |
+| `settings.actions.implies`     | Implies: {list}                                   |
+| `settings.actions.impliesNone` | Implies no other action                           |
+| `settings.actions.moveUp`      | Move {label} up                                   |
+| `settings.actions.moveDown`    | Move {label} down                                 |
+| `settings.actions.lastHint`    | At least one action must stay visible.            |
+| `settings.kinds.legend`        | Subject kinds                                     |
+| `settings.kinds.hint`          | Choose which kinds of subject can be picked.      |
+| `settings.kinds.lastHint`      | At least one subject kind must stay enabled.      |
+| `settings.behavior.legend`     | Behavior                                          |
+| `settings.showInherited`       | Show inherited entries                            |
+| `settings.confirmDeny`         | Confirm before saving a Deny                      |
+| `settings.density.legend`      | Density                                           |
+| `settings.density.comfortable` | Comfortable                                       |
+| `settings.density.compact`     | Compact                                           |
+| `settings.reset`               | Reset to defaults                                 |
 
 Two pieces of text are not configurable: the "Up" and "Down" button captions in the settings panel
 (their accessible names, `settings.actions.moveUp` and `moveDown`, are), and the action and kind

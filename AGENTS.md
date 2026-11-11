@@ -86,6 +86,6 @@ Follow the logging rules in `CLAUDE.md`. In short:
 - A code block in `README.md` or `guides/` that is also in `tests/docs-snippets.test.tsx` must match
   the test file exactly (with `@/index` written as `node-raci-editor`). Edit both together.
 - `vectors/decide.json` stays generic and language-neutral; change `vectors/README.md` with it.
-- `decide()` treats a category without `stopInheriting` as false and ignores settings, so
-  `RaciSettings.defaultStopInheriting` only changes what the editor shows.
+- `decide()` treats a category without `stopInheriting` as false and ignores settings; the editor
+  reads the same flag, so what it shows is what the engine does.
 - No product or brand names anywhere in the code, docs or vectors.
