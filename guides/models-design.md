@@ -500,6 +500,49 @@ Behaviour:
   `onChange` fires); Cancel restores the copy; Save emits `onSave` once; leaving with changes
   confirms; sizes are the same in both modes. The demo has a switch for both starts (default edit).
 
+### 4.4 Cell appearance is the host's and the user's to set
+
+Whoever uses the package may set anything about their cells. There are two places, and the second
+writes into the first's shape.
+
+**Host config, `config.cellStates`.** One optional entry per state: `allow`, `deny`, `none`,
+`inheritedAllow`, `inheritedDeny`, and `included` (a blank cell another cell covers; it defaults to
+a dimmed `allow`). Each entry is a `CellStateStyle`, every field optional:
+
+| Field                 | Meaning                                                                                                            |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `glyph`               | What is drawn: text, or a render function `(state) => ReactNode` for an icon. A check, an X, nothing, or anything. |
+| `text`                | A word shown beside or instead of the glyph (box variant).                                                         |
+| `label`, `shortLabel` | The state's name for the legend and the accessible name, and its short form for narrow grids.                      |
+| `tooltip`             | The tooltip and the screen-reader text for the cell.                                                               |
+| `colors`              | `{ fg, bg, border }` as CSS colours or token names. The green and red defaults are the token values.               |
+| `shape`               | `{ radius, borderStyle, borderWidth }`.                                                                            |
+| `className`           | An extra class, for anything not covered.                                                                          |
+
+Next to it: `cellVariant` (`"box"`, `"marks"`, or a custom name that `renderCell` handles), `renderCell`
+for total control, and the size and density tokens (`--raci-cell-width`, `--raci-cell-height` per
+density).
+
+**Settings, `SettingsPanel`.** A Cells section edits the serializable part of the same shape: the
+variant, glyph or text per state, colours (colour inputs), shape, size and density, header mode
+(`full`, `short`, `auto`) and the labels. It shows a live preview of the states drawn by the real
+cell. The values are validated (a colour must parse, a glyph is short, a size is between a lower
+and an upper bound) and normalized (an invalid value falls back to the default and the panel says
+so), and they are emitted through the settings `onChange` as `settings.cells`. The package stores
+nothing: the host persists what it receives and passes it back. Render functions and `renderCell`
+are config only, because they cannot be serialized; settings carry text, colours, shape, sizes and
+the variant.
+
+**Guarantees that hold whatever is chosen.** The box size comes from the size tokens only, never from
+the content. Content that is too large is clipped or scaled to fit; it never resizes the box, the row
+or the column. The state is still centred and still carried by more than colour (a glyph or a
+word), so a colour pair that makes the text unreadable is only flagged in the preview.
+
+**Tests.** A custom glyph and custom colours render; settings round-trip (emit, store, pass back,
+same cells); an oversized glyph or a long word leaves the box size and the centring unchanged
+(jsdom for structure, headless Chromium for the measured sizes); invalid input is normalized. The
+demo gets a preset with custom cells, and the review gets one item for it.
+
 ## 5. What the `Simulator` adapts
 
 The three views (list, boxes, and a host `renderResults`) keep working and keep reading one
@@ -645,16 +688,16 @@ Migration notes:
 
 Estimates in working days, one developer, including tests and docs for the item.
 
-| Step | Work item                                                                                             | Days |
-| ---- | ----------------------------------------------------------------------------------------------------- | ---- |
-| 1    | `RaciModel` interface, registry, `"nearest"` extracted from `decide()`; no behaviour change           | 2    |
-| 2    | Vectors per model: `nearest.json`, alias `decide.json`, shared schema, `model` and `version`          | 1.5  |
-| 3    | `"ordered"` evaluate (rows, chain, owners, implies, requires, trace), pools, validate and its vectors | 4    |
-| 4    | Editor: view and edit mode (1.5); names, matchers and context picker (2.5); ordered editor (3)        | 7    |
-| 5    | Simulator: wording by kind, pool and obligation lists, trace steps, `gatedBy`                         | 2    |
-| 6    | Docs, an `"ordered"` demo preset, and guides                                                          | 1.5  |
+| Step | Work item                                                                                                       | Days |
+| ---- | --------------------------------------------------------------------------------------------------------------- | ---- |
+| 1    | `RaciModel` interface, registry, `"nearest"` extracted from `decide()`; no behaviour change                     | 2    |
+| 2    | Vectors per model: `nearest.json`, alias `decide.json`, shared schema, `model` and `version`                    | 1.5  |
+| 3    | `"ordered"` evaluate (rows, chain, owners, implies, requires, trace), pools, validate and its vectors           | 4    |
+| 4    | Editor: view and edit mode (1.5); names, matchers, cell appearance and context picker (3.5); ordered editor (3) | 8    |
+| 5    | Simulator: wording by kind, pool and obligation lists, trace steps, `gatedBy`                                   | 2    |
+| 6    | Docs, an `"ordered"` demo preset, and guides                                                                    | 1.5  |
 
-Total: about 18 days. A Go port of the runner is outside this estimate, about 1 day per model.
+Total: about 19 days. A Go port of the runner is outside this estimate, about 1 day per model.
 
 Recommended order and PR split, after the initial build merges:
 
@@ -665,9 +708,11 @@ Recommended order and PR split, after the initial build merges:
    evaluates with it on a server or in tests; it needs only A.
 3. PR C, step 4, split into three because the pieces are independent concerns:
    - C1: view and edit mode (4.3). Applies to every model; needs nothing else.
-   - C2: names and matchers (4.1 and 4.2): short labels and header mode, kind grouping, glyph
-     overrides, generic matchers, the context picker, the demo presets (short labels; capabilities
-     only). Applies to every model; needs nothing else.
+   - C2: names, matchers and cell appearance (4.1, 4.2 and 4.4): short labels and header mode, kind
+     grouping, `cellStates` and the Cells section of the settings panel, generic matchers, the
+     context picker, the demo presets (short labels; capabilities only; custom cells). Applies to
+     every model; needs nothing else. If it grows too large it splits again into names and
+     matchers, and cell appearance.
    - C3: the `"ordered"` editor: row ordering (up, down, drag), green/red/empty cells, inherited
      rows, the owners editor. Needs B and C1.
 4. PR D, step 5: the simulator's wording by kind, pool and obligation lists. Needs B; its list view
