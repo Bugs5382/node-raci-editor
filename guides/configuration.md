@@ -63,7 +63,10 @@ interface ActionDef {
     that requires `read` is denied when `read` is denied, whatever its own row says.
   - `ownerHas` says whether a category's owners always have the action. It defaults to true, except
     for an obligation, so owners are not required to acknowledge unless the host says so.
-  - `outcome` holds the words for an allowed and a denied result of this action.
+  - `outcome` holds the words for an allowed and a denied result of this action, for example
+    `{ allowed: "Must sign", denied: "Exempt" }`. The simulator uses them in every view and in the
+    reason sentence. Without it the words come from the action's `kind`: an access action reads
+    "Would be allowed" and "Would be denied", an obligation reads "Required" and "Not required".
 - Options of the `"ordered"` model, set with `createOrderedModel(options)` (the registered `"ordered"` has the defaults): `ownerKinds` (the subject kinds that may own a category; default `["user"]`, empty switches owners off), `implicitSubjects` (default the built-in Everyone), `ownerActions`, and `superusers: { subjects, actions }` (subjects that always have the listed actions, whatever any row says, like owners but host-supplied and not tied to a category; off unless set, and an action you do not list follows the rows). Manage in a host's config usually implies Read and Author only; list `implies` as you want it.
 
 ## Subject kinds
@@ -220,6 +223,10 @@ Keys with a variable list their variables in braces. The default text is in the 
 | `simulator.walk`                   | Checked, nearest first                                                 |
 | `simulator.allowed`                | Would be allowed                                                       |
 | `simulator.denied`                 | Would be denied                                                        |
+| `simulator.access.allowed`         | Would be allowed (same as `simulator.allowed`, which still works)      |
+| `simulator.access.denied`          | Would be denied (same as `simulator.denied`, which still works)        |
+| `simulator.obligation.allowed`     | Required                                                               |
+| `simulator.obligation.denied`      | Not required                                                           |
 | `simulator.allCategories`          | All categories                                                         |
 | `simulator.emptyPerson`            | Choose a person to preview what these rules would allow.               |
 | `simulator.emptyCategory`          | There are no categories to preview.                                    |
@@ -229,6 +236,19 @@ Keys with a variable list their variables in braces. The default text is in the 
 | `simulator.reason.global`          | {verdict} by {subject} ({action}), from the rules for all categories   |
 | `simulator.reason.stopped`         | Would be denied: no rule matched, and inheriting stopped at {category} |
 | `simulator.reason.default`         | Would be denied: no rule matched (default deny)                        |
+| `simulator.reason.stoppedFor`      | {verdict}: no rule matched, and inheriting stopped at {category}       |
+| `simulator.reason.defaultFor`      | {verdict}: no rule matched (default deny)                              |
+| `simulator.decidedBy`              | Decided by: {text}                                                     |
+| `simulator.by.row`                 | row #{n} of {category}                                                 |
+| `simulator.by.entry`               | an entry in {category}                                                 |
+| `simulator.by.owner`               | owner of {category}                                                    |
+| `simulator.by.superuser`           | always has this action                                                 |
+| `simulator.by.requires`            | needs {action} first                                                   |
+| `simulator.by.confer`              | given by {action}                                                      |
+| `simulator.list.access`            | Who can {action}                                                       |
+| `simulator.list.obligation`        | Who must {action}                                                      |
+| `simulator.list.everyone`          | Everyone                                                               |
+| `simulator.list.nobody`            | Nobody                                                                 |
 | `simulator.loading`                | Previewing...                                                          |
 | `simulator.error`                  | Could not preview the result.                                          |
 | `simulator.retry`                  | Retry                                                                  |

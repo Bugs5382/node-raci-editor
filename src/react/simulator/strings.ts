@@ -36,6 +36,10 @@ export const simulatorStrings: Record<string, string> = {
   "simulator.walk": "Checked, nearest first",
   "simulator.allowed": "Would be allowed",
   "simulator.denied": "Would be denied",
+  "simulator.access.allowed": "Would be allowed",
+  "simulator.access.denied": "Would be denied",
+  "simulator.obligation.allowed": "Required",
+  "simulator.obligation.denied": "Not required",
   "simulator.allCategories": "All categories",
   "simulator.emptyPerson": "Choose a person to preview what these rules would allow.",
   "simulator.emptyCategory": "There are no categories to preview.",
@@ -45,10 +49,23 @@ export const simulatorStrings: Record<string, string> = {
   "simulator.reason.global": "{verdict} by {subject} ({action}), from the rules for all categories",
   "simulator.reason.stopped":
     "Would be denied: no rule matched, and inheriting stopped at {category}",
+  "simulator.reason.stoppedFor": "{verdict}: no rule matched, and inheriting stopped at {category}",
   "simulator.reason.owner": "{verdict}: an owner of this category or of one above it",
   "simulator.reason.superuser": "{verdict}: this subject always has this action",
   "simulator.reason.requires": "{verdict}: needs {action} first",
   "simulator.reason.default": "Would be denied: no rule matched (default deny)",
+  "simulator.reason.defaultFor": "{verdict}: no rule matched (default deny)",
+  "simulator.decidedBy": "Decided by: {text}",
+  "simulator.by.row": "row #{n} of {category}",
+  "simulator.by.entry": "an entry in {category}",
+  "simulator.by.owner": "owner of {category}",
+  "simulator.by.superuser": "always has this action",
+  "simulator.by.requires": "needs {action} first",
+  "simulator.by.confer": "given by {action}",
+  "simulator.list.access": "Who can {action}",
+  "simulator.list.obligation": "Who must {action}",
+  "simulator.list.everyone": "Everyone",
+  "simulator.list.nobody": "Nobody",
   "simulator.loading": "Previewing...",
   "simulator.error": "Could not preview the result.",
   "simulator.retry": "Retry",
@@ -68,4 +85,25 @@ export const simulatorStrings: Record<string, string> = {
   "simulator.box.effectAllow": "Allow",
   "simulator.box.effectDeny": "Deny",
   "simulator.box.entry": "Entry #{n}",
+};
+
+/**
+ * The defaults for a host's config. The access words are `simulator.allowed` and
+ * `simulator.denied`; a host that sets `simulator.access.allowed` or `simulator.access.denied`
+ * changes them too, and the strips follow the access words unless the host set the strip strings.
+ */
+export const simulatorDefaults = (
+  strings: Partial<Record<string, string>> | undefined,
+): Record<string, string> => {
+  const allowed = strings?.["simulator.access.allowed"] ?? simulatorStrings["simulator.allowed"]!;
+  const denied = strings?.["simulator.access.denied"] ?? simulatorStrings["simulator.denied"]!;
+  return {
+    ...simulatorStrings,
+    "simulator.allowed": allowed,
+    "simulator.denied": denied,
+    "simulator.access.allowed": allowed,
+    "simulator.access.denied": denied,
+    "simulator.strip.yes": strings?.["simulator.allowed"] ?? allowed,
+    "simulator.strip.no": strings?.["simulator.denied"] ?? denied,
+  };
 };

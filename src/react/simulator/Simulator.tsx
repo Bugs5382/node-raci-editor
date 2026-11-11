@@ -22,8 +22,11 @@ OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 */
 import { useEffect, useId, useMemo, useState } from "react";
 import { decide } from "@/core/decide";
+import { actionPool, type PoolPerson } from "@/core/pools";
+import { EVERYONE } from "@/core/models/ordered";
 import { defaultSettings } from "@/core/types";
 import type {
+  ActionDef,
   Decision,
   Person,
   RaciConfig,
@@ -34,16 +37,37 @@ import type {
 import { makeT } from "@/react/strings";
 import {
   categoryLabel,
+  decidedByText,
   explainDecision,
   flattenResources,
   personFromPicks,
   subjectLabel,
+  verdictWord,
 } from "@/react/simulator/model";
+import type { ReasonContext } from "@/react/simulator/model";
 import { Boxes } from "@/react/simulator/Boxes";
 import { SubjectPicker } from "@/react/simulator/SubjectPicker";
 import { Strips, StripsSkeleton } from "@/react/simulator/Strips";
-import { simulatorStrings } from "@/react/simulator/strings";
-import type { ActionResult, SimulatorVariant, SimulatorViewProps } from "@/react/simulator/view";
+import { Lists } from "@/react/simulator/Lists";
+import { simulatorDefaults } from "@/react/simulator/strings";
+import type {
+  ActionResult,
+  PoolListView,
+  SimulatorVariant,
+  SimulatorViewProps,
+} from "@/react/simulator/view";
+
+/** One pool or obligation list to show for the selected category. */
+export interface SimulatorList {
+  /** Stable id of the list. */
+  id: string;
+  /** The action whose pool is listed: the approvers, or the people an obligation applies to. */
+  action: string;
+  /** The title. Default: the string `simulator.list.access` or `simulator.list.obligation` with the action's label. */
+  label?: string;
+  /** The people to consider, each with the matchers that apply to them. The package does not know who exists. */
+  people: PoolPerson[];
+}
 
 /** Props of `Simulator`. */
 export interface SimulatorProps {
@@ -71,6 +95,14 @@ export interface SimulatorProps {
     decision: Decision;
     reasonText?: string;
   }>;
+  /**
+   * Pool and obligation lists, such as the approvers or the people who must acknowledge. For each
+   * one the simulator runs the same model as the results (the rule set's `model`) over `people` for
+   * the selected category and shows who the action answers allowed for, owners first, with the
+   * reason. Not used when `evaluate` is set: the host then supplies its own lists. A host that
+   * replaces the results with `renderResults` receives them as `view.lists`.
+   */
+  lists?: SimulatorList[];
   /** Hide parts the host does not want. Defaults to shown. */
   show?: { memberships?: boolean };
 }
@@ -121,7 +153,7 @@ export const Simulator = (props: SimulatorProps) => {
   const personKind =
     props.personKind ?? (hasUser ? "user" : (config.subjectKinds[0]?.kind ?? "user"));
   const { variant = "list", renderResults, evaluate, show } = props;
-  const t = useMemo(() => makeT(config, simulatorStrings), [config]);
+  const t = useMemo(() => makeT(config, simulatorDefaults(config.strings)), [config]);
   const titleId = useId();
 
   const settings: RaciSettings = { ...defaultSettings(config), ...props.settings };
@@ -157,14 +189,23 @@ export const Simulator = (props: SimulatorProps) => {
   const picks = [...(person ? [person.id] : []), ...memberships.map((m) => m.id)];
   const who = personFromPicks(picks);
 
-  const why = (decision: Decision) =>
-    explainDecision(decision, {
+  const resultFor = (action: ActionDef, decision: Decision, reasonText?: string): ActionResult => {
+    const ctx: ReasonContext = {
       t,
       category,
       categoryLabel: labelOf,
       subjectLabel: (s) => subjectLabel(config.subjectKinds, s),
       actionLabel,
-    });
+      action,
+    };
+    const by = decidedByText(decision, ctx);
+    return {
+      action,
+      decision,
+      reasonText: reasonText ?? explainDecision(decision, ctx),
+      ...(by !== undefined ? { decidedByText: by } : {}),
+    };
+  };
 
   const ready = person !== null && category !== "" && flat.length > 0 && actions.length > 0;
   const evalKey =
@@ -178,7 +219,7 @@ export const Simulator = (props: SimulatorProps) => {
     Promise.all(
       actions.map(async (action): Promise<ActionResult> => {
         const r = await evaluate({ person: who, category, action: action.id });
-        return { action, decision: r.decision, reasonText: r.reasonText ?? why(r.decision) };
+        return resultFor(action, r.decision, r.reasonText);
       }),
     ).then(
       (list) => live && setEvalState({ key: runKey, status: "ready", results: list }),
@@ -204,14 +245,70 @@ export const Simulator = (props: SimulatorProps) => {
           { ruleSet, actions: config.actions, person: who, category, action: action.id },
           { trace: true },
         );
-        return { action, decision, reasonText: why(decision) };
+        return resultFor(action, decision);
       });
     }
   }
+  // The lists use the rule set's model, as decide() does; with a host evaluation there are none.
+  const poolLists: PoolListView[] =
+    evaluate || category === "" || flat.length === 0
+      ? []
+      : (props.lists ?? []).map((spec) => {
+          const def = config.actions.find((a) => a.id === spec.action);
+          const entries = actionPool({
+            ruleSet,
+            actions: config.actions,
+            category,
+            people: spec.people,
+            action: spec.action,
+          });
+          const where = (e: { row?: number; category: string }) =>
+            e.row === undefined
+              ? t("simulator.by.entry", { category: labelOf(e.category) })
+              : t("simulator.by.row", { n: e.row + 1, category: labelOf(e.category) });
+          const items = entries.flatMap((e) =>
+            e.everyone
+              ? []
+              : [
+                  {
+                    person: e.person,
+                    label: subjectLabel(config.subjectKinds, e.person),
+                    reason:
+                      e.reason === "owner"
+                        ? t("simulator.by.owner", { category: labelOf(e.category) })
+                        : where(e),
+                    everyone: false,
+                  },
+                ],
+          );
+          const all = entries.find((e) => e.everyone);
+          if (all) {
+            items.push({
+              person: EVERYONE,
+              label: t("simulator.list.everyone"),
+              reason: where(all),
+              everyone: true,
+            });
+          }
+          return {
+            id: spec.id,
+            action: spec.action,
+            title:
+              spec.label ??
+              t(
+                def?.kind === "obligation" ? "simulator.list.obligation" : "simulator.list.access",
+                {
+                  action: actionLabel(spec.action),
+                },
+              ),
+            items,
+          };
+        });
   const view: SimulatorViewProps = {
     person: person ? who : null,
     category,
     results: list,
+    lists: poolLists,
     status,
     retry: status === "error" ? () => setAttempt((n) => n + 1) : undefined,
     labelOf,
@@ -259,19 +356,19 @@ export const Simulator = (props: SimulatorProps) => {
           </tr>
         </thead>
         <tbody>
-          {list.map(({ action: a, decision, reasonText }) => {
+          {list.map(({ action: a, decision, reasonText, decidedByText: by }) => {
             const decidedIn = decision.decidedBy?.category;
             return (
               <tr key={a.id}>
                 <th scope="row">{a.label ?? a.id}</th>
                 <td>
-                  <Verdict
-                    allowed={decision.allowed}
-                    text={t(decision.allowed ? "simulator.allowed" : "simulator.denied")}
-                  />
+                  <Verdict allowed={decision.allowed} text={verdictWord(a, decision.allowed, t)} />
                 </td>
                 <td>
                   <p className="raci-reason">{reasonText}</p>
+                  {by ? (
+                    <p className="raci-decided">{t("simulator.decidedBy", { text: by })}</p>
+                  ) : null}
                   <ol className="raci-walk" aria-label={t("simulator.walk")}>
                     {decision.path.map((id) => (
                       <li key={id} data-decided={id === decidedIn || undefined}>
@@ -350,6 +447,7 @@ export const Simulator = (props: SimulatorProps) => {
       <div className="raci-results" aria-live="polite">
         {results}
       </div>
+      {renderResults && status === "ready" ? null : <Lists lists={poolLists} t={t} />}
     </div>
   );
 };
