@@ -5,6 +5,9 @@ host that keeps its rules on a server and evaluates there. Each needs an owner d
 starts. None would change verdicts when its new fields are absent, so `vectors/decide.json` stays
 valid; new behaviour would get new vectors.
 
+The design for these as pluggable rule models, with the built-in `nearest` and `ordered` models, the
+split into work items and the order of work, is in [Pluggable rule models](models-design.md).
+
 ## Editor features worth generalizing (future, ranked)
 
 1. Row ordering (move up and down, a `#` column), active when a category sets
