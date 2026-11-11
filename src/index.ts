@@ -55,6 +55,7 @@ export { RulesEditor, impliedActions } from "./react/editor/index.js";
 export type {
   CellSizeTokens,
   CellVariant,
+  EditorMode,
   RenderCellProps,
   RulesEditorProps,
 } from "./react/editor/index.js";

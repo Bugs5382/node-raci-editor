@@ -43,7 +43,7 @@
     "vectors"
   ],
   "config": {
-    "packMaxUnpackedBytes": 700000,
+    "packMaxUnpackedBytes": 800000,
     "packMaxGrowthPercent": 25
   },
   "engines": {

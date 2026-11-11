@@ -24,6 +24,7 @@ export { RulesEditor } from "@/react/editor/RulesEditor";
 export type {
   CellSizeTokens,
   CellVariant,
+  EditorMode,
   RenderCellProps,
   RulesEditorProps,
 } from "@/react/editor/RulesEditor";
