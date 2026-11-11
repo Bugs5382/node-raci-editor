@@ -155,6 +155,8 @@ export const RulesEditor = (props: RulesEditorProps) => {
     headerMode === "short" || (headerMode === "auto" && (settings.density === "compact" || narrow));
   const headerText = (a: ActionDef): string =>
     short && a.shortLabel ? a.shortLabel : actionName(a);
+  const headerName = (a: ActionDef): string | undefined =>
+    short && a.shortLabel ? actionName(a) : undefined;
   const headerTitle = (a: ActionDef): string | undefined =>
     short && a.shortLabel
       ? a.description
@@ -250,39 +252,15 @@ export const RulesEditor = (props: RulesEditorProps) => {
 
       <div className="raci-editor__scroll" ref={scrollRef}>
         <table className="raci-table">
-          <thead>
-            {grouped && (
-              <tr className="raci-table__groups">
-                <td />
-                {groupHeadings.map((g) => (
-                  <th scope="colgroup" colSpan={g.count} key={g.kind} className="raci-table__group">
-                    {g.label}
-                  </th>
-                ))}
-                {!readOnly && <td />}
-              </tr>
-            )}
-            <tr>
-              <th scope="col" className="raci-table__subject">
-                {t("editor.subject")}
-              </th>
-              {columns.map((a) => (
-                <th
-                  scope="col"
-                  key={a.id}
-                  title={headerTitle(a)}
-                  aria-label={short && a.shortLabel ? actionName(a) : undefined}
-                >
-                  {headerText(a)}
-                </th>
-              ))}
-              {!readOnly && (
-                <th scope="col">
-                  <span className="raci-visually-hidden">{t("editor.remove")}</span>
-                </th>
-              )}
-            </tr>
-          </thead>
+          <TableHead
+            columns={columns}
+            groups={grouped ? groupHeadings : null}
+            subject={t("editor.subject")}
+            text={headerText}
+            title={headerTitle}
+            name={headerName}
+            removeLabel={readOnly ? undefined : t("editor.remove")}
+          />
           <tbody>
             {rows.length === 0 && (
               <tr>
@@ -368,6 +346,16 @@ export const RulesEditor = (props: RulesEditorProps) => {
         </table>
       </div>
 
+      {short && columns.some((a) => a.shortLabel) && (
+        <p className="raci-editor__key raci-muted">
+          {t("editor.key")}:{" "}
+          {columns
+            .filter((a) => a.shortLabel)
+            .map((a) => `${a.shortLabel} ${actionName(a)}`)
+            .join(", ")}
+        </p>
+      )}
+
       {!readOnly && kinds.length > 0 && (
         <SubjectPicker
           kinds={kinds}
@@ -395,6 +383,9 @@ export const RulesEditor = (props: RulesEditorProps) => {
           stateWord={stateWord}
           stateText={stateText}
           headerText={headerText}
+          headerTitle={headerTitle}
+          headerName={headerName}
+          groups={grouped ? groupHeadings : null}
           t={t}
         />
       ))}
@@ -419,6 +410,69 @@ export const RulesEditor = (props: RulesEditorProps) => {
   );
 };
 
+/** A column group heading: its kind, how many columns it spans and its label. */
+interface GroupHeading {
+  kind: "access" | "obligation";
+  count: number;
+  label: string;
+}
+
+/** The heading rows of an action grid, used by the editable grid and the inherited tables alike. */
+const TableHead = (props: {
+  columns: ActionDef[];
+  groups: GroupHeading[] | null;
+  subject: string;
+  text: (a: ActionDef) => string;
+  title: (a: ActionDef) => string | undefined;
+  name: (a: ActionDef) => string | undefined;
+  /** Set when the grid has a trailing removal column; its hidden heading text. */
+  removeLabel?: string;
+}) => {
+  const { columns, groups, subject, text, title, name, removeLabel } = props;
+  const startsAt = groups && groups.length > 1 ? (groups[0]?.count ?? -1) : -1;
+  return (
+    <thead>
+      {groups && (
+        <tr className="raci-table__groups">
+          <td className="raci-table__corner" />
+          {groups.map((g, i) => (
+            <th
+              scope="colgroup"
+              colSpan={g.count}
+              key={g.kind}
+              className={`raci-table__group${i > 0 ? " raci-col-group-start" : ""}`}
+            >
+              {g.label}
+            </th>
+          ))}
+          {removeLabel !== undefined && <td className="raci-table__corner" />}
+        </tr>
+      )}
+      <tr>
+        <th scope="col" className="raci-table__subject">
+          {subject}
+        </th>
+        {columns.map((a, i) => (
+          <th
+            scope="col"
+            key={a.id}
+            className={i === startsAt ? "raci-col-group-start" : undefined}
+            title={title(a)}
+            aria-label={name(a)}
+          >
+            {text(a)}
+          </th>
+        ))}
+        {removeLabel !== undefined && (
+          <th scope="col">
+            <span className="raci-visually-hidden">{removeLabel}</span>
+          </th>
+        )}
+      </tr>
+    </thead>
+  );
+};
+
 interface InheritedTableProps {
   title: string;
   note: string;
@@ -428,12 +482,27 @@ interface InheritedTableProps {
   stateWord: (effect: Effect | undefined) => string;
   stateText: (effect: Effect | undefined) => string;
   headerText: (a: ActionDef) => string;
+  headerTitle: (a: ActionDef) => string | undefined;
+  headerName: (a: ActionDef) => string | undefined;
+  groups: GroupHeading[] | null;
   t: (key: string, vars?: Record<string, string | number>) => string;
 }
 
 const InheritedTable = (props: InheritedTableProps) => {
-  const { title, note, entries, columns, subjectLabel, stateWord, stateText, headerText, t } =
-    props;
+  const {
+    title,
+    note,
+    entries,
+    columns,
+    subjectLabel,
+    stateWord,
+    stateText,
+    headerText,
+    headerTitle,
+    headerName,
+    groups,
+    t,
+  } = props;
   return (
     <div className="raci-editor__inherited">
       <h3 className="raci-editor__inherited-title">{title}</h3>
@@ -441,22 +510,14 @@ const InheritedTable = (props: InheritedTableProps) => {
       <div className="raci-editor__scroll">
         <table className="raci-table raci-table--inherited">
           <caption className="raci-visually-hidden">{title}</caption>
-          <thead>
-            <tr>
-              <th scope="col" className="raci-table__subject">
-                {t("editor.subject")}
-              </th>
-              {columns.map((a) => (
-                <th
-                  scope="col"
-                  key={a.id}
-                  aria-label={headerText(a) !== actionName(a) ? actionName(a) : undefined}
-                >
-                  {headerText(a)}
-                </th>
-              ))}
-            </tr>
-          </thead>
+          <TableHead
+            columns={columns}
+            groups={groups}
+            subject={t("editor.subject")}
+            text={headerText}
+            title={headerTitle}
+            name={headerName}
+          />
           <tbody>
             {deriveRows(entries).map((subject) => (
               <tr key={subject}>

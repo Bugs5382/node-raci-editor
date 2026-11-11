@@ -205,3 +205,119 @@ describe("the built-in everyone subject", () => {
     expect(screen.getByRole("rowheader", { name: "All callers" })).toBeInTheDocument();
   });
 });
+
+describe("headings are consistent across the grid and the inherited tables", () => {
+  const withParent = (): RuleSet => ({
+    categories: {
+      docs: ruleSet.categories.docs!,
+      parent: { entries: [{ subject: "user:zed", action: "r", effect: "allow" }] },
+    },
+    parents: { docs: "parent" },
+  });
+  const showInherited = (headerMode: "full" | "short" | "auto" = "full") =>
+    render(
+      <RulesEditor
+        config={config()}
+        ruleSet={withParent()}
+        categoryId="docs"
+        onChange={() => {}}
+        headerMode={headerMode}
+      />,
+    );
+  const tables = () => Array.from(document.querySelectorAll<HTMLElement>("table.raci-table"));
+
+  it("gives every table the same group headings, in the same order", () => {
+    showInherited();
+    const groups = tables().map((t) =>
+      Array.from(t.querySelectorAll("thead .raci-table__group")).map((g) => [
+        g.textContent,
+        g.getAttribute("colspan"),
+      ]),
+    );
+    expect(groups).toHaveLength(2);
+    for (const g of groups) {
+      expect(g).toEqual([
+        ["Access", "3"],
+        ["Obligations", "2"],
+      ]);
+    }
+  });
+
+  it("gives the inherited headings a tooltip and the full name when short", () => {
+    showInherited("short");
+    const inherited = document.querySelector("table.raci-table--inherited") as HTMLElement;
+    const ths = Array.from(inherited.querySelectorAll("thead tr:last-child th[scope=col]")).slice(
+      1,
+      6,
+    );
+    expect(ths.map((t) => t.textContent)).toEqual(["R", "A", "M", "APV", "ACK"]);
+    expect(ths.map((t) => t.getAttribute("title"))).toEqual([
+      "Read: See the content",
+      "Author",
+      "Manage",
+      "Approve",
+      "Acknowledge",
+    ]);
+    expect(ths.map((t) => t.getAttribute("aria-label"))).toEqual([
+      "Read",
+      "Author",
+      "Manage",
+      "Approve",
+      "Acknowledge",
+    ]);
+  });
+
+  it("marks where the second group starts, in every table's headings", () => {
+    showInherited();
+    for (const t of tables()) {
+      const starts = Array.from(t.querySelectorAll("thead .raci-col-group-start"));
+      expect(starts).toHaveLength(2);
+      expect(starts.map((s) => s.textContent)).toEqual(["Obligations", "Approve"]);
+    }
+  });
+
+  it("styles the group row's corner cells like the heading row", () => {
+    showInherited();
+    const corners = document.querySelectorAll(
+      "table.raci-table:not(.raci-table--inherited) thead .raci-table__corner",
+    );
+    expect(corners).toHaveLength(2);
+  });
+});
+
+describe("the key for short headings", () => {
+  it("is shown with short labels, naming each one in full", () => {
+    show(config(), { headerMode: "short" });
+    const key = document.querySelector(".raci-editor__key") as HTMLElement;
+    expect(key).not.toBeNull();
+    expect(key.textContent).toBe("Key: R Read, A Author, M Manage, APV Approve, ACK Acknowledge");
+  });
+  it("is not shown with full labels, or when no action has a short label", () => {
+    show(config(), { headerMode: "full" });
+    expect(document.querySelector(".raci-editor__key")).toBeNull();
+    cleanup();
+    const cfg = config();
+    cfg.actions = cfg.actions.map(({ shortLabel: _s, ...a }) => a);
+    show(cfg, { headerMode: "short" });
+    expect(document.querySelector(".raci-editor__key")).toBeNull();
+  });
+  it("follows auto: shown at compact density", () => {
+    show(config(), { settings: { density: "compact" } });
+    expect(document.querySelector(".raci-editor__key")).not.toBeNull();
+  });
+});
+
+describe("stylesheet: the group row reads as part of the header", () => {
+  it("gives the corner cells the heading background and the groups a divider and an underline", async () => {
+    const { readFileSync } = await import("node:fs");
+    const css = readFileSync("src/styles/editor.css", "utf8");
+    const rule = (sel: string) => {
+      const i = css.indexOf(`${sel} {`);
+      expect(i, sel).toBeGreaterThanOrEqual(0);
+      return css.slice(i, css.indexOf("}", i));
+    };
+    expect(rule(".raci-editor .raci-table__corner")).toMatch(/background/);
+    expect(rule(".raci-editor .raci-table__group")).toMatch(/border-bottom:\s*2px/);
+    expect(rule(".raci-editor .raci-col-group-start")).toMatch(/border-inline-start/);
+  });
+});

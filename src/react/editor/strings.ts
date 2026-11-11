@@ -26,6 +26,7 @@ export const editorStrings: Record<string, string> = {
   "editor.pathSeparator": " / ",
   "editor.subject": "Subject",
   "editor.everyone": "Everyone",
+  "editor.key": "Key",
   "editor.group.access": "Access",
   "editor.group.obligation": "Obligations",
   "editor.empty": "No subjects have rules in this category yet.",

@@ -406,13 +406,29 @@
   }
 }
 
-/* Column groups: a heading row above the action columns. */
+/* Column groups: a heading row above the action columns, part of the header. */
 .raci-editor .raci-table__groups > * {
   border-bottom: 1px solid var(--raci-border);
+}
+
+.raci-editor .raci-table__corner {
+  background: var(--raci-bg-subtle);
 }
 
 .raci-editor .raci-table__group {
   font-weight: var(--raci-font-weight-medium);
   color: var(--raci-text-muted);
   text-align: center;
+  border-bottom: 2px solid var(--raci-border-strong);
+}
+
+/* Where the second group starts, in the headings only (cells and sizes are not touched). */
+.raci-editor .raci-col-group-start {
+  border-inline-start: 1px solid var(--raci-border-strong);
+}
+
+/* The key for short headings. */
+.raci-editor__key {
+  margin: var(--raci-space-2) 0 0;
+  font-size: var(--raci-font-size-xs);
 }

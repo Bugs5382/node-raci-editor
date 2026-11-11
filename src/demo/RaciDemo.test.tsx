@@ -262,8 +262,8 @@ describe("the short-labels preset", () => {
     expect(screen.getAllByRole("columnheader", { name: "Acknowledge" })[0]).toHaveTextContent(
       "ACK",
     );
-    expect(screen.getByRole("columnheader", { name: "Access" })).toBeInTheDocument();
-    expect(screen.getByRole("columnheader", { name: "Obligations" })).toBeInTheDocument();
+    expect(screen.getAllByRole("columnheader", { name: "Access" }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole("columnheader", { name: "Obligations" }).length).toBeGreaterThan(0);
     expect(screen.getByRole("rowheader", { name: "Everyone" })).toBeInTheDocument();
   });
 
