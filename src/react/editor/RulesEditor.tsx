@@ -26,6 +26,7 @@ import { cellStateId, normalizeCells, resolveCellStyle } from "@/core/cells";
 import { defaultSettings } from "@/core/types";
 import type {
   ActionDef,
+  MatcherDef,
   CellStateId,
   CellStateStyle,
   Effect,
@@ -167,6 +168,47 @@ const findPath = (nodes: ResourceNode[], id: string): string[] | undefined => {
 
 const actionName = (a: ActionDef): string => a.label ?? a.id;
 
+/** A plain choice of the built-in Everyone and the host's matchers, with no kind chooser and no search. */
+const MatcherPicker = (props: {
+  matchers: MatcherDef[];
+  existing: string[];
+  everyoneLabel: string;
+  label: string;
+  pickLabel: string;
+  placeholder: string;
+  onPick: (subject: string) => void;
+}) => {
+  const free = props.matchers.filter((m) => !props.existing.includes(m.id));
+  const groups = [...new Set(free.flatMap((m) => (m.group ? [m.group] : [])))];
+  const option = (m: MatcherDef) => (
+    <option key={m.id} value={m.id} title={m.description}>
+      {m.label}
+    </option>
+  );
+  return (
+    <div className="raci-picker" role="group" aria-label={props.label}>
+      <select
+        className="raci-select"
+        aria-label={props.pickLabel}
+        value=""
+        onChange={(e) => {
+          if (e.target.value) props.onPick(e.target.value);
+        }}
+      >
+        <option value="">{props.placeholder}</option>
+        {!props.existing.includes(EVERYONE_SUBJECT) && (
+          <option value={EVERYONE_SUBJECT}>{props.everyoneLabel}</option>
+        )}
+        {groups.map((g) => (
+          <optgroup key={g} label={g}>
+            {free.filter((m) => m.group === g).map(option)}
+          </optgroup>
+        ))}
+        {free.filter((m) => !m.group).map(option)}
+      </select>
+    </div>
+  );
+};
 /** The key for short headings: each short label with its full name. */
 const keyOf = (actions: ActionDef[]): string =>
   actions
@@ -336,7 +378,12 @@ export const RulesEditor = (props: RulesEditorProps) => {
   const subjectLabel = (subject: string): string => {
     if (subject === EVERYONE_SUBJECT) return t("editor.everyone");
     const kind = config.subjectKinds.find((k) => subject.startsWith(`${k.kind}:`));
-    return kind?.resolve?.(subject) ?? labels[subject] ?? subject;
+    return (
+      kind?.resolve?.(subject) ??
+      config.matchers?.find((m) => m.id === subject)?.label ??
+      labels[subject] ??
+      subject
+    );
   };
   const resourceLabel = (id: string): string =>
     id === STAR
@@ -603,6 +650,18 @@ export const RulesEditor = (props: RulesEditorProps) => {
                 .join("; ")
             : keyOf(columns)}
         </p>
+      )}
+
+      {!readOnly && (config.matchers !== undefined || config.subjectKinds.length === 0) && (
+        <MatcherPicker
+          matchers={config.matchers ?? []}
+          existing={rows}
+          everyoneLabel={t("editor.everyone")}
+          label={t("editor.addSubject")}
+          pickLabel={t("editor.pickMatcher")}
+          placeholder={t("editor.addPlaceholder")}
+          onPick={keep}
+        />
       )}
 
       {!readOnly && kinds.length > 0 && (

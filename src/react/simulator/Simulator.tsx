@@ -31,6 +31,10 @@ import type {
   RuleSet,
   SubjectOption,
 } from "@/core/types";
+import { DEFAULT_PERSON_KIND } from "@/react/defaults";
+
+/** The built-in subject every asker has. */
+const EVERYONE_SUBJECT = "everyone:*";
 import { makeT } from "@/react/strings";
 import {
   categoryLabel,
@@ -117,9 +121,10 @@ const Chip = ({
 export const Simulator = (props: SimulatorProps) => {
   const { config, ruleSet, categoryId, className } = props;
   // Without personKind: "user" when the host has that kind, else the host's first kind.
-  const hasUser = config.subjectKinds.some((k) => k.kind === "user");
+  const hasDefault = config.subjectKinds.some((k) => k.kind === DEFAULT_PERSON_KIND);
   const personKind =
-    props.personKind ?? (hasUser ? "user" : (config.subjectKinds[0]?.kind ?? "user"));
+    props.personKind ??
+    (hasDefault ? DEFAULT_PERSON_KIND : (config.subjectKinds[0]?.kind ?? DEFAULT_PERSON_KIND));
   const { variant = "list", renderResults, evaluate, show } = props;
   const t = useMemo(() => makeT(config, simulatorStrings), [config]);
   const titleId = useId();
@@ -138,6 +143,14 @@ export const Simulator = (props: SimulatorProps) => {
     [config.subjectKinds, enabledKey, personKind],
   );
 
+  // A context picker replaces the person picker when the host has named contexts, or flat matchers and
+  // no subject kinds: the context is the list of matchers that apply, resolved by the host.
+  const matchers = config.matchers ?? [];
+  const contexts = config.contexts ?? [];
+  const contextMode =
+    contexts.length > 0 || (matchers.length > 0 && config.subjectKinds.length === 0);
+  const [contextId, setContextId] = useState("");
+  const [contextSubjects, setContextSubjects] = useState<string[]>([]);
   const [person, setPerson] = useState<SubjectOption | null>(null);
   const [memberships, setMemberships] = useState<SubjectOption[]>([]);
   const flat = useMemo(() => flattenResources(config.resources), [config.resources]);
@@ -154,19 +167,28 @@ export const Simulator = (props: SimulatorProps) => {
     return def?.label ?? id;
   };
 
-  const picks = [...(person ? [person.id] : []), ...memberships.map((m) => m.id)];
+  const hasWho = contextMode
+    ? contexts.length === 0 || contextId !== "" || contextSubjects.length > 0
+    : person !== null;
+  const picks = contextMode
+    ? [EVERYONE_SUBJECT, ...contextSubjects]
+    : [...(person ? [person.id] : []), ...memberships.map((m) => m.id)];
   const who = personFromPicks(picks);
+  const labelSubject = (s: string): string =>
+    s === EVERYONE_SUBJECT
+      ? t("simulator.everyone")
+      : (matchers.find((m) => m.id === s)?.label ?? subjectLabel(config.subjectKinds, s));
 
   const why = (decision: Decision) =>
     explainDecision(decision, {
       t,
       category,
       categoryLabel: labelOf,
-      subjectLabel: (s) => subjectLabel(config.subjectKinds, s),
+      subjectLabel: labelSubject,
       actionLabel,
     });
 
-  const ready = person !== null && category !== "" && flat.length > 0 && actions.length > 0;
+  const ready = hasWho && category !== "" && flat.length > 0 && actions.length > 0;
   const evalKey =
     evaluate && ready ? JSON.stringify([picks, category, actions.map((a) => a.id)]) : null;
   const [attempt, setAttempt] = useState(0);
@@ -209,19 +231,23 @@ export const Simulator = (props: SimulatorProps) => {
     }
   }
   const view: SimulatorViewProps = {
-    person: person ? who : null,
+    person: hasWho ? who : null,
     category,
     results: list,
     status,
     retry: status === "error" ? () => setAttempt((n) => n + 1) : undefined,
     labelOf,
-    subjectLabel: (s) => subjectLabel(config.subjectKinds, s),
+    subjectLabel: labelSubject,
     t,
   };
 
   let results: React.ReactNode;
-  if (!person) {
-    results = <p className="raci-empty">{t("simulator.emptyPerson")}</p>;
+  if (!hasWho) {
+    results = (
+      <p className="raci-empty">
+        {t(contextMode ? "simulator.emptyContext" : "simulator.emptyPerson")}
+      </p>
+    );
   } else if (category === "" || flat.length === 0) {
     results = <p className="raci-empty">{t("simulator.emptyCategory")}</p>;
   } else if (actions.length === 0) {
@@ -299,30 +325,79 @@ export const Simulator = (props: SimulatorProps) => {
         {t("simulator.title")}
       </h2>
       <div className="raci-controls">
-        <div className="raci-field">
-          {person ? (
-            <>
-              <span className="raci-label">{t("simulator.person")}</span>
-              <ul className="raci-chips">
-                <Chip
-                  label={person.label}
-                  remove={t("simulator.remove", { label: person.label })}
-                  onRemove={() => setPerson(null)}
-                />
-              </ul>
-            </>
-          ) : (
-            <SubjectPicker
-              label={t("simulator.person")}
-              placeholder={t("simulator.personPlaceholder")}
-              noMatches={t("simulator.noMatches")}
-              kinds={personKinds}
-              exclude={[]}
-              onPick={setPerson}
-            />
-          )}
-        </div>
-        {show?.memberships === false || memberKinds.length === 0 ? null : (
+        {contextMode ? (
+          <>
+            {contexts.length > 0 && (
+              <div className="raci-field">
+                <label className="raci-label" htmlFor={`${titleId}-context`}>
+                  {t("simulator.context")}
+                </label>
+                <select
+                  id={`${titleId}-context`}
+                  className="raci-select"
+                  value={contextId}
+                  onChange={(e) => {
+                    setContextId(e.target.value);
+                    setContextSubjects(
+                      contexts.find((c) => c.id === e.target.value)?.subjects ?? [],
+                    );
+                  }}
+                >
+                  <option value="">{t("simulator.contextPlaceholder")}</option>
+                  {contexts.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+            {matchers.length > 0 && (
+              <fieldset className="raci-field raci-toggles">
+                <legend className="raci-label">{t("simulator.toggles")}</legend>
+                {matchers.map((m) => (
+                  <label key={m.id} className="raci-toggle" title={m.description}>
+                    <input
+                      type="checkbox"
+                      checked={contextSubjects.includes(m.id)}
+                      onChange={() =>
+                        setContextSubjects((all) =>
+                          all.includes(m.id) ? all.filter((x) => x !== m.id) : [...all, m.id],
+                        )
+                      }
+                    />
+                    <span>{m.label}</span>
+                  </label>
+                ))}
+              </fieldset>
+            )}
+          </>
+        ) : (
+          <div className="raci-field">
+            {person ? (
+              <>
+                <span className="raci-label">{t("simulator.person")}</span>
+                <ul className="raci-chips">
+                  <Chip
+                    label={person.label}
+                    remove={t("simulator.remove", { label: person.label })}
+                    onRemove={() => setPerson(null)}
+                  />
+                </ul>
+              </>
+            ) : (
+              <SubjectPicker
+                label={t("simulator.person")}
+                placeholder={t("simulator.personPlaceholder")}
+                noMatches={t("simulator.noMatches")}
+                kinds={personKinds}
+                exclude={[]}
+                onPick={setPerson}
+              />
+            )}
+          </div>
+        )}
+        {contextMode || show?.memberships === false || memberKinds.length === 0 ? null : (
           <div className="raci-field">
             <SubjectPicker
               label={t("simulator.memberships")}

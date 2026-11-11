@@ -40,6 +40,9 @@ All optional.
   (it can be hidden with `show.category=false` once that prop is available).
 - The package area, captioned "package: rules editor, simulator, settings", with tabs: Editor (`RulesEditor`), Simulator (`Simulator`) and Settings (`SettingsPanel`), with arrow
   key navigation.
+- A "Capabilities only" preset: no users, groups or roles. Subjects are matchers such as Can
+  acknowledge and Can approve, added from a flat list; the simulator previews named contexts (New hire,
+  Reviewer, Guest) or matcher toggles.
 - A "Custom cells" preset: round Y and N cells in the host's colours, empty cells with no glyph, and a
   smaller cell size. The Settings tab has a Cells section to change glyphs, words, tooltips, colours
   and size, with a live preview.
