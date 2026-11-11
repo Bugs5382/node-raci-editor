@@ -16,6 +16,7 @@
 
 #### 🐛 Bug Fixes
 
+- fix(core): list superusers in pools and cover the ordered model's remaining branches @Bugs5382 (#42)
 - fix(editor): contain hidden header text and centre the state label @Bugs5382 (#22)
 
 #### 📄 Documentation
