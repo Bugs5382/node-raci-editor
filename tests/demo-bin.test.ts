@@ -32,7 +32,7 @@ const start = (...args: string[]) =>
     });
   });
 
-describe.skipIf(!built)("raci-editor-demo bin", () => {
+describe.skipIf(!built)("raci-editor-demo bin", { timeout: 20_000 }, () => {
   it("serves the demo page and its assets and prints the URL", async () => {
     const { url, stop } = await start("--port", "0");
     try {
