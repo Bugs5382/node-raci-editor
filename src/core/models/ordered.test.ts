@@ -20,10 +20,10 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 */
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 import { decide } from "../decide.js";
 import { actionPool } from "../pools.js";
-import { getModel, listModels } from "../registry.js";
+import { getModel, listModels, registerModel } from "../registry.js";
 import type { ActionDef, Entry, RuleSet } from "../types.js";
 import { createOrderedModel, EVERYONE } from "./ordered.js";
 
@@ -509,5 +509,110 @@ describe("site administrators (superusers), off unless configured", () => {
   it("reports the superuser capability only when configured", () => {
     expect(su.capabilities.superuser).toBe(true);
     expect(getModel("ordered").capabilities.superuser).toBe(false);
+  });
+});
+
+describe("the remaining branches of the ordered model", () => {
+  it("a subject with no kind is not an owner and is reported", () => {
+    const set: RuleSet = {
+      model: "ordered",
+      categories: { c: { owners: ["plain"], entries: [] } },
+      parents: {},
+    };
+    expect(ask(set, ["plain"], "read").reason).toBe("default-deny");
+    expect(
+      getModel("ordered")
+        .validate(set, actions)
+        .map((i) => i.path),
+    ).toEqual(["/categories/c/owners/0"]);
+  });
+  it("a valid owner raises no issue", () => {
+    const set: RuleSet = {
+      model: "ordered",
+      categories: { c: { owners: ["user:o"], entries: [] } },
+      parents: {},
+    };
+    expect(getModel("ordered").validate(set, actions)).toEqual([]);
+  });
+  it("the ownerActions option limits what owners always have", () => {
+    const only = createOrderedModel({ id: "ordered-read-owner", ownerActions: ["read"] });
+    const set: RuleSet = {
+      model: "ordered",
+      categories: { c: { owners: ["user:o"], entries: [] } },
+      parents: {},
+    };
+    const q = (action: string) =>
+      only.evaluate({
+        ruleSet: set,
+        actions,
+        person: { subjects: ["user:o"] },
+        category: "c",
+        action,
+      }).decision;
+    expect(q("read")).toMatchObject({ allowed: true, reason: "owner" });
+    expect(q("author")).toMatchObject({ allowed: false, reason: "default-deny" });
+  });
+  it("an owner satisfies a requirement without a trace step of its own", () => {
+    const set: RuleSet = {
+      model: "ordered",
+      categories: { c: { owners: ["user:o"], entries: [e("user:o", "ack", "allow")] } },
+      parents: {},
+    };
+    const { decision, trace } = getModel("ordered").evaluate({
+      ruleSet: set,
+      actions,
+      person: { subjects: ["user:o"] },
+      category: "c",
+      action: "ack",
+    });
+    expect(decision).toMatchObject({ allowed: true, reason: "entry" });
+    expect(trace.filter((t) => t.kind === "owners")).toEqual([]);
+  });
+  it("walks past a category that has no entry in the rule set", () => {
+    const set: RuleSet = {
+      model: "ordered",
+      categories: { top: { entries: [e("user:a", "read", "allow")] } },
+      parents: { c: "top" },
+    };
+    expect(ask(set, ["user:a"], "read", "c")).toMatchObject({ allowed: true, path: ["c", "top"] });
+  });
+  it("warns about an action that is not defined", () => {
+    const issues = getModel("ordered").validate(rs([e("user:a", "mystery", "allow")]), actions);
+    expect(issues).toEqual([
+      expect.objectContaining({ level: "warning", path: "/categories/c/entries/0/action" }),
+    ]);
+  });
+  it("describes an allow entry", () => {
+    expect(getModel("ordered").describeEntry(e("user:a", "read", "allow"))).toBe(
+      "Allow read for user:a",
+    );
+  });
+});
+
+describe("actionPool and superusers", () => {
+  const su = createOrderedModel({
+    id: "ordered-pool-su",
+    superusers: { subjects: ["role:admin"], actions: ["read"] },
+  });
+  beforeAll(() => registerModel(su));
+  const set: RuleSet = {
+    model: "ordered-pool-su",
+    categories: {
+      it: { owners: ["user:erin"], entries: [] },
+      c: { entries: [e(EVERYONE, "read", "allow")] },
+    },
+    parents: { c: "it" },
+  };
+  const people = [
+    { id: "admin", subjects: ["role:admin"] },
+    { id: "erin", subjects: ["user:erin"] },
+    { id: "bob", subjects: ["user:bob"] },
+  ];
+  it("lists a superuser as one, after the owners and before the rows", () => {
+    expect(actionPool({ ruleSet: set, actions, category: "c", people, action: "read" })).toEqual([
+      { person: "erin", reason: "owner", category: "it" },
+      { person: "admin", reason: "superuser", category: "c" },
+      { person: "bob", reason: "entry", category: "c", row: 0, everyone: true },
+    ]);
   });
 });
