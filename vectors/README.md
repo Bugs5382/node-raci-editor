@@ -10,7 +10,7 @@ There is one file per rule model. A file's `model` field names the model its cas
 | -------------- | ----------- | ----------------------------------------------------------------------------------------------- |
 | `nearest.json` | `"nearest"` | The built-in default model. Importable as `node-raci-editor/vectors/nearest.json`.              |
 | `ordered.json` | `"ordered"` | The built-in firewall-style model: per-action first row from the top, empty cells skipped, inherited rows after the category's own, owners, `requires`. Written from the design guide, not from any product. |
-| `decide.json`  | `"nearest"` | The original name, kept as an alias. It has no `model` field (absent means `"nearest"`) and its cases are identical to `nearest.json`; a test keeps them equal. |
+| `decide.json`  | `"nearest"` | The original name, kept as an alias in the repository. The package does not ship this file: its `./vectors/decide.json` export resolves to the minified `nearest.json`. It has no `model` field (absent means `"nearest"`) and its cases are identical to `nearest.json`; a test keeps them equal. |
 
 A runner picks the model from `model` (default `"nearest"`), runs every case of the file through that model, and skips a model it has not implemented with a visible skip, never a silent pass. Every model file uses the same format; the algorithm section describes `"nearest"`.
 

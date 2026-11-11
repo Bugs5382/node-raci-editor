@@ -3,8 +3,9 @@
 `vectors/nearest.json` (and `vectors/decide.json`, its alias with identical cases) is a language-neutral list of questions and expected answers for the access
 decision. The TypeScript package, a mock server and a Go implementation all run the same file, so
 they have to agree. `decide()` is a pure evaluation helper the host may call; the host enforces.
-The file ships in the npm package and is importable as
-`node-raci-editor/vectors/decide.json`.
+The package ships minified copies (built into `dist/vectors`) and the file is importable as
+`node-raci-editor/vectors/decide.json`, which resolves to the nearest vectors; the repository keeps
+the readable files and `decide.json` as an alias that is not shipped on its own.
 
 The format and the exact algorithm are written down in
 [`vectors/README.md`](../vectors/README.md); that file is the contract. In short:

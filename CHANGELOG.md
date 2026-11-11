@@ -6,6 +6,7 @@
 
 #### 🚀 Features
 
+- feat(editor): generic subject matchers and a context picker @Bugs5382 (#36)
 - feat(editor): configurable cell appearance, sizes and a Cells settings section @Bugs5382 (#34)
 - feat(editor): short labels, header mode and grouped action columns @Bugs5382 (#32)
 - feat(core): the ordered rule model, its vectors and the pool lists @Bugs5382 (#28)
