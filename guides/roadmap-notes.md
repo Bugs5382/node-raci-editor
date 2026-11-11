@@ -1,7 +1,7 @@
 # Roadmap notes
 
 Nothing on this page is implemented. These are candidates found while comparing the package with a
-host that keeps its rules on a server and evaluates there. Each needs an owner decision before work
+host that keeps its rules on a server and evaluates there. Each needs a decision by the maintainer before work
 starts. None would change verdicts when its new fields are absent, so `vectors/decide.json` stays
 valid; new behaviour would get new vectors.
 
@@ -24,7 +24,7 @@ split into work items and the order of work, is in [Pluggable rule models](model
 
 A dirty, save and discard bar belongs to the host page and is not a candidate.
 
-## Model gaps (future, owner decision)
+## Model gaps (future, needs a decision)
 
 | Gap                    | Proposal                                                                                                                                                                                        |
 | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
