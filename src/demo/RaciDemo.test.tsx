@@ -250,6 +250,37 @@ describe("props", () => {
   });
 });
 
+describe("cell variants", () => {
+  it("offers box, marks and custom, and switches the editor cells", async () => {
+    const user = userEvent.setup();
+    render(<RaciDemo />);
+    const group = screen.getByRole("group", { name: "Cell variant" });
+    expect(group.querySelectorAll("button")).toHaveLength(3);
+    expect(screen.getByRole("button", { name: "box" })).toHaveAttribute("aria-pressed", "true");
+    expect(document.querySelector(".raci-cell--marks")).toBeNull();
+
+    await user.click(screen.getByRole("button", { name: "marks" }));
+    expect(document.querySelector("tbody .raci-cell--marks")).not.toBeNull();
+    expect(document.querySelector(".raci-cell__text")).toBeNull();
+
+    await user.click(screen.getByRole("button", { name: "custom" }));
+    expect(document.querySelector("tbody .raci-cell")).toBeNull();
+    expect(document.querySelector("tbody .demo-custom-cell")).not.toBeNull();
+
+    await user.click(screen.getByRole("button", { name: "box" }));
+    expect(document.querySelector("tbody .raci-cell")).not.toBeNull();
+  });
+
+  it("keeps editing working in the custom cell", async () => {
+    const user = userEvent.setup();
+    render(<RaciDemo />);
+    await user.click(screen.getByRole("button", { name: "custom" }));
+    const before = JSON.stringify(shownJson());
+    await user.click(document.querySelector("tbody .demo-custom-cell") as HTMLElement);
+    expect(JSON.stringify(shownJson())).not.toBe(before);
+  });
+});
+
 describe("the capabilities-only preset", () => {
   it("edits with a flat choice: no kind chooser, no search, no directory", async () => {
     const user = userEvent.setup();

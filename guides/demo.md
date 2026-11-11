@@ -43,6 +43,8 @@ All optional.
 - A "Capabilities only" preset: no users, groups or roles. Subjects are matchers such as Can
   acknowledge and Can approve, added from a flat list; the simulator previews named contexts (New hire,
   Reviewer, Guest) or matcher toggles.
+- A Cell variant switch in the Editor tab: box (default), marks (a check, an X or nothing) and custom
+  (a sample host cell, exported as `demoRenderCell`).
 - Two presets that differ in actions, subject kinds, tree and strings, to show nothing is hard-coded.
 - The rule set as JSON: copy, download, upload with validation, and reset to the sample.
 - A light, dark and system theme switch, and a "Brand override" toggle that only changes tokens.

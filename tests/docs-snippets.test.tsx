@@ -154,6 +154,32 @@ import { RaciDemo } from "@/demo/index";
 export const DemoPage = () => <RaciDemo initialPreset="other" initialTheme="dark" />;
 // snippet:end demo
 
+// snippet:start cells
+import type { RenderCellProps, RulesEditorProps } from "@/index";
+
+// A host cell: a plain button that keeps the fixed size and the editor's accessible name.
+export const HostCell = (cell: RenderCellProps) => (
+  <button
+    type="button"
+    aria-label={cell.label}
+    title={cell.title}
+    disabled={cell.readOnly}
+    style={{ width: cell.size.width, height: cell.size.height }}
+    onClick={cell.onCycle}
+  >
+    {cell.state === "allow" ? "Y" : cell.state === "deny" ? "N" : ""}
+  </button>
+);
+
+// `cellVariant="marks"` draws a check, an X or nothing; `renderCell` draws the whole cell.
+export const MarksEditor = (props: RulesEditorProps) => (
+  <RulesEditor {...props} cellVariant="marks" />
+);
+export const HostCellEditor = (props: RulesEditorProps) => (
+  <RulesEditor {...props} renderCell={HostCell} />
+);
+// snippet:end cells
+
 const SPECIFIERS: [string, string][] = [
   ['"@/demo/index.css"', '"node-raci-editor/demo.css"'],
   ['"@/demo/index"', '"node-raci-editor/demo"'],
@@ -204,6 +230,26 @@ describe("demo", () => {
   });
 });
 
+describe("cells", () => {
+  const props: RulesEditorProps = {
+    config,
+    ruleSet: {
+      categories: { docs: { entries: [{ subject: "user:a", action: "read", effect: "allow" }] } },
+      parents: {},
+    },
+    categoryId: "docs",
+    onChange: () => {},
+  };
+  it("draws marks and a host cell from the documented code", () => {
+    const marks = render(<MarksEditor {...props} />);
+    expect(marks.container.querySelector("tbody .raci-cell--marks")).not.toBeNull();
+    marks.unmount();
+    const host = render(<HostCellEditor {...props} />);
+    expect(host.container.querySelector("tbody .raci-cell")).toBeNull();
+    expect(host.container.querySelector("tbody button")?.textContent).toBe("Y");
+  });
+});
+
 describe("vector runner", () => {
   it("passes every shared vector", () => {
     expect(runVectors()).toEqual([]);
@@ -229,6 +275,8 @@ describe("docs", () => {
     ["extending", "guides/extending.md"],
     ["demo", "README.md"],
     ["demo", "guides/demo.md"],
+    ["cells", "guides/components.md"],
+    ["cells", "README.md"],
   ])("shows the %s snippet verbatim in %s", (name, file) => {
     expect(found[name]).toBeTruthy();
     expect(doc(file)).toContain(found[name] as string);
