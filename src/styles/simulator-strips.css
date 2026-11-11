@@ -1,0 +1,125 @@
+/* simulator strips view. Tokens only (--raci-*). */
+
+.raci-simulator .raci-strips {
+  display: flex;
+  flex-direction: column;
+  gap: var(--raci-space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.raci-simulator .raci-strip {
+  display: flex;
+  align-items: center;
+  gap: var(--raci-space-4);
+  width: 100%;
+  min-width: 0;
+  padding: var(--raci-space-4);
+  border: 1px solid var(--raci-border);
+  border-radius: var(--raci-radius-md);
+}
+
+.raci-simulator .raci-strip--allow {
+  color: var(--raci-allow-fg);
+  background: var(--raci-allow-bg);
+  border-color: var(--raci-allow-border);
+}
+
+.raci-simulator .raci-strip--deny {
+  color: var(--raci-blank-fg);
+  background: var(--raci-blank-bg);
+  border-color: var(--raci-blank-border);
+}
+
+.raci-simulator .raci-strip-icon {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--raci-radius-pill);
+}
+
+.raci-simulator .raci-strip-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+.raci-simulator .raci-strip--allow .raci-strip-icon {
+  color: var(--raci-text-on-accent);
+  background: var(--raci-allow-border);
+}
+
+.raci-simulator .raci-strip--deny .raci-strip-icon {
+  color: var(--raci-blank-fg);
+  background: transparent;
+  border: 2px dashed var(--raci-blank-border);
+}
+
+.raci-simulator .raci-strip-body {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--raci-space-2) var(--raci-space-5);
+  min-width: 0;
+}
+
+.raci-simulator .raci-strip-title {
+  font-weight: var(--raci-font-weight-bold);
+  overflow-wrap: anywhere;
+}
+
+.raci-simulator .raci-strip-reason {
+  margin: 0;
+  color: var(--raci-text-muted);
+  font-size: var(--raci-font-size-xs);
+  overflow-wrap: anywhere;
+}
+
+.raci-simulator .raci-strip--error {
+  flex-wrap: wrap;
+  justify-content: space-between;
+  color: var(--raci-deny-fg);
+  background: var(--raci-deny-bg);
+  border-color: var(--raci-deny-border);
+}
+
+.raci-simulator .raci-strip--skeleton {
+  min-height: 3.25rem;
+  background: var(--raci-bg-subtle);
+  border-color: var(--raci-border);
+  animation: raci-strip-pulse 1.4s var(--raci-easing) infinite;
+}
+
+.raci-simulator .raci-strips-note {
+  margin: var(--raci-space-3) 0 0;
+  color: var(--raci-text-muted);
+  font-size: var(--raci-font-size-xs);
+}
+
+@keyframes raci-strip-pulse {
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@media (max-width: 40rem) {
+  .raci-simulator .raci-strip {
+    padding: var(--raci-space-3);
+  }
+
+  .raci-simulator .raci-strip-body {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .raci-simulator .raci-strip--skeleton {
+    animation: none;
+  }
+}

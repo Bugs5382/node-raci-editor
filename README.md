@@ -8,7 +8,8 @@ answers "what can this person do here, and why", and a settings panel. The rules
 document, and `decide()` turns that document into an answer with no React and no DOM, so a Go
 service or a mock can run the same logic against the same test vectors. 🔌 **The host owns the
 data:** every component is controlled, you pass the rules in and get a new copy back through
-`onChange`.
+`onChange`. Resources are your data too: the package draws no resource list, you pass the selected
+category to the editor and the simulator.
 
 ## 📦 Install
 
@@ -78,6 +79,7 @@ deny. The simulator needs a `user` subject kind to find the person it simulates.
 - 🧩 **Your model, not ours** — you define the actions, which actions imply which, the subject kinds and the resource tree.
 - 🔎 **Async subject lookup** — each subject kind brings its own `search` and `resolve`; sync or promise.
 - 🌳 **Inheritance you can see** — inherited entries show read-only in the editor, and the simulator prints the walk it took.
+- 🪟 **Three simulator views** — the default list, a `boxes` grid with a per-category walk, and `strips`; plus a results slot and host-side `evaluate`.
 - 🛑 **Stop inheriting** — per category, plus a `"*"` category for rules that apply everywhere.
 - 🧪 **Shared test vectors** — one JSON file that the TypeScript package, a mock and a Go implementation all run.
 - 🗣️ **Your wording** — every string is a key you can override through `config.strings`.

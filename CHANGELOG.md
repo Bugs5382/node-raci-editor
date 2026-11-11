@@ -4,6 +4,12 @@
 
 ### What Changed 👀
 
+#### Features
+
+- feat(simulator): `variant` ("list" default, "boxes", "strips"), `renderResults`, `evaluate` and `show` (`memberships`) props, new strings under `simulator.box.*`, `simulator.strip.*` and `simulator.loading`, `simulator.error`, `simulator.retry`; the default list view is unchanged (#11)
+- feat(simulator)!: remove the built-in category menu and `onCategoryChange`; the host passes `categoryId`, and without it the simulator shows the empty-category state (#11)
+- feat(core): `decide(input, { trace: true })` adds a per-category `trace`; verdicts are identical with and without it (#11)
+
 #### Bug Fixes
 
 - fix(core): remove `RaciSettings.defaultStopInheriting`; the editor shows the same `stopInheriting` flag the engine reads (#4)

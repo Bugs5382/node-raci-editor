@@ -27,7 +27,9 @@ mind before changing it:
   `node-raci-editor/vectors/decide.json`). Go and mock implementations run the same file.
 - Exports: the types (`RaciConfig`, `RuleSet`, `Entry`, ...), `decide`, `defaultSettings`,
   `normalizeSettings`, `toggleAction`, `toggleKind`, `moveAction`, `impliedActions`,
-  `vectorSubjects`, and the three components with their props types.
+  `vectorSubjects`, and the three components with their props types. The simulator also exports
+  `SimulatorVariant`, `ActionResult`, `SimulatorViewProps`, and core exports `TraceStep`,
+  `TraceMatch` and `DecideOptions` (`decide(input, { trace: true })`).
 - Components are controlled: the host owns the `RuleSet` and `RaciSettings` and receives a new
   object through `onChange`. Nothing is mutated.
 - Usage docs are in `README.md` and `guides/` (getting started, access model, configuration,
@@ -37,9 +39,10 @@ mind before changing it:
 
 - `src/index.ts` - the public entry point: exports only.
 - `src/core/` - the pure TypeScript domain model and `decide()`; node tests, 100% coverage gate.
-- `src/react/` - the React components; tests run in jsdom.
+- `src/react/` - the React components; tests run in jsdom. The simulator has three built-in
+  views (`list` is the default and must stay as it is; `Boxes.tsx`, `Strips.tsx`).
 - `src/styles/` - `index.css` imports `tokens.css` and the component sheets (`components.css`,
-  `editor.css`, `simulator.css`, `settings.css`); built to `dist/styles.css`.
+  `editor.css`, `simulator.css`, `simulator-boxes.css`, `simulator-strips.css`, `settings.css`); built to `dist/styles.css`.
 - `demo/` - a Vite app that imports the package source through the `@/` alias (not published).
 - `tests/` - cross-module tests; `docs-snippets.test.tsx` runs the code shown in the README and guides.
 - `vectors/` - shared `decide()` test vectors (published) and their format in `vectors/README.md`.

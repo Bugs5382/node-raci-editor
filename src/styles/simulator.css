@@ -46,8 +46,7 @@
   font-weight: var(--raci-font-weight-medium);
 }
 
-.raci-simulator .raci-input,
-.raci-simulator .raci-select {
+.raci-simulator .raci-input {
   width: 100%;
   min-height: var(--raci-control-height);
   padding: 0 var(--raci-space-4);
@@ -62,7 +61,7 @@
   color: var(--raci-text-muted);
 }
 
-.raci-simulator :is(.raci-input, .raci-select, .raci-chip-remove):focus-visible {
+.raci-simulator :is(.raci-input, .raci-chip-remove):focus-visible {
   outline: 2px solid var(--raci-focus-ring);
   outline-offset: 2px;
 }

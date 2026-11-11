@@ -55,6 +55,32 @@ export type DecideReason =
   | "entry" // a matching entry decided
   | "default-deny"; // nothing matched on the walk
 
+/** One entry that matched the asked action while walking a category. */
+export interface TraceMatch {
+  entry: Entry;
+  /** Position of the entry in `category.entries`. */
+  index: number;
+  /** `direct` when the entry names the asked action, `implied` when it covers it through `implies`. */
+  via: "direct" | "implied";
+  /** True for the entry that produced the verdict. */
+  decisive: boolean;
+}
+
+/** What `decide()` saw in one visited category. */
+export interface TraceStep {
+  category: string;
+  /** Every matching entry, in entry order. Empty when nothing matched. */
+  matches: TraceMatch[];
+  /** True when the category stops inheriting, which ends the walk here. */
+  stopInheriting?: boolean;
+}
+
+/** Options of `decide()`. */
+export interface DecideOptions {
+  /** Add `trace` to the decision. Verdicts are identical either way. */
+  trace?: boolean;
+}
+
 /** The result of `decide()`. */
 export interface Decision {
   allowed: boolean;
@@ -65,6 +91,8 @@ export interface Decision {
   path: string[];
   /** True when a stopInheriting category ended the walk without a match. */
   stoppedAt?: string;
+  /** One step per visited category, nearest first. Only present when `decide()` was asked for it. */
+  trace?: TraceStep[];
 }
 
 /** A node of the host's resource tree. */

@@ -239,3 +239,73 @@ describe("decide", () => {
     expect(decide(input(rs, "a", "read")).path).toEqual(["a", "*"]);
   });
 });
+
+describe("decide trace", () => {
+  it("omits trace by default and when trace is false", () => {
+    const rs: RuleSet = {
+      categories: { a: { entries: [e("user:alice", "read", "allow")] } },
+      parents: {},
+    };
+    expect("trace" in decide(input(rs, "a", "read"))).toBe(false);
+    expect("trace" in decide(input(rs, "a", "read"), {})).toBe(false);
+    expect("trace" in decide(input(rs, "a", "read"), { trace: false })).toBe(false);
+  });
+
+  it("returns an empty trace for an unknown action", () => {
+    const d = decide(input({ categories: {}, parents: {} }, "a", "nope"), { trace: true });
+    expect(d.trace).toEqual([]);
+  });
+
+  it("lists a step with no matches for every visited category", () => {
+    const d = decide(input({ categories: {}, parents: { b: "a" } }, "b", "read"), { trace: true });
+    expect(d.trace).toEqual([
+      { category: "b", matches: [] },
+      { category: "a", matches: [] },
+      { category: "*", matches: [] },
+    ]);
+  });
+
+  it("marks the deciding entry, direct and implied matches, and entry indexes", () => {
+    const allow = e("user:alice", "manage", "allow");
+    const other = e("user:bob", "read", "allow");
+    const deny = e("group:g", "read", "deny");
+    const rs: RuleSet = {
+      categories: { a: { entries: [allow, other, deny] } },
+      parents: {},
+    };
+    const d = decide(input(rs, "a", "read", ["user:alice", "group:g"]), { trace: true });
+    expect(d.allowed).toBe(false);
+    expect(d.trace).toEqual([
+      {
+        category: "a",
+        matches: [
+          { entry: allow, index: 0, via: "implied", decisive: false },
+          { entry: deny, index: 2, via: "direct", decisive: true },
+        ],
+      },
+    ]);
+  });
+
+  it("marks the first match decisive when there is no deny, and walks to a parent", () => {
+    const inherited = e("user:alice", "read", "allow");
+    const rs: RuleSet = {
+      categories: { p: { entries: [inherited] }, c: { entries: [] } },
+      parents: { c: "p" },
+    };
+    const d = decide(input(rs, "c", "read"), { trace: true });
+    expect(d.trace).toEqual([
+      { category: "c", matches: [] },
+      { category: "p", matches: [{ entry: inherited, index: 0, via: "direct", decisive: true }] },
+    ]);
+  });
+
+  it("flags stopInheriting on the step where the walk ended", () => {
+    const rs: RuleSet = {
+      categories: { c: { stopInheriting: true, entries: [] }, p: { entries: [] } },
+      parents: { c: "p" },
+    };
+    const d = decide(input(rs, "c", "read"), { trace: true });
+    expect(d.stoppedAt).toBe("c");
+    expect(d.trace).toEqual([{ category: "c", matches: [], stopInheriting: true }]);
+  });
+});

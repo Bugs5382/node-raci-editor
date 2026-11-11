@@ -76,7 +76,7 @@ interface ResourceNode {
 ```
 
 The node ids are the category ids in your `RuleSet`. The tree is used for labels (the editor's
-"Inherited from ..." headings and the simulator's category menu and walk). It is not used to decide:
+"Inherited from ..." headings and the simulator's walk). It is not used to decide:
 `decide()` follows `ruleSet.parents`, so keep `parents` in step with the tree you pass here.
 
 ## Settings
@@ -177,7 +177,6 @@ Keys with a variable list their variables in braces. The default text is in the 
 | `simulator.membershipsPlaceholder` | Add a group or role                                                  |
 | `simulator.noMatches`              | No matches                                                           |
 | `simulator.remove`                 | Remove {label}                                                       |
-| `simulator.category`               | Category                                                             |
 | `simulator.results`                | Results                                                              |
 | `simulator.action`                 | Action                                                               |
 | `simulator.result`                 | Result                                                               |
@@ -194,6 +193,25 @@ Keys with a variable list their variables in braces. The default text is in the 
 | `simulator.reason.global`          | {verdict} by {subject} ({action}), from the rules for all categories |
 | `simulator.reason.stopped`         | Denied: no rule matched, and inheriting stopped at {category}        |
 | `simulator.reason.default`         | Denied: no rule matched (default deny)                               |
+| `simulator.loading`                | Checking access...                                                   |
+| `simulator.error`                  | Could not check access.                                              |
+| `simulator.retry`                  | Retry                                                                |
+| `simulator.strip.title`            | {action} - {answer}                                                  |
+| `simulator.strip.yes`              | Yes                                                                  |
+| `simulator.strip.no`               | No                                                                   |
+| `simulator.box.reason`             | Reason                                                               |
+| `simulator.box.decidedBy`          | Decided by                                                           |
+| `simulator.box.walk`               | Walk                                                                 |
+| `simulator.box.overridden`         | Overridden ({count})                                                 |
+| `simulator.box.noRule`             | No rule matched                                                      |
+| `simulator.box.noMatch`            | no match                                                             |
+| `simulator.box.stopped`            | Inheriting stopped here                                              |
+| `simulator.box.direct`             | direct                                                               |
+| `simulator.box.implied`            | implied                                                              |
+| `simulator.box.deciding`           | deciding                                                             |
+| `simulator.box.effectAllow`        | Allow                                                                |
+| `simulator.box.effectDeny`         | Deny                                                                 |
+| `simulator.box.entry`              | Entry #{n}                                                           |
 
 ### Settings panel (`settings.*`)
 
