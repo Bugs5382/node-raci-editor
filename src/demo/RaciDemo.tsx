@@ -82,6 +82,7 @@ const Workbench = ({ presetId }: { presetId: string }) => {
   const [categoryId, setCategoryId] = useState(preset.initialCategory);
   const [tab, setTab] = useState<TabId>("editor");
   const [variant, setVariant] = useState<SimulatorVariant>("list");
+  const [start, setStart] = useState<"edit" | "view">("edit");
   const [settings, setSettings] = useState<RaciSettings>(() => defaultSettings(config));
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -171,13 +172,31 @@ const Workbench = ({ presetId }: { presetId: string }) => {
         </div>
         <div role="tabpanel" id={panelId} aria-labelledby={tabId(tab)} className="demo-panel">
           {tab === "editor" && (
-            <RulesEditor
-              config={config}
-              ruleSet={ruleSet}
-              categoryId={categoryId}
-              onChange={setRuleSet}
-              settings={settings}
-            />
+            <>
+              <div className="demo-actions" role="group" aria-label="Editor start">
+                {(["edit", "view"] as const).map((v) => (
+                  <button
+                    key={v}
+                    type="button"
+                    className="demo-button"
+                    aria-pressed={start === v}
+                    onClick={() => setStart(v)}
+                  >
+                    {v === "edit" ? "editable" : "read-only"}
+                  </button>
+                ))}
+              </div>
+              <RulesEditor
+                key={start}
+                config={config}
+                ruleSet={ruleSet}
+                categoryId={categoryId}
+                onChange={setRuleSet}
+                settings={settings}
+                defaultMode={start === "view" ? "view" : undefined}
+                onSave={start === "view" ? () => setMessage("Saved.") : undefined}
+              />
+            </>
           )}
           {tab === "simulator" && (
             <>

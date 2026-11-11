@@ -32,11 +32,19 @@ export interface SubjectPickerProps {
   /** Subjects already shown as rows; they are left out of the results. */
   existing: string[];
   onPick: (option: SubjectOption) => void;
+  /** Greys the whole picker out (read-only view); it keeps its size. */
+  disabled?: boolean;
   t: (key: string, vars?: Record<string, string | number>) => string;
 }
 
 /** Kind select plus an async, debounced, keyboard accessible search combobox. */
-export const SubjectPicker = ({ kinds, existing, onPick, t }: SubjectPickerProps) => {
+export const SubjectPicker = ({
+  kinds,
+  existing,
+  onPick,
+  disabled = false,
+  t,
+}: SubjectPickerProps) => {
   const uid = useId();
   const listId = `${uid}-list`;
   const [kindId, setKindId] = useState(kinds[0]?.kind ?? "");
@@ -119,6 +127,7 @@ export const SubjectPicker = ({ kinds, existing, onPick, t }: SubjectPickerProps
           <span className="raci-visually-hidden">{t("editor.kind")}</span>
           <select
             className="raci-select"
+            disabled={disabled}
             value={kind?.kind ?? ""}
             onChange={(e) => {
               setKindId(e.target.value);
@@ -146,6 +155,7 @@ export const SubjectPicker = ({ kinds, existing, onPick, t }: SubjectPickerProps
             showPanel && status === "done" && options[active] ? `${uid}-opt-${active}` : undefined
           }
           placeholder={t("editor.searchPlaceholder")}
+          disabled={disabled}
           autoComplete="off"
           value={query}
           onChange={(e) => {

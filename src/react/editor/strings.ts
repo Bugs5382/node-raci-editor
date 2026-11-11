@@ -56,4 +56,11 @@ export const editorStrings: Record<string, string> = {
     "Deny {action} for {subject}? A deny overrides any allow in this category.",
   "editor.confirm": "Deny",
   "editor.cancel": "Cancel",
+  "editor.edit": "Edit",
+  "editor.save": "Save",
+  "editor.unsaved": "Unsaved changes",
+  "editor.discardTitle": "Discard unsaved changes?",
+  "editor.discardBody": "Your changes to {category} have not been saved.",
+  "editor.discard": "Discard",
+  "editor.keepEditing": "Keep editing",
 };
