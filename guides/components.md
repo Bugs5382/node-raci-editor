@@ -19,20 +19,22 @@ that root so the [theme tokens](theming.md) apply.
 
 A matrix of subjects (rows) by actions (columns) for the entries of one category.
 
-| Prop                        | Type                                 | Notes                                                                                              |
-| --------------------------- | ------------------------------------ | -------------------------------------------------------------------------------------------------- |
-| `config`                    | `RaciConfig`                         | Actions, subject kinds, resources, strings.                                                        |
-| `ruleSet`                   | `RuleSet`                            | The whole rule set; the editor reads the entries of `categoryId`.                                  |
-| `categoryId`                | `string`                             | The category being edited. Change it to move to another category.                                  |
-| `onChange`                  | `(next: RuleSet) => void`            | Called with the new rule set after each edit.                                                      |
-| `settings`                  | `Partial<RaciSettings>`              | Optional. Missing fields use `defaultSettings(config)`.                                            |
-| `readOnly`                  | `boolean`                            | Optional, default `false`. Disables the cells, the checkbox and the picker, and hides Remove.      |
-| `defaultMode`               | `"edit" \| "view"`                   | Optional, default `"edit"` (today's behaviour). `"view"` starts read-only; see "Read-only start".  |
-| `mode`, `onModeChange`      | `"edit" \| "view"`, `(mode) => void` | Optional. Control the mode yourself.                                                               |
-| `canEdit`, `readOnlyReason` | `boolean`, `string`                  | Optional. When `canEdit` is false, Edit is hidden, or disabled with your reason when you give one. |
-| `onSave`, `onCancel`        | `(ruleSet) => void`, `() => void`    | Optional. Save hands you the working copy once; Cancel reports that it was discarded.              |
-| `confirmDiscard`            | `() => boolean \| Promise<boolean>`  | Optional. Asked before unsaved changes are discarded; a built-in dialog is the default.            |
-| `className`                 | `string`                             | Optional.                                                                                          |
+| Prop                        | Type                                   | Notes                                                                                              |
+| --------------------------- | -------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `config`                    | `RaciConfig`                           | Actions, subject kinds, resources, strings.                                                        |
+| `ruleSet`                   | `RuleSet`                              | The whole rule set; the editor reads the entries of `categoryId`.                                  |
+| `categoryId`                | `string`                               | The category being edited. Change it to move to another category.                                  |
+| `onChange`                  | `(next: RuleSet) => void`              | Called with the new rule set after each edit.                                                      |
+| `settings`                  | `Partial<RaciSettings>`                | Optional. Missing fields use `defaultSettings(config)`.                                            |
+| `readOnly`                  | `boolean`                              | Optional, default `false`. Disables the cells, the checkbox and the picker, and hides Remove.      |
+| `cellVariant`               | `"box" \| "marks"`                     | Optional, default `"box"`. The look of a cell; see "Cell variants" below.                          |
+| `renderCell`                | `(cell: RenderCellProps) => ReactNode` | Optional. Draws every cell itself; wins over `cellVariant`. See "Cell variants".                   |
+| `defaultMode`               | `"edit" \| "view"`                     | Optional, default `"edit"` (today's behaviour). `"view"` starts read-only; see "Read-only start".  |
+| `mode`, `onModeChange`      | `"edit" \| "view"`, `(mode) => void`   | Optional. Control the mode yourself.                                                               |
+| `canEdit`, `readOnlyReason` | `boolean`, `string`                    | Optional. When `canEdit` is false, Edit is hidden, or disabled with your reason when you give one. |
+| `onSave`, `onCancel`        | `(ruleSet) => void`, `() => void`      | Optional. Save hands you the working copy once; Cancel reports that it was discarded.              |
+| `confirmDiscard`            | `() => boolean \| Promise<boolean>`    | Optional. Asked before unsaved changes are discarded; a built-in dialog is the default.            |
+| `className`                 | `string`                               | Optional.                                                                                          |
 
 What it does:
 
@@ -115,6 +117,68 @@ editable and shows no Edit, Save or Cancel, exactly as before.
 - **Words.** `editor.edit`, `editor.save`, `editor.cancel`, `editor.unsaved`, `editor.discardTitle`,
   `editor.discardBody`, `editor.discard` and `editor.keepEditing` are strings you can override.
 - `readOnly` still wins: with it set there is no Edit button.
+
+## Cell variants
+
+Every cell has the same fixed box, set by `--raci-cell-width` and `--raci-cell-height` for each
+density, in every variant, so editing never moves or resizes a row.
+
+- **`box`** (default, unchanged): the state box with an icon, the state word and a reserved line for
+  "included".
+- **`marks`**: only a mark, centred in the same box. A check for Allow, an X for Deny and nothing for
+  Not set. There is no box or fill. An included cell shows a dimmed check, and an inherited cell a
+  dimmed mark. The button, its accessible name (for example "Alice, Edit: allow"), its tooltip, the
+  keyboard behaviour (Tab, Enter, Space) and the click order (not set, allow, deny, not set) are
+  the same as the box. `readOnly` disables it the same way.
+- **`renderCell`**: the host draws the whole cell. It is called for every grid cell and every cell
+  of the inherited tables, and gets a `RenderCellProps`:
+
+| Field        | Type                                  | Notes                                                                             |
+| ------------ | ------------------------------------- | --------------------------------------------------------------------------------- |
+| `state`      | `"allow" \| "deny" \| "blank"`        | The cell's own state; `"blank"` is Not set.                                       |
+| `inherited`  | `boolean`                             | True in an inherited table: read-only, never changes.                             |
+| `includedBy` | `ActionDef \| undefined`              | For a blank cell, the action whose Allow includes it.                             |
+| `action`     | `ActionDef`                           | The column.                                                                       |
+| `subject`    | `string`                              | The row's subject id. `subjectLabel` is its display label.                        |
+| `label`      | `string`                              | The accessible name the built-in cell uses. Put it on your control.               |
+| `title`      | `string`                              | The tooltip text the built-in cell uses.                                          |
+| `readOnly`   | `boolean`                             | True when the editor is read-only or the cell is inherited.                       |
+| `onChange`   | `(next: Effect \| undefined) => void` | Sets the cell; a deny asks for confirmation when `settings.confirmDeny` is on.    |
+| `onCycle`    | `() => void`                          | Moves to the next state: not set, allow, deny, not set.                           |
+| `size`       | `{ width: string; height: string }`   | `var(--raci-cell-width)` and `var(--raci-cell-height)`: put them on your control. |
+
+Keep the fixed size, put `label` on the control and call `onCycle` or `onChange`, and your cell
+behaves like the built-in ones. The package does not add a wrapper, a border or a click handler
+around a host cell.
+
+```tsx
+import type { RenderCellProps, RulesEditorProps } from "node-raci-editor";
+
+// A host cell: a plain button that keeps the fixed size and the editor's accessible name.
+export const HostCell = (cell: RenderCellProps) => (
+  <button
+    type="button"
+    aria-label={cell.label}
+    title={cell.title}
+    disabled={cell.readOnly}
+    style={{ width: cell.size.width, height: cell.size.height }}
+    onClick={cell.onCycle}
+  >
+    {cell.state === "allow" ? "Y" : cell.state === "deny" ? "N" : ""}
+  </button>
+);
+
+// `cellVariant="marks"` draws a check, an X or nothing; `renderCell` draws the whole cell.
+export const MarksEditor = (props: RulesEditorProps) => (
+  <RulesEditor {...props} cellVariant="marks" />
+);
+export const HostCellEditor = (props: RulesEditorProps) => (
+  <RulesEditor {...props} renderCell={HostCell} />
+);
+```
+
+The demo has a Cell variant switch (box, marks, custom) and exports `demoRenderCell`, a sample host
+cell, from `node-raci-editor/demo`.
 
 ## Simulator
 

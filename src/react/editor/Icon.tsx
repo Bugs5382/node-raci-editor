@@ -43,3 +43,29 @@ export const EffectIcon = ({ effect }: { effect: Effect | undefined }) => {
     </svg>
   );
 };
+
+/**
+ * A bare mark for the `marks` cell variant: a check for Allow, an X for Deny and nothing for Not set.
+ * Decorative: the cell's own button carries the accessible name.
+ */
+export const MarkIcon = ({ effect }: { effect: Effect | undefined }) => {
+  if (effect === undefined) return null;
+  return (
+    <svg
+      className="raci-icon raci-icon--mark"
+      viewBox="0 0 16 16"
+      width="18"
+      height="18"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <path
+        d={effect === "allow" ? "M3 8.5l3.5 3.5L13 4.5" : "M4 4l8 8M12 4l-8 8"}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+};

@@ -42,6 +42,8 @@ All optional.
   key navigation.
 - An Editor start switch in the Editor tab: editable (default) or read-only (starts read-only; Edit, Save and
   Cancel). The read-only start is opt-in.
+- A Cell variant switch in the Editor tab: box (default), marks (a check, an X or nothing) and custom
+  (a sample host cell, exported as `demoRenderCell`).
 - Two presets that differ in actions, subject kinds, tree and strings, to show nothing is hard-coded.
 - The rule set as JSON: copy, download, upload with validation, and reset to the sample.
 - A light, dark and system theme switch, and a "Brand override" toggle that only changes tokens.

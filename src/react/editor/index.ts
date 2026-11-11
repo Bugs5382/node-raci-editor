@@ -21,5 +21,11 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 */
 export { RulesEditor } from "@/react/editor/RulesEditor";
-export type { EditorMode, RulesEditorProps } from "@/react/editor/RulesEditor";
+export type {
+  CellSizeTokens,
+  CellVariant,
+  EditorMode,
+  RenderCellProps,
+  RulesEditorProps,
+} from "@/react/editor/RulesEditor";
 export { impliedActions } from "@/react/editor/model";
