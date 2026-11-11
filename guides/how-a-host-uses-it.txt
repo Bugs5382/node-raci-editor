@@ -51,3 +51,11 @@
                approve on contracts  -> Would be allowed (no entry in contracts, so the
                                                   parent library: Allow approver)
                read    on contracts  -> Would be denied  (a Deny on author includes read)
+
+  THE CELL LOOK IS YOURS TO CHOOSE
+  --------------------------------
+  RulesEditor draws each cell as a state box by default.
+    cellVariant="marks"   only a check (Allow), an X (Deny) or nothing (Not set)
+    renderCell={fn}       your own cell: fn gets { state, inherited, includedBy, action,
+                          subject, label, title, readOnly, onChange, onCycle, size }
+  Every variant keeps the same fixed cell size, so rows never move when a cell changes.
