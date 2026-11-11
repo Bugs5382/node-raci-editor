@@ -257,6 +257,7 @@
 /* The sample custom cell: a round dot, filled for Allow, crossed for Deny, hollow for Not set. */
 .demo-custom-cell {
   display: inline-flex;
+  vertical-align: middle;
   align-items: center;
   justify-content: center;
   padding: 0;

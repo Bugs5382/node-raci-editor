@@ -365,3 +365,12 @@ describe("stylesheet: marks keep the fixed size", () => {
     expect(rule(".raci-editor .raci-cell--marks.raci-cell--included")).toMatch(/opacity/);
   });
 });
+
+describe("demo stylesheet: the sample host cell", () => {
+  it("aligns by its middle like the built-in cells, so rows do not move", () => {
+    const css = readFileSync("src/demo/demo.css", "utf8");
+    const start = css.indexOf(".demo-custom-cell {");
+    expect(start).toBeGreaterThanOrEqual(0);
+    expect(css.slice(start, css.indexOf("}", start))).toMatch(/vertical-align:\s*middle/);
+  });
+});
