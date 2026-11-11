@@ -1,0 +1,22 @@
+/** English defaults for the settings panel; a host overrides any key through `config.strings`. */
+export const settingsStrings: Record<string, string> = {
+  "settings.title": "Settings",
+  "settings.actions.legend": "Actions",
+  "settings.actions.hint": "Choose which actions are shown and in what order.",
+  "settings.actions.implies": "Implies: {list}",
+  "settings.actions.impliesNone": "Implies no other action",
+  "settings.actions.moveUp": "Move {label} up",
+  "settings.actions.moveDown": "Move {label} down",
+  "settings.actions.lastHint": "At least one action must stay visible.",
+  "settings.kinds.legend": "Subject kinds",
+  "settings.kinds.hint": "Choose which kinds of subject can be picked.",
+  "settings.kinds.lastHint": "At least one subject kind must stay enabled.",
+  "settings.behavior.legend": "Behavior",
+  "settings.showInherited": "Show inherited entries",
+  "settings.confirmDeny": "Confirm before saving a Deny",
+  "settings.defaultStopInheriting": "Stop inheriting by default for categories without a setting",
+  "settings.density.legend": "Density",
+  "settings.density.comfortable": "Comfortable",
+  "settings.density.compact": "Compact",
+  "settings.reset": "Reset to defaults",
+};
