@@ -21,6 +21,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 */
 import { useEffect, useId, useMemo, useRef, useState } from "react";
+import type { ReactNode } from "react";
 import { defaultSettings } from "@/core/types";
 import type {
   ActionDef,
@@ -32,7 +33,7 @@ import type {
   RuleSet,
 } from "@/core/types";
 import { makeT } from "@/react/strings";
-import { EffectIcon } from "@/react/editor/Icon";
+import { EffectIcon, MarkIcon } from "@/react/editor/Icon";
 import {
   cellEffect,
   deriveRows,
@@ -56,6 +57,48 @@ const NARROW_PX = 640;
 /** The built-in subject every asker has. */
 const EVERYONE_SUBJECT = "everyone:*";
 
+/** How a grid cell looks: the state box (default) or just a mark (a check, an X or nothing). */
+export type CellVariant = "box" | "marks";
+
+/** The fixed cell size, as CSS values the host can put on its own cell so rows never jump. */
+export interface CellSizeTokens {
+  /** `var(--raci-cell-width)`. */
+  width: string;
+  /** `var(--raci-cell-height)`. */
+  height: string;
+}
+
+/** What a host's `renderCell` receives for one cell. */
+export interface RenderCellProps {
+  /** The cell's own state; `"blank"` is Not set. */
+  state: "allow" | "deny" | "blank";
+  /** True for a cell in an inherited (parent category) table: read-only, never changes. */
+  inherited: boolean;
+  /** For a blank cell, the action whose Allow includes it; otherwise undefined. */
+  includedBy?: ActionDef;
+  /** The action (column) of this cell. */
+  action: ActionDef;
+  /** The subject id of this cell's row. */
+  subject: string;
+  /** The subject's display label. */
+  subjectLabel: string;
+  /** The accessible name the built-in cell uses; put it on the host's control. */
+  label: string;
+  /** The tooltip text the built-in cell uses. */
+  title: string;
+  /** True when the editor is read-only or the cell is inherited. */
+  readOnly: boolean;
+  /** Sets this cell to a state (undefined clears it). A Deny asks for confirmation when that setting is on. */
+  onChange: (next: Effect | undefined) => void;
+  /** Moves to the next state in the editor's order: Not set, Allow, Deny, Not set. */
+  onCycle: () => void;
+  /** The fixed cell size; use it so rows keep the same height in every variant. */
+  size: CellSizeTokens;
+}
+
+const SIZE: CellSizeTokens = { width: "var(--raci-cell-width)", height: "var(--raci-cell-height)" };
+const NOOP = () => {};
+
 /** Props of `RulesEditor`. */
 export interface RulesEditorProps {
   /** The host configuration. */
@@ -76,6 +119,10 @@ export interface RulesEditorProps {
    * and accessible name.
    */
   headerMode?: HeaderMode;
+  /** Cell look: `"box"` (default) or `"marks"`. Ignored when `renderCell` is given. */
+  cellVariant?: CellVariant;
+  /** Draws every cell itself. Gets the state, the actions and the size tokens; see `RenderCellProps`. */
+  renderCell?: (cell: RenderCellProps) => ReactNode;
   /** Extra class on the root element. */
   className?: string;
 }
@@ -101,7 +148,8 @@ interface Pending {
 
 /** Matrix editor for the entries of one category. Controlled: it never mutates its input. */
 export const RulesEditor = (props: RulesEditorProps) => {
-  const { config, ruleSet, categoryId, onChange, readOnly = false, className } = props;
+  const { config, ruleSet, categoryId, onChange, readOnly = false, className, renderCell } = props;
+  const marks = props.cellVariant === "marks";
   const settings: RaciSettings = { ...defaultSettings(config), ...props.settings };
   const t = useMemo(() => makeT(config, editorStrings), [config]);
   const uid = useId();
@@ -196,14 +244,16 @@ export const RulesEditor = (props: RulesEditorProps) => {
     onChange(setCell(ruleSet, categoryId, subject, action.id, effect));
   };
 
-  const cycle = (subject: string, action: ActionDef) => {
-    const next = nextEffect(cellEffect(entries, subject, action.id));
+  const request = (subject: string, action: ActionDef, next: Effect | undefined) => {
     if (next === "deny" && settings.confirmDeny) {
       setPending({ subject, action });
     } else {
       apply(subject, action, next);
     }
   };
+
+  const cycle = (subject: string, action: ActionDef) =>
+    request(subject, action, nextEffect(cellEffect(entries, subject, action.id)));
 
   // Actions a subject's allowed cells include, mapped to the action that includes them.
   const includedBy = (subject: string): Map<string, ActionDef> => {
@@ -295,29 +345,54 @@ export const RulesEditor = (props: RulesEditorProps) => {
                       : base;
                     return (
                       <td key={a.id}>
-                        <button
-                          type="button"
-                          className={`raci-cell raci-cell--${effect ?? "blank"}${via ? " raci-cell--included" : ""}`}
-                          aria-label={aria}
-                          title={
-                            via
+                        {renderCell ? (
+                          renderCell({
+                            state: effect ?? "blank",
+                            inherited: false,
+                            includedBy: via,
+                            action: a,
+                            subject,
+                            subjectLabel: label,
+                            label: aria,
+                            title: via
                               ? t("editor.includedVia", { action: actionName(via) })
-                              : stateText(effect)
-                          }
-                          disabled={readOnly}
-                          onClick={() => cycle(subject, a)}
-                        >
-                          <span className="raci-cell__primary" aria-hidden="true">
-                            <EffectIcon effect={effect} />
-                            <span className="raci-cell__text">{stateText(effect)}</span>
-                          </span>
-                          <span
-                            className={`raci-cell__secondary${via ? "" : " raci-cell__secondary--off"}`}
-                            aria-hidden="true"
+                              : stateText(effect),
+                            readOnly,
+                            onChange: (next) => request(subject, a, next),
+                            onCycle: () => cycle(subject, a),
+                            size: SIZE,
+                          })
+                        ) : (
+                          <button
+                            type="button"
+                            className={`raci-cell raci-cell--${effect ?? "blank"}${via ? " raci-cell--included" : ""}${marks ? " raci-cell--marks" : ""}`}
+                            aria-label={aria}
+                            title={
+                              via
+                                ? t("editor.includedVia", { action: actionName(via) })
+                                : stateText(effect)
+                            }
+                            disabled={readOnly}
+                            onClick={() => cycle(subject, a)}
                           >
-                            {t("editor.included")}
-                          </span>
-                        </button>
+                            {marks ? (
+                              <MarkIcon effect={effect ?? (via ? "allow" : undefined)} />
+                            ) : (
+                              <>
+                                <span className="raci-cell__primary" aria-hidden="true">
+                                  <EffectIcon effect={effect} />
+                                  <span className="raci-cell__text">{stateText(effect)}</span>
+                                </span>
+                                <span
+                                  className={`raci-cell__secondary${via ? "" : " raci-cell__secondary--off"}`}
+                                  aria-hidden="true"
+                                >
+                                  {t("editor.included")}
+                                </span>
+                              </>
+                            )}
+                          </button>
+                        )}
                       </td>
                     );
                   })}
@@ -386,6 +461,8 @@ export const RulesEditor = (props: RulesEditorProps) => {
           headerTitle={headerTitle}
           headerName={headerName}
           groups={grouped ? groupHeadings : null}
+          marks={marks}
+          renderCell={renderCell}
           t={t}
         />
       ))}
@@ -485,6 +562,8 @@ interface InheritedTableProps {
   headerTitle: (a: ActionDef) => string | undefined;
   headerName: (a: ActionDef) => string | undefined;
   groups: GroupHeading[] | null;
+  marks: boolean;
+  renderCell?: (cell: RenderCellProps) => ReactNode;
   t: (key: string, vars?: Record<string, string | number>) => string;
 }
 
@@ -501,6 +580,8 @@ const InheritedTable = (props: InheritedTableProps) => {
     headerTitle,
     headerName,
     groups,
+    marks,
+    renderCell,
     t,
   } = props;
   return (
@@ -526,28 +607,51 @@ const InheritedTable = (props: InheritedTableProps) => {
                 </th>
                 {columns.map((a) => {
                   const effect = cellEffect(entries, subject, a.id);
+                  const label = t("editor.cellLabel", {
+                    subject: subjectLabel(subject),
+                    action: actionName(a),
+                    state: stateWord(effect),
+                  });
                   return (
                     <td key={a.id}>
-                      <span
-                        className={`raci-cell raci-cell--${effect ?? "blank"} raci-cell--inherited`}
-                        role="img"
-                        aria-label={t("editor.cellLabel", {
-                          subject: subjectLabel(subject),
-                          action: actionName(a),
-                          state: stateWord(effect),
-                        })}
-                      >
-                        <span className="raci-cell__primary" aria-hidden="true">
-                          <EffectIcon effect={effect} />
-                          <span className="raci-cell__text">{stateText(effect)}</span>
-                        </span>
+                      {renderCell ? (
+                        renderCell({
+                          state: effect ?? "blank",
+                          inherited: true,
+                          action: a,
+                          subject,
+                          subjectLabel: subjectLabel(subject),
+                          label,
+                          title: stateText(effect),
+                          readOnly: true,
+                          onChange: NOOP,
+                          onCycle: NOOP,
+                          size: SIZE,
+                        })
+                      ) : (
                         <span
-                          className="raci-cell__secondary raci-cell__secondary--off"
-                          aria-hidden="true"
+                          className={`raci-cell raci-cell--${effect ?? "blank"} raci-cell--inherited${marks ? " raci-cell--marks" : ""}`}
+                          role="img"
+                          aria-label={label}
                         >
-                          {t("editor.included")}
+                          {marks ? (
+                            <MarkIcon effect={effect} />
+                          ) : (
+                            <>
+                              <span className="raci-cell__primary" aria-hidden="true">
+                                <EffectIcon effect={effect} />
+                                <span className="raci-cell__text">{stateText(effect)}</span>
+                              </span>
+                              <span
+                                className="raci-cell__secondary raci-cell__secondary--off"
+                                aria-hidden="true"
+                              >
+                                {t("editor.included")}
+                              </span>
+                            </>
+                          )}
                         </span>
-                      </span>
+                      )}
                     </td>
                   );
                 })}
