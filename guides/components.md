@@ -36,7 +36,8 @@ What it does:
   stored rule set holds both an allow and a deny for one pair, the cell shows deny.
 - **Included cells.** If a subject has an allow on an action that implies another, the other's
   cell shows "included" and its tooltip says which action includes it. The cell is still its own
-  entry: you can set an explicit deny on it.
+  entry: you can set an explicit deny on it. Every cell state has the same fixed size, set by
+  `--raci-cell-width` and `--raci-cell-height` for each density.
 - **Confirm deny.** With `settings.confirmDeny`, the move to deny opens a dialog first. Escape or
   Cancel leaves the cell as it was.
 - **Adding a subject.** The picker at the bottom has a kind menu (only the enabled kinds) and a
