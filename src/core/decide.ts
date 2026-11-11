@@ -27,7 +27,8 @@ const closure = (id: string, byId: Map<string, ActionDef>): Set<string> => {
 };
 
 /**
- * Decide whether a person may perform an action in a category.
+ * Evaluate whether the rules would allow a person to perform an action in a category. This is a
+ * pure evaluation helper the host may call; the host enforces.
  *
  * Default deny. Walk from the category up through `ruleSet.parents`, then the implicit `"*"`
  * category. The nearest category with a matching entry decides: any deny beats any allow there

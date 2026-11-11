@@ -22,4 +22,5 @@
 
 #### 📄 Documentation
 
+- docs(wording): the package shows and edits rules and the host enforces; the simulator previews what the rules would allow and reads "Would be allowed" / "Would be denied" (default strings `simulator.title`, `simulator.allowed`, `simulator.denied`, `simulator.strip.yes`/`no`, `simulator.reason.*`, `simulator.emptyPerson`, `simulator.emptyCategory`, `simulator.loading`, `simulator.error` changed); `decide()` is documented as a pure evaluation helper the host may call (#14)
 - docs(guides): usage, configuration and theming docs, with the README quick start and the shared vector runner checked by a test (#8)

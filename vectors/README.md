@@ -1,6 +1,6 @@
 # Shared decide() test vectors
 
-`decide.json` is a language-neutral set of test cases for the access decision. The TypeScript package, a mock server and a Go implementation all run the same file, so they must agree.
+`decide.json` is a language-neutral set of test cases for the access decision. The TypeScript package, a mock server and a Go implementation all run the same file, so they must agree. `decide()` is a pure evaluation helper the host may call; the host enforces.
 
 ## Format
 

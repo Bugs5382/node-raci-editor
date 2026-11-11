@@ -76,7 +76,7 @@ What each piece does here:
 - `RulesEditor` edits the entries of one category, `specs`. Each edit calls `onChange` with a new
   `RuleSet`; your state setter stores it.
 - `Simulator` reads the same `ruleSet` and answers questions with `decide()`. Add Alice in the
-  editor, search for her in the simulator's Person box, and it lists what she can do and why.
+  editor, search for her in the simulator's Person box, and it previews what the rules would allow her and why.
 - `settings` holds display choices (which action columns, density, confirm before deny). The editor
   and the simulator read them, and `SettingsPanel` edits them.
 
@@ -91,8 +91,8 @@ What each piece does here:
 4. **Storage.** Load a `RuleSet` from wherever you keep it, pass it in, and save what `onChange`
    gives you. The shape is [documented](access-model.md#wire-format) and is the same one a server
    uses to decide.
-5. **Server side.** Run the same decision where you enforce access. In TypeScript call `decide()`;
-   in another language implement the algorithm and check it against the
+5. **Server side.** Your host enforces access. Where it does, it may call `decide()` in TypeScript;
+   in another language, you may use an equivalent implementation of the algorithm and check it against the
    [test vectors](test-vectors.md).
 
 ## Next

@@ -28,9 +28,9 @@
                  | ruleSet                      |  SettingsPanel                |
                  v                              |  which actions and kinds to   |
   +-----------------------------+               |  show; onChange(settings)     |
-  | Enforcement                 |  decide()     +-------------------------------+
-  | decide() here, or go-authz  |<-----------   decide(ruleSet, actions, person,
-  | in Go, same test vectors    |               category, action) -> Decision
+  | Your enforcement            |  decide()     +-------------------------------+
+  | may call decide() or an     |<-----------   decide(ruleSet, actions, person,
+  | equivalent (same vectors)   |               category, action) -> Decision
   +-----------------------------+
 
   The package renders NO resource tree or picker. Your app owns it and passes the
@@ -45,8 +45,8 @@
                           Allow role:approver        approve
                contracts: Deny  group:finance-staff  author
 
-  alice asks:  author  on library    -> Allowed  (library: Allow finance-staff)
-               author  on contracts  -> Denied   (nearest category wins: the Deny)
-               approve on contracts  -> Allowed  (no entry in contracts, so the
+  alice asks:  author  on library    -> Would be allowed (library: Allow finance-staff)
+               author  on contracts  -> Would be denied  (nearest category wins: the Deny)
+               approve on contracts  -> Would be allowed (no entry in contracts, so the
                                                   parent library: Allow approver)
-               read    on contracts  -> Denied   (a Deny on author includes read)
+               read    on contracts  -> Would be denied  (a Deny on author includes read)
