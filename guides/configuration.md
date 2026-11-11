@@ -35,6 +35,43 @@ interface ActionDef {
   hide them per user.
 - Action ids that appear in `implies` but not in the list match only by id.
 
+## Subjects without a directory
+
+A subject is a matcher your app defines. The package gives no meaning to any kind or id except the
+built-in `everyone:*`, which it labels "Everyone" (string `editor.everyone`). Your app may have no
+users, groups or roles at all, and a subject can be a capability such as `can:ack` or `has:approve`.
+
+```ts
+interface MatcherDef {
+  id: string;
+  label: string;
+  description?: string;
+  group?: string;
+}
+interface ContextDef {
+  id: string;
+  label: string;
+  subjects: string[];
+}
+// config.matchers?: MatcherDef[]   config.contexts?: ContextDef[]   config.subjectKinds may be []
+```
+
+- **The editor.** With `matchers` set, or with no `subjectKinds`, it shows no kind chooser and no
+  search. The next row is chosen from a plain list: Everyone, then your matchers (listed together
+  by `group`), leaving out the ones already in the grid. Kinds with a lookup keep working and can be
+  mixed with the list. Rows, cells and the stored rule set are the same as for any subject.
+- **The asker.** `decide()` and the simulator take the list of matchers that apply to whoever or
+  whatever is asking (`Person.subjects`, also exported as the alias `Context`). Your app resolves
+  it; the package never learns how a match is computed, so a predicate is just another entry.
+- **The simulator.** The person picker becomes a context picker. With `contexts` it shows a list of
+  named contexts (the label is the string `simulator.context`, "Context" by default; call it
+  Account, Request or anything else). With `matchers` it also shows a checkbox per matcher, "Which
+  of these apply?", so the asker can be built by hand. No directory lookup is needed, and Everyone
+  always applies. Without `contexts`, matchers and no kinds, the preview starts at once.
+- **Words.** The words user, group, role and person are defaults in the string tables, and the one
+  default kind name the simulator prefers for a person is `DEFAULT_PERSON_KIND` in the defaults
+  module; set `personKind` to use another. A test checks that no other code shows or compares them.
+
 ## Subject kinds
 
 Subjects are whatever kinds your app has (user, group, role, team, department, service account, ...); the package assumes none of them. With one kind there is no kind chooser, and a stored subject of a kind you did not configure is shown as stored, kept when rows change and still evaluated.

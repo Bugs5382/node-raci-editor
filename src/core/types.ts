@@ -150,6 +150,26 @@ export interface SubjectKind {
   resolve?: (subject: string) => string | undefined;
 }
 
+/** A subject the host defines without any directory: a flat choice such as `can:ack` or `has:approve`. */
+export interface MatcherDef {
+  /** The subject string stored in rules, `kind:id`. */
+  id: string;
+  /** The host's label. */
+  label: string;
+  /** A tooltip for the choice. */
+  description?: string;
+  /** Choices with the same group are listed together. */
+  group?: string;
+}
+
+/** A named context the simulator can preview: the list of matchers that apply to it. */
+export interface ContextDef {
+  id: string;
+  label: string;
+  /** The subjects that apply, resolved by the host. */
+  subjects: string[];
+}
+
 /** Everything the host passes to the drop-in pieces. */
 export interface RaciConfig {
   /** The actions, in default column order. */
@@ -160,6 +180,14 @@ export interface RaciConfig {
   resources: ResourceNode[];
   /** Overrides for any UI string, by key; see the configuration guide for the keys. */
   strings?: Partial<Record<string, string>>;
+  /**
+   * A flat list of subjects with no directory lookup. The editor offers them, and the built-in
+   * Everyone, as a plain choice for the next row; the simulator offers them as toggles. May be
+   * mixed with `subjectKinds`, or used with none.
+   */
+  matchers?: MatcherDef[];
+  /** Named contexts for the simulator's context picker. */
+  contexts?: ContextDef[];
 }
 
 /** Display and behaviour settings the SettingsPanel edits; the editor and simulator read them. */

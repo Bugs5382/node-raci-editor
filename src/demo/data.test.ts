@@ -42,14 +42,18 @@ describe("seed validity", () => {
     describe(preset.label, () => {
       const actionIds = preset.config.actions.map((a) => a.id);
       const ids = nodeIds(preset.config.resources);
-      const kinds = preset.config.subjectKinds.map((k) => k.kind);
+      const kinds = new Set(preset.config.subjectKinds.map((k) => k.kind));
 
       it("only uses known actions, categories and subject kinds", () => {
         for (const [category, rules] of Object.entries(preset.seed.categories)) {
           if (category !== "*") expect(ids).toContain(category);
           for (const entry of rules.entries) {
             expect(actionIds).toContain(entry.action);
-            expect(kinds).toContain(entry.subject.split(":")[0]);
+            const known =
+              kinds.has(entry.subject.split(":")[0]!) ||
+              entry.subject === "everyone:*" ||
+              (preset.config.matchers ?? []).some((m) => m.id === entry.subject);
+            expect(known, entry.subject).toBe(true);
           }
         }
         for (const [child, parent] of Object.entries(preset.seed.parents)) {
@@ -87,6 +91,25 @@ describe("seed validity", () => {
     expect(ask("reports", "read", "user:alice", "group:everyone")).toBe(true); // inherited allow
     expect(ask("contracts", "read", "user:erin", "group:contractors")).toBe(true); // re-allow
     expect(ask("disputes", "read", "user:x", "group:contractors")).toBe(false);
+  });
+
+  it("decides the capabilities-only preset through decide(), with no users, groups or roles", () => {
+    const { config, seed } = presetById("capabilities");
+    expect(config.subjectKinds).toEqual([]);
+    const ask = (category: string, action: string, ...subjects: string[]) =>
+      decide({
+        ruleSet: seed,
+        actions: config.actions,
+        person: person("everyone:*", ...subjects),
+        category,
+        action,
+      });
+    expect(ask("access", "read").allowed).toBe(true); // everyone reads
+    expect(ask("access", "ack").allowed).toBe(false);
+    expect(ask("access", "ack", "can:ack").allowed).toBe(true);
+    expect(ask("access", "approve", "has:approve").allowed).toBe(true);
+    expect(ask("access", "approve", "can:ack").allowed).toBe(false);
+    expect(ask("onboarding", "ack", "can:ack").decidedBy?.category).toBe("policies"); // inherited
   });
 
   it("falls back to the first preset for an unknown id", () => {
@@ -191,7 +214,7 @@ describe("theme storage", () => {
 describe("public builders", () => {
   it("lists both presets with their seed and first category", () => {
     const list = demoPresets();
-    expect(list.map((p) => p.id)).toEqual(["org", "other"]);
+    expect(list.map((p) => p.id)).toEqual(["org", "other", "capabilities"]);
     expect(list[0]!.seed).toEqual(presetById("org").seed);
     expect(list[1]!.initialCategory).toBe("drafts");
   });
