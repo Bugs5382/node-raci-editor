@@ -8,3 +8,11 @@ export * from "./core/types.js";
 export { decide } from "./core/decide.js";
 export { vectorSubjects } from "./core/vectors.js";
 export type { VectorPerson } from "./core/vectors.js";
+export {
+  SettingsPanel,
+  normalizeSettings,
+  moveAction,
+  toggleAction,
+  toggleKind,
+} from "./react/settings/index.js";
+export type { SettingsPanelProps } from "./react/settings/index.js";
