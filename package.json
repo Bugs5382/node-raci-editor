@@ -1,6 +1,6 @@
 {
   "name": "node-raci-editor",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "Generic drop-in React rules editor, simulator and settings for RACI-style access rules, with a pure TypeScript decide() and shared test vectors.",
   "author": "Shane",
   "license": "MIT",
