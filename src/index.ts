@@ -16,3 +16,6 @@ export {
   toggleKind,
 } from "./react/settings/index.js";
 export type { SettingsPanelProps } from "./react/settings/index.js";
+
+export { Simulator } from "./react/simulator/Simulator.js";
+export type { SimulatorProps } from "./react/simulator/Simulator.js";
