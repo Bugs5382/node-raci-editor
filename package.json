@@ -1,0 +1,72 @@
+{
+  "name": "node-raci-editor",
+  "version": "0.0.0",
+  "description": "Generic drop-in React rules editor, simulator and settings for RACI-style access rules, with a pure TypeScript decide() and shared test vectors.",
+  "author": "Shane",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "config": {
+    "packMaxUnpackedBytes": 250000,
+    "packMaxGrowthPercent": 25
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Bugs5382/node-raci-editor.git"
+  },
+  "homepage": "https://github.com/Bugs5382/node-raci-editor#readme",
+  "bugs": {
+    "url": "https://github.com/Bugs5382/node-raci-editor/issues"
+  },
+  "scripts": {
+    "build": "tsdown",
+    "check:pack": "node scripts/checkPack.mjs",
+    "check:pack:growth": "node scripts/checkPackGrowth.mjs",
+    "check:install": "node scripts/checkInstall.mjs",
+    "dev": "tsdown --watch",
+    "clean": "rm -rf dist docs coverage",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "docs": "typedoc"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.17.0",
+    "@types/node": "^22.10.0",
+    "@vitest/coverage-v8": "^2.1.8",
+    "eslint": "^9.17.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-prettier": "^5.2.1",
+    "prettier": "^3.4.2",
+    "tsdown": "^0.22.0",
+    "typedoc": "^0.27.4",
+    "typescript": "^5.7.2",
+    "typescript-eslint": "^8.18.0",
+    "vitest": "^2.1.8"
+  }
+}

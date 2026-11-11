@@ -1,0 +1,52 @@
+name: Package Growth
+# Compares this PR's packed tarball with the release on the npm `latest`
+# dist-tag (npm view <pkg> dist.unpackedSize dist.fileCount) and fails when the
+# unpacked size or file count grows past package.json
+# config.packMaxGrowthPercent. An unpublished package passes with a note.
+#
+# Intended growth: add the `pack-size-override` label and say why in the PR
+# body. The label events retrigger this workflow, and the payload is read per
+# run, so adding or removing the label re-evaluates the gate right away. It is
+# a separate workflow so a label change reruns only this job, not the test
+# matrix.
+#
+# Draft PRs are skipped; the run happens when the PR is marked ready.
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: ["**"]
+    types: [opened, reopened, ready_for_review, synchronize, labeled, unlabeled]
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: read
+jobs:
+  growth:
+    name: 📦 Package Growth
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Generate lockfile
+        run: npm install --package-lock-only --ignore-scripts --legacy-peer-deps
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 'lts/*'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts --legacy-peer-deps
+
+      - name: Build
+        run: npm run build
+
+      - name: Compare with the last published release
+        env:
+          PACK_GROWTH_OVERRIDE: ${{ contains(github.event.pull_request.labels.*.name, 'pack-size-override') }}
+        run: npm run check:pack:growth

@@ -1,0 +1,90 @@
+name: Test
+# Draft PRs are skipped; the run happens when the PR is marked ready. The job
+# still runs for workflow_dispatch and when the publish workflow calls it.
+on:
+  workflow_dispatch:
+  workflow_call:
+  pull_request:
+    branches: ["**"]
+    types: [opened, reopened, ready_for_review, synchronize]
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+jobs:
+  build:
+    name: 🧪 Build
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [24.x, 'lts/*', 'latest']
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      # Generate the lockfile BEFORE setup-node so its npm cache has something to
+      # key on. --legacy-peer-deps keeps CI in parity with local installs that
+      # rely on overrides / peer-dep workarounds.
+      - name: Generate lockfile
+        run: npm install --package-lock-only --ignore-scripts --legacy-peer-deps
+
+      - name: Setup Node ${{ matrix.node-version }}
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts --legacy-peer-deps
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+      # Fails if the tarball would ship source maps, TypeScript source, tests or
+      # another non-runtime folder, misses an entry point, or goes over the
+      # unpacked-size ceiling (package.json config.packMaxUnpackedBytes). The
+      # file list and sizes land in the job summary.
+      - name: Check package contents
+        run: npm run check:pack
+
+      # Packs the package, installs the tarball in a throwaway folder outside the
+      # repo, and loads every entry point as ESM (import) and CJS (require). Fails
+      # when an entry point does not load, loads empty, or the two builds export
+      # different names. Runs on every Node version in the matrix.
+      - name: Install the packed tarball and import it (ESM and CJS)
+        run: npm run check:install
+
+      # typedoc.json sets treatWarningsAsErrors, so a dangling or undocumented
+      # reference fails the PR instead of slipping into the published docs.
+      - name: Build Docs (warnings fail the build)
+        run: npm run docs
+
+      # The published set is whatever package.json `files` lists (dist for an app,
+      # lib for a library) plus the fixed metadata. Derived, never hardcoded.
+      - name: Resolve published files
+        id: pkg
+        run: |
+          {
+            echo 'paths<<EOF'
+            echo 'package.json'
+            echo 'README.md'
+            echo 'LICENSE'
+            echo 'CHANGELOG.md'
+            node -p "(require('./package.json').files || ['dist']).join('\n')"
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Upload build artifact
+        if: matrix.node-version == 'lts/*'
+        uses: actions/upload-artifact@v7
+        with:
+          name: dist
+          path: ${{ steps.pkg.outputs.paths }}

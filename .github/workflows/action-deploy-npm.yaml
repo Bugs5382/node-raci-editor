@@ -1,0 +1,56 @@
+name: Release and Publish
+on:
+  workflow_dispatch:
+  workflow_call:
+  release:
+    types: [released]
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  test:
+    name: 🧪 Test
+    uses: ./.github/workflows/action-test.yaml
+
+  publish:
+    name: 🚀 Publish
+    if: github.event_name == 'workflow_dispatch' || github.event_name == 'release'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: [test]
+    # id-token: write (workflow scope) lets npm verify the OIDC token GitHub
+    # issues against the trusted publisher registered on npmjs.com -- no token.
+    steps:
+      - name: Download the build artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: dist
+          path: ./
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: lts/*
+          registry-url: 'https://registry.npmjs.org/'
+
+      # OIDC trusted publishing + provenance require npm >= 11.5.1 (the LTS image
+      # ships 10.x).
+      - name: Upgrade npm
+        run: |
+          npm install -g npm@latest
+          npm --version
+
+      # No --token / NODE_AUTH_TOKEN: npm authenticates via the GitHub OIDC token
+      # matched against the trusted publisher on npmjs.com. Idempotent: skip if
+      # that exact version is already on the registry (partial-publish retry).
+      - name: Publish to npm
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          NAME=$(node -p "require('./package.json').name")
+          if npm view "${NAME}@${VERSION}" version >/dev/null 2>&1; then
+            echo "${NAME}@${VERSION} already published -- skipping."
+          else
+            npm publish --provenance --access public --ignore-scripts
+          fi
