@@ -3,9 +3,10 @@
  *
  * All tokens are CSS custom properties prefixed --raci- and defined on
  * :where(.raci-root), which has zero specificity so any host rule wins.
- * Light is the default. Dark follows the system preference unless the root
- * (or an ancestor rule) opts out with data-theme="light", and can be forced
- * with data-theme="dark". Components use only these tokens.
+ * Light is the default. Dark follows the system preference unless data-theme="light"
+ * is set on the root or on any ancestor, and can be forced with data-theme="dark" on
+ * the root or on any ancestor. The nearest explicit data-theme wins, so the light
+ * attribute rule comes last. Components use only these tokens.
  */
 
 :where(.raci-root) {
@@ -100,7 +101,7 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  :where(.raci-root:not([data-theme="light"])) {
+  :where(.raci-root:not([data-theme="light"], [data-theme="light"] .raci-root)) {
     --raci-bg: #0b1120;
     --raci-bg-subtle: #111827;
     --raci-bg-raised: #1e293b;
@@ -132,7 +133,7 @@
   }
 }
 
-:where(.raci-root[data-theme="dark"]) {
+:where(.raci-root[data-theme="dark"], [data-theme="dark"] .raci-root) {
   --raci-bg: #0b1120;
   --raci-bg-subtle: #111827;
   --raci-bg-raised: #1e293b;
@@ -161,6 +162,38 @@
   --raci-info-border: #60a5fa;
   --raci-shadow-sm: 0 1px 2px rgb(0 0 0 / 0.5);
   --raci-shadow-md: 0 4px 12px rgb(0 0 0 / 0.6);
+}
+
+/* Last: the nearest explicit light wins over a dark ancestor. */
+:where(.raci-root[data-theme="light"]) {
+  --raci-bg: #ffffff;
+  --raci-bg-subtle: #f8fafc;
+  --raci-bg-raised: #ffffff;
+  --raci-border: #cbd5e1;
+  --raci-border-strong: #64748b;
+  --raci-text: #0f172a;
+  --raci-text-muted: #475569;
+  --raci-text-on-accent: #ffffff;
+  --raci-accent: #1d4ed8;
+  --raci-accent-hover: #1e40af;
+  --raci-focus-ring: #1d4ed8;
+  --raci-allow-bg: #dcfce7;
+  --raci-allow-fg: #14532d;
+  --raci-allow-border: #16a34a;
+  --raci-deny-bg: #fee2e2;
+  --raci-deny-fg: #7f1d1d;
+  --raci-deny-border: #dc2626;
+  --raci-blank-bg: #f1f5f9;
+  --raci-blank-fg: #475569;
+  --raci-blank-border: #94a3b8;
+  --raci-warning-bg: #fef3c7;
+  --raci-warning-fg: #78350f;
+  --raci-warning-border: #d97706;
+  --raci-info-bg: #dbeafe;
+  --raci-info-fg: #1e3a8a;
+  --raci-info-border: #2563eb;
+  --raci-shadow-sm: 0 1px 2px rgb(15 23 42 / 0.08);
+  --raci-shadow-md: 0 4px 12px rgb(15 23 42 / 0.12);
 }
 
 @media (prefers-reduced-motion: reduce) {

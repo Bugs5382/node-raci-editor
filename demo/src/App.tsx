@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import type { ChangeEvent, KeyboardEvent, RefObject } from "react";
 import { defaultSettings } from "@/core/types";
 import type { RaciSettings, ResourceNode, RuleSet } from "@/core/types";
@@ -218,17 +218,7 @@ export const App = () => {
   const [theme, setTheme] = useState<ThemeChoice>(readTheme);
   const [brand, setBrand] = useState(false);
   const [presetId, setPresetId] = useState(presets[0]!.id);
-  const root = useRef<HTMLDivElement>(null);
   const dataTheme = theme === "system" ? undefined : theme;
-
-  // Each component renders its own .raci-root, which re-declares every token, so a theme set
-  // only on the wrapper would not reach it. Mirror the choice onto those inner roots too.
-  useEffect(() => {
-    root.current?.querySelectorAll<HTMLElement>(".raci-root").forEach((el) => {
-      if (dataTheme === undefined) el.removeAttribute("data-theme");
-      else el.setAttribute("data-theme", dataTheme);
-    });
-  });
 
   const chooseTheme = (next: ThemeChoice) => {
     setTheme(next);
@@ -237,7 +227,6 @@ export const App = () => {
 
   return (
     <div
-      ref={root}
       className={["raci-root", "demo-app", brand ? "demo-brand" : ""].filter(Boolean).join(" ")}
       data-theme={dataTheme}
     >
