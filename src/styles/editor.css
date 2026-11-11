@@ -118,6 +118,7 @@
   min-width: 4.5rem;
   min-height: var(--raci-control-height);
   padding: var(--raci-space-2) var(--raci-space-3);
+  line-height: var(--raci-line-height);
   border: 1px solid var(--raci-blank-border);
   border-radius: var(--raci-radius-sm);
   background: var(--raci-blank-bg);
@@ -156,9 +157,26 @@
   opacity: 0.8;
 }
 
+.raci-editor .raci-cell .raci-icon {
+  flex: none;
+  width: 14px;
+  height: 14px;
+}
+
+.raci-editor .raci-cell__text {
+  white-space: nowrap;
+}
+
+/* The hint slot is always rendered so an included cell never changes the row height. */
 .raci-editor .raci-cell__hint {
   font-size: var(--raci-font-size-xs);
   font-style: italic;
+  line-height: var(--raci-line-height);
+  white-space: nowrap;
+}
+
+.raci-editor .raci-cell__hint--off {
+  visibility: hidden;
 }
 
 .raci-editor .raci-cell:disabled {
