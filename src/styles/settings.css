@@ -155,3 +155,45 @@
     flex: 1 1 0;
   }
 }
+
+/* Cells section: a live preview of the six states and the controls that change them. */
+.raci-editor--preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--raci-space-3);
+  padding: 0;
+  border: 0;
+}
+
+.raci-settings__preview-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--raci-space-1);
+}
+
+.raci-settings__preview-name {
+  font-size: var(--raci-font-size-xs);
+  color: var(--raci-text-muted);
+}
+
+.raci-settings__cells-size,
+.raci-settings__cells-state {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: var(--raci-space-3);
+  margin-top: var(--raci-space-3);
+}
+
+.raci-settings__cells-size label,
+.raci-settings__cells-state label {
+  display: flex;
+  flex-direction: column;
+  gap: var(--raci-space-1);
+  font-size: var(--raci-font-size-xs);
+}
+
+.raci-settings__error {
+  color: var(--raci-deny-fg);
+}

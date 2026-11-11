@@ -66,6 +66,43 @@ interface ActionDef {
   - `outcome` holds the words for an allowed and a denied result of this action.
 - Options of the `"ordered"` model, set with `createOrderedModel(options)` (the registered `"ordered"` has the defaults): `ownerKinds` (the subject kinds that may own a category; default `["user"]`, empty switches owners off), `implicitSubjects` (default the built-in Everyone), `ownerActions`, and `superusers: { subjects, actions }` (subjects that always have the listed actions, whatever any row says, like owners but host-supplied and not tied to a category; off unless set, and an action you do not list follows the rows). Manage in a host's config usually implies Read and Author only; list `implies` as you want it.
 
+## Cell appearance
+
+Whoever uses the package can set how the cells look, in two places. Both are optional; nothing
+changes without them.
+
+**Host config, `config.cellStates`.** One entry per state: `allow`, `deny`, `none` (empty),
+`inheritedAllow`, `inheritedDeny` and `included` (an empty cell another cell covers). Every field of
+an entry is optional:
+
+| Field       | Meaning                                                                                                |
+| ----------- | ------------------------------------------------------------------------------------------------------ |
+| `glyph`     | Text, or a function `(state) => ReactNode` for an icon. An empty string draws no glyph.                |
+| `text`      | The word beside the glyph. An empty string hides the word.                                             |
+| `label`     | The state's name in the cell's accessible name ("Alice, Read: yes").                                   |
+| `tooltip`   | The cell's tooltip.                                                                                    |
+| `colors`    | `{ fg, bg, border }`: a CSS colour or `var(--token)`. The green and red defaults are the token values. |
+| `shape`     | `{ radius, borderStyle, borderWidth }`.                                                                |
+| `className` | An extra class on the cell.                                                                            |
+
+**User settings, `settings.cells`.** The serializable part of the same entries (everything except a
+glyph function), plus the cell size: `{ size: { width, height }, states: { allow: { glyph: "Y" } } }`.
+Settings override the host's entry field by field. The size is in px, from 24 to 240 wide and from 16
+to 120 high, so cells can be much smaller than the density defaults (96 by 56 and 144 by 28); empty
+uses the density's size. `normalizeCells(value)` checks any such value and returns what is valid
+with a list of what it dropped; `normalizeSettings` and the settings panel use it, so what you
+store is valid.
+
+**The Settings panel** has a Cells section: a live preview of the six states drawn by the real cell,
+the size, and for each state a glyph, a word, a tooltip and three colour inputs. It emits through
+`onChange` as `settings.cells` and stores nothing; the host persists what it receives and passes it
+back. An empty text field keeps the default (to draw nothing, type a single space).
+
+**Guarantees.** The box size comes from the size tokens (`--raci-cell-width` and
+`--raci-cell-height`) only. A glyph or word that is too big is clipped, never resizes the box, the
+row or the column, and stays centred. The state is still carried by the glyph or word as well as
+colour, so choosing colours with little contrast is only a matter of taste, not of meaning.
+
 ## Subject kinds
 
 Subjects are whatever kinds your app has (user, group, role, team, department, service account, ...); the package assumes none of them. With one kind there is no kind chooser, and a stored subject of a kind you did not configure is shown as stored, kept when rows change and still evaluated.

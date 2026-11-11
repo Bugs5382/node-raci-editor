@@ -40,6 +40,9 @@ All optional.
   (it can be hidden with `show.category=false` once that prop is available).
 - The package area, captioned "package: rules editor, simulator, settings", with tabs: Editor (`RulesEditor`), Simulator (`Simulator`) and Settings (`SettingsPanel`), with arrow
   key navigation.
+- A "Custom cells" preset: round Y and N cells in the host's colours, empty cells with no glyph, and a
+  smaller cell size. The Settings tab has a Cells section to change glyphs, words, tooltips, colours
+  and size, with a live preview.
 - A "Short labels" preset that uses the headings R A APV M ACK in two host-named groups (Permissions:
   Read, Author, Approve; Obligations: Manage, Acknowledge) and the built-in Everyone subject, and a
   Heading labels switch (auto, full, short).

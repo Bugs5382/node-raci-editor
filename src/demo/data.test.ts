@@ -226,7 +226,7 @@ describe("theme storage", () => {
 describe("public builders", () => {
   it("lists both presets with their seed and first category", () => {
     const list = demoPresets();
-    expect(list.map((p) => p.id)).toEqual(["org", "other", "short"]);
+    expect(list.map((p) => p.id)).toEqual(["org", "other", "short", "cells"]);
     expect(list[0]!.seed).toEqual(presetById("org").seed);
     expect(list[1]!.initialCategory).toBe("drafts");
   });

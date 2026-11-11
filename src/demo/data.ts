@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 */
 import { createOrderedModel } from "@/core/models/ordered";
 import { listModels, registerModel } from "@/core/registry";
-import type { RaciConfig, ResourceNode, RuleSet, SubjectOption } from "@/core/types";
+import type { RaciConfig, RaciSettings, ResourceNode, RuleSet, SubjectOption } from "@/core/types";
 
 /** A named bundle of host configuration and a seed rule set, to show nothing is hard-coded. */
 export interface Preset {
@@ -34,6 +34,8 @@ export interface Preset {
   initialCategory: string;
   /** Heading labels shown first; the demo switch can change it. Default `"auto"`. */
   headerMode?: "full" | "short" | "auto";
+  /** Settings the demo starts with, checked like any stored settings. */
+  settings?: Partial<RaciSettings>;
 }
 
 /** Pretend network latency for subject search, in milliseconds. */
@@ -424,6 +426,32 @@ const shortSeed: RuleSet = {
   },
 };
 
+const cellsConfig: RaciConfig = {
+  ...docsConfig,
+  cellStates: {
+    allow: {
+      glyph: "Y",
+      text: "",
+      label: "yes",
+      tooltip: "Allowed",
+      colors: { fg: "#065f46", bg: "#d1fae5", border: "#10b981" },
+      shape: { radius: "999px" },
+    },
+    deny: {
+      glyph: "N",
+      text: "",
+      label: "no",
+      tooltip: "Denied",
+      colors: { fg: "#991b1b", bg: "#fee2e2", border: "#ef4444" },
+      shape: { radius: "999px" },
+    },
+    none: { glyph: "", text: "" },
+    included: { glyph: "y", text: "", colors: { fg: "#065f46" } },
+    inheritedAllow: { glyph: "Y", text: "" },
+    inheritedDeny: { glyph: "N", text: "" },
+  },
+};
+
 export const presets: Preset[] = [
   {
     id: "org",
@@ -446,6 +474,14 @@ export const presets: Preset[] = [
     seed: shortSeed,
     initialCategory: "access",
     headerMode: "short",
+  },
+  {
+    id: "cells",
+    label: "Custom cells",
+    config: cellsConfig,
+    seed: docsSeed,
+    initialCategory: "drafts",
+    settings: { cells: { size: { width: 64, height: 36 } } },
   },
 ];
 
