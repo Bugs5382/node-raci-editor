@@ -1,0 +1,192 @@
+/**
+ * Runs the code shown in README.md and guides/. Each region between the snippet markers is real,
+ * type-checked code that is executed here, and the same text (with the package specifiers) must
+ * appear in a Markdown file, so the docs cannot drift from the code.
+ */
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import { fileURLToPath } from "node:url";
+import { render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { describe, expect, it } from "vitest";
+
+// snippet:start quickstart
+import { useState } from "react";
+import "@/styles/index.css";
+import { RulesEditor, SettingsPanel, Simulator, defaultSettings } from "@/index";
+import type { RaciConfig, RuleSet } from "@/index";
+
+const people = [
+  { id: "user:alice", label: "Alice" },
+  { id: "user:bob", label: "Bob" },
+];
+
+export const config: RaciConfig = {
+  actions: [
+    { id: "read", label: "Read" },
+    { id: "edit", label: "Edit", implies: ["read"] },
+  ],
+  subjectKinds: [
+    {
+      kind: "user",
+      label: "Users",
+      search: (q) => people.filter((p) => p.label.toLowerCase().includes(q.toLowerCase())),
+    },
+  ],
+  resources: [{ id: "docs", label: "Docs", children: [{ id: "specs", label: "Specs" }] }],
+};
+
+export const App = () => {
+  const [ruleSet, setRuleSet] = useState<RuleSet>({ categories: {}, parents: { specs: "docs" } });
+  const [settings, setSettings] = useState(defaultSettings(config));
+  return (
+    <>
+      <RulesEditor
+        config={config}
+        ruleSet={ruleSet}
+        categoryId="specs"
+        onChange={setRuleSet}
+        settings={settings}
+      />
+      <Simulator config={config} ruleSet={ruleSet} categoryId="specs" settings={settings} />
+      <SettingsPanel config={config} value={settings} onChange={setSettings} />
+    </>
+  );
+};
+// snippet:end quickstart
+
+// snippet:start runner
+import { isDeepStrictEqual } from "node:util";
+import { decide, vectorSubjects } from "@/index";
+import type { ActionDef, DecideInput, VectorPerson } from "@/index";
+import vectors from "../vectors/decide.json";
+
+interface Case {
+  name: string;
+  ruleSet: DecideInput["ruleSet"];
+  person: VectorPerson;
+  category: string;
+  action: string;
+  expect: { allowed: boolean; reason: string; decidedBy: object | null };
+}
+
+/** Returns the names of the cases whose decision differs from `expect`. */
+export const runVectors = (): string[] => {
+  const file = vectors as unknown as { actions: ActionDef[]; cases: Case[] };
+  const failed: string[] = [];
+  for (const c of file.cases) {
+    const d = decide({
+      ruleSet: c.ruleSet,
+      actions: file.actions,
+      person: { subjects: vectorSubjects(c.person) },
+      category: c.category,
+      action: c.action,
+    });
+    const by = d.decidedBy;
+    const got = {
+      allowed: d.allowed,
+      reason: d.reason,
+      decidedBy: by
+        ? {
+            category: by.category,
+            subject: by.entry.subject,
+            action: by.entry.action,
+            effect: by.entry.effect,
+          }
+        : null,
+    };
+    if (!isDeepStrictEqual(got, c.expect)) failed.push(c.name);
+  }
+  return failed;
+};
+// snippet:end runner
+
+// snippet:start extending
+export const extend = (base: RaciConfig): RaciConfig => ({
+  ...base,
+  actions: [...base.actions, { id: "export", label: "Export", implies: ["read"] }],
+  subjectKinds: [
+    ...base.subjectKinds,
+    {
+      kind: "team",
+      label: "Teams",
+      search: (q) =>
+        q.toLowerCase().startsWith("e") ? [{ id: "team:eng", label: "Engineering" }] : [],
+      resolve: (subject) => (subject === "team:eng" ? "Engineering" : undefined),
+    },
+  ],
+});
+
+export const compact = (base: RaciConfig) => ({
+  ...defaultSettings(base),
+  density: "compact" as const,
+  confirmDeny: true,
+});
+// snippet:end extending
+
+const SPECIFIERS: [string, string][] = [
+  ['"@/styles/index.css"', '"node-raci-editor/styles.css"'],
+  ['"../vectors/decide.json"', '"node-raci-editor/vectors/decide.json"'],
+  ['"@/index"', '"node-raci-editor"'],
+];
+
+const regions = (): Record<string, string> => {
+  const source = readFileSync(fileURLToPath(import.meta.url), "utf8");
+  const out: Record<string, string> = {};
+  const re = /\/\/ snippet:start (\w+)\n([\s\S]*?)\/\/ snippet:end \1/g;
+  for (const m of source.matchAll(re)) {
+    let text = m[2] as string;
+    for (const [from, to] of SPECIFIERS) text = text.split(from).join(to);
+    out[m[1] as string] = text.trimEnd();
+  }
+  return out;
+};
+
+const doc = (path: string): string => readFileSync(join(process.cwd(), path), "utf8");
+
+describe("quick start", () => {
+  it("renders the editor, simulator and settings together", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    const editor = screen.getByRole("region", { name: "Rules" });
+    expect(screen.getByRole("group", { name: "Access simulator" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Settings" })).toBeInTheDocument();
+
+    await user.type(within(editor).getByPlaceholderText("Search by name"), "ali");
+    await user.click(await within(editor).findByText("Alice", {}, { timeout: 2000 }));
+    await user.click(within(editor).getByRole("button", { name: /^Alice, Edit: not set/ }));
+    expect(within(editor).getByRole("button", { name: /^Alice, Edit: allow/ })).toBeInTheDocument();
+    expect(
+      within(editor).getByRole("button", { name: /^Alice, Read: not set, included by Edit/ }),
+    ).toBeInTheDocument();
+  });
+});
+
+describe("vector runner", () => {
+  it("passes every shared vector", () => {
+    expect(runVectors()).toEqual([]);
+  });
+});
+
+describe("extending", () => {
+  it("adds an action and a subject kind without touching the base", () => {
+    const next = extend(config);
+    expect(next.actions.map((a) => a.id)).toEqual(["read", "edit", "export"]);
+    expect(next.subjectKinds.map((k) => k.kind)).toEqual(["user", "team"]);
+    expect(config.actions).toHaveLength(2);
+    expect(compact(next).density).toBe("compact");
+  });
+});
+
+describe("docs", () => {
+  const found = regions();
+  it.each([
+    ["quickstart", "README.md"],
+    ["quickstart", "guides/getting-started.md"],
+    ["runner", "guides/test-vectors.md"],
+    ["extending", "guides/extending.md"],
+  ])("shows the %s snippet verbatim in %s", (name, file) => {
+    expect(found[name]).toBeTruthy();
+    expect(doc(file)).toContain(found[name] as string);
+  });
+});

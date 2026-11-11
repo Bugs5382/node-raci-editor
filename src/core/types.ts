@@ -41,6 +41,7 @@ export interface Person {
   subjects: string[];
 }
 
+/** Everything `decide()` needs: the rules, the action definitions, who asks, and the question. */
 export interface DecideInput {
   ruleSet: RuleSet;
   actions: ActionDef[];
@@ -49,10 +50,12 @@ export interface DecideInput {
   action: string;
 }
 
+/** Why a decision came out the way it did. */
 export type DecideReason =
   | "entry" // a matching entry decided
   | "default-deny"; // nothing matched on the walk
 
+/** The result of `decide()`. */
 export interface Decision {
   allowed: boolean;
   reason: DecideReason;
@@ -73,14 +76,19 @@ export interface ResourceNode {
 
 /** One lookup result for a subject picker. */
 export interface SubjectOption {
-  id: string; // full subject string, `kind:id`
+  /** Full subject string, `kind:id`. */
+  id: string;
+  /** Text shown for the option. */
   label: string;
+  /** Optional secondary text, such as an email address. */
   detail?: string;
 }
 
 /** A kind of subject (user, group, role, ...) and how the host looks it up and labels it. */
 export interface SubjectKind {
-  kind: string; // the part before the colon
+  /** The part of the subject string before the colon, such as `user`. */
+  kind: string;
+  /** Name of the kind shown in the picker. */
   label: string;
   /** Search for subjects of this kind. */
   search: (query: string) => Promise<SubjectOption[]> | SubjectOption[];
@@ -90,9 +98,13 @@ export interface SubjectKind {
 
 /** Everything the host passes to the drop-in pieces. */
 export interface RaciConfig {
+  /** The actions, in default column order. */
   actions: ActionDef[];
+  /** The kinds of subject, each with its lookup. */
   subjectKinds: SubjectKind[];
+  /** The resource tree; each node id is a category id in the `RuleSet`. */
   resources: ResourceNode[];
+  /** Overrides for any UI string, by key; see the configuration guide for the keys. */
   strings?: Partial<Record<string, string>>;
 }
 
@@ -112,6 +124,7 @@ export interface RaciSettings {
   defaultStopInheriting: boolean;
 }
 
+/** The settings used when the host passes none: every action and kind on, comfortable density. */
 export const defaultSettings = (
   config: Pick<RaciConfig, "actions" | "subjectKinds">,
 ): RaciSettings => ({

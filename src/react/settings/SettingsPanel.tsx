@@ -6,10 +6,15 @@ import { makeT } from "@/react/strings";
 import { moveAction, toggleAction, toggleKind } from "@/react/settings/model";
 import { settingsStrings } from "@/react/settings/strings";
 
+/** Props of `SettingsPanel`. */
 export interface SettingsPanelProps {
+  /** The host configuration; supplies the actions, subject kinds and strings. */
   config: RaciConfig;
+  /** The current settings. The panel never changes it; it reports changes through `onChange`. */
   value: RaciSettings;
+  /** Called with a new settings object after each change. */
   onChange: (next: RaciSettings) => void;
+  /** Extra class on the root element. */
   className?: string;
 }
 

@@ -24,13 +24,21 @@ import {
 import { SubjectPicker } from "@/react/editor/SubjectPicker";
 import { editorStrings } from "@/react/editor/strings";
 
+/** Props of `RulesEditor`. */
 export interface RulesEditorProps {
+  /** The host configuration. */
   config: RaciConfig;
+  /** The full rule set. Never mutated. */
   ruleSet: RuleSet;
+  /** The category whose entries are edited. */
   categoryId: string;
+  /** Called with a new rule set after each edit. */
   onChange: (next: RuleSet) => void;
+  /** Display settings; missing fields use the defaults. */
   settings?: Partial<RaciSettings>;
+  /** When true, nothing can be changed. */
   readOnly?: boolean;
+  /** Extra class on the root element. */
   className?: string;
 }
 
