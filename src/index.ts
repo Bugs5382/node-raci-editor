@@ -8,3 +8,5 @@ export * from "./core/types.js";
 export { decide } from "./core/decide.js";
 export { vectorSubjects } from "./core/vectors.js";
 export type { VectorPerson } from "./core/vectors.js";
+export { RulesEditor, impliedActions } from "./react/editor/index.js";
+export type { RulesEditorProps } from "./react/editor/index.js";
