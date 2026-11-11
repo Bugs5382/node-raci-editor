@@ -20,8 +20,8 @@ Everything the package does rests on a small model. The editor writes it, the si
 
 ## Resolving a question
 
-The question is: may this person do this action in this category? `decide()` answers it in four
-steps.
+The question is: would these rules allow this person to do this action in this category? `decide()`
+answers it in four steps. It is a pure evaluation helper the host may call; the host enforces.
 
 1. **Default deny.** If nothing says allow, the answer is deny. An action that is not in the action
    list is denied outright.
@@ -54,7 +54,7 @@ and the tree `docs` > `specs`. Alice is `user:alice` and belongs to `group:eng`.
 looked at. Asked `read` in `docs`: only the `docs` entry exists on that walk, so allowed.
 
 **Deny beats allow in the same category.** `specs` has `group:eng allow edit` and `user:alice deny
-edit`. Asked `edit`: both match, the deny wins. A deny on `read` does not block an allow on `edit`
+edit`. Asked `edit`: both match, the deny wins. A deny on `read` does not cancel an allow on `edit`
 when `edit` is asked, because the deny on `read` only matches questions about `read`. But when
 `read` is asked, both match and the deny wins.
 

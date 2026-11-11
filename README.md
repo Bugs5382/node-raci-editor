@@ -4,9 +4,10 @@
 
 You describe your actions, your kinds of subject (users, groups, roles, whatever you have) and your
 resource tree. The package gives you a matrix editor for the rules of one category, a simulator that
-answers "what can this person do here, and why", and a settings panel. The rules are one plain JSON
-document, and `decide()` turns that document into an answer with no React and no DOM, so a Go
-service or a mock can run the same logic against the same test vectors. 🔌 **The host owns the
+previews "what would these rules allow this person here, and why", and a settings panel. The rules are one plain JSON
+document, and `decide()` turns that document into a preview answer with no React and no DOM, so a Go
+service or a mock can run the same logic against the same test vectors. The package shows and
+edits the rules; it does not enforce anything. The host enforces them. 🔌 **The host owns the
 data:** every component is controlled, you pass the rules in and get a new copy back through
 `onChange`. Resources are your data too: the package draws no resource list, you pass the selected
 category to the editor and the simulator.
@@ -101,7 +102,7 @@ See [Demo](guides/demo.md) for the props and the sample data builders.
 
 ## 🧭 How a host app uses it
 
-The host app owns what it is protecting: the resource tree and picker, the subject directory, the rule storage and the enforcement. The package is the rules editor, the simulator and the settings panel, plus the pure `decide()`. Resources are data you pass in (ids, parents, labels, the selected `categoryId`); the package renders no resource list or picker of its own.
+The host app owns its resources and checks requests itself: the resource tree and picker, the subject directory, the rule storage and whatever checks a request. The host enforces; the package only shows and edits the rules. The package is the rules editor, the simulator (a preview of what the rules would allow) and the settings panel, plus the pure `decide()`, an evaluation helper the host may call. Resources are data you pass in (ids, parents, labels, the selected `categoryId`); the package renders no resource list or picker of its own.
 
 ```text
   HOST APP (yours)                         PACKAGE (node-raci-editor)
@@ -134,9 +135,9 @@ The host app owns what it is protecting: the resource tree and picker, the subje
                  | ruleSet                      |  SettingsPanel                |
                  v                              |  which actions and kinds to   |
   +-----------------------------+               |  show; onChange(settings)     |
-  | Enforcement                 |  decide()     +-------------------------------+
-  | decide() here, or go-authz  |<-----------   decide(ruleSet, actions, person,
-  | in Go, same test vectors    |               category, action) -> Decision
+  | Your enforcement            |  decide()     +-------------------------------+
+  | may call decide() or an     |<-----------   decide(ruleSet, actions, person,
+  | equivalent (same vectors)   |               category, action) -> Decision
   +-----------------------------+
 
   The package renders NO resource tree or picker. Your app owns it and passes the
@@ -151,11 +152,11 @@ The host app owns what it is protecting: the resource tree and picker, the subje
                           Allow role:approver        approve
                contracts: Deny  group:finance-staff  author
 
-  alice asks:  author  on library    -> Allowed  (library: Allow finance-staff)
-               author  on contracts  -> Denied   (nearest category wins: the Deny)
-               approve on contracts  -> Allowed  (no entry in contracts, so the
+  alice asks:  author  on library    -> Would be allowed (library: Allow finance-staff)
+               author  on contracts  -> Would be denied  (nearest category wins: the Deny)
+               approve on contracts  -> Would be allowed (no entry in contracts, so the
                                                   parent library: Allow approver)
-               read    on contracts  -> Denied   (a Deny on author includes read)
+               read    on contracts  -> Would be denied  (a Deny on author includes read)
 ```
 
 ## ✨ Features

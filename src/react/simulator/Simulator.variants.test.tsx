@@ -122,8 +122,10 @@ describe("variant boxes", () => {
     await setup({ variant: "boxes", categoryId: "legal" });
     const read = card("Read");
     expect(read).toHaveClass("raci-box--deny");
-    expect(within(read).getByText("Denied")).toBeInTheDocument();
-    expect(within(read).getByText("Denied: no rule matched (default deny)")).toBeInTheDocument();
+    expect(within(read).getByText("Would be denied")).toBeInTheDocument();
+    expect(
+      within(read).getByText("Would be denied: no rule matched (default deny)"),
+    ).toBeInTheDocument();
     expect(within(read).getByText("No rule matched")).toBeInTheDocument();
     expect(within(read).getAllByText("no match")).toHaveLength(2);
     expect(within(read).getByText("Legal")).toBeInTheDocument();
@@ -136,9 +138,9 @@ describe("variant boxes", () => {
     await pick(user, "Extra memberships", "sta", /Staff/);
     const read = card("Read");
     expect(read).toHaveClass("raci-box--allow");
-    expect(within(read).getByText("Allowed")).toBeInTheDocument();
+    expect(within(read).getByText("Would be allowed")).toBeInTheDocument();
     expect(
-      within(read).getByText("Allowed by Staff (Read), inherited from Company"),
+      within(read).getByText("Would be allowed by Staff (Read), inherited from Company"),
     ).toBeInTheDocument();
     const by = read.querySelector(".raci-box-by") as HTMLElement;
     expect(by).toHaveTextContent("Staff");
@@ -181,13 +183,15 @@ describe("variant boxes", () => {
     const read = card("Read");
     expect(within(read).getByText("Inheriting stopped here")).toBeInTheDocument();
     expect(
-      within(read).getByText("Denied: no rule matched, and inheriting stopped at Reports"),
+      within(read).getByText("Would be denied: no rule matched, and inheriting stopped at Reports"),
     ).toBeInTheDocument();
   });
 
   it("follows the empty states", () => {
     render(<Simulator config={config} ruleSet={ruleSet} variant="boxes" />);
-    expect(screen.getByText("Choose a person to see what they can do.")).toBeInTheDocument();
+    expect(
+      screen.getByText("Choose a person to preview what these rules would allow."),
+    ).toBeInTheDocument();
   });
 
   it("shows empty category and action states", async () => {
@@ -213,9 +217,9 @@ describe("variant strips", () => {
     expect(strips).toHaveLength(3);
     expect(screen.getByRole("list", { name: "Results" })).toHaveClass("raci-strips");
     expect(strips[0]).toHaveClass("raci-strip", "raci-strip--allow");
-    expect(strips[0]).toHaveTextContent("Read - Yes");
+    expect(strips[0]).toHaveTextContent("Read - Would be allowed");
     expect(strips[2]).toHaveClass("raci-strip--deny");
-    expect(strips[2]).toHaveTextContent("approve - No");
+    expect(strips[2]).toHaveTextContent("approve - Would be denied");
     expect(strips[2]?.querySelectorAll(".raci-strip-reason")).toHaveLength(1);
     expect(strips[2]?.querySelector(".raci-strip-icon")).toHaveAttribute("aria-hidden", "true");
     expect(screen.queryByRole("table")).not.toBeInTheDocument();
@@ -256,7 +260,7 @@ describe("renderResults", () => {
     expect(view.results[0].decision.trace).toBeDefined();
     expect(view.labelOf("*")).toBe("All categories");
     expect(view.subjectLabel("user:bob")).toBe("Bob Ray");
-    expect(view.t("simulator.allowed")).toBe("Allowed");
+    expect(view.t("simulator.allowed")).toBe("Would be allowed");
   });
 });
 
@@ -309,29 +313,29 @@ describe("evaluate", () => {
   it("shows loading, then host results and host wording, without running decide", async () => {
     const { calls, evaluate } = deferredEvaluate();
     await setup({ evaluate, categoryId: "finance", variant: "strips" });
-    expect(screen.getByText("Checking access...")).toBeInTheDocument();
+    expect(screen.getByText("Previewing...")).toBeInTheDocument();
     expect(document.querySelectorAll(".raci-strip--skeleton")).toHaveLength(3);
     expect(calls).toHaveLength(3);
     calls.forEach((c, i) =>
       c.resolve({ decision: decision(i === 0), reasonText: `host says ${i}` }),
     );
     expect(await screen.findByText("host says 0")).toBeInTheDocument();
-    expect(screen.getByText("Read - Yes")).toBeInTheDocument();
-    expect(screen.getByText("Author - No")).toBeInTheDocument();
-    expect(screen.queryByText("Checking access...")).not.toBeInTheDocument();
+    expect(screen.getByText("Read - Would be allowed")).toBeInTheDocument();
+    expect(screen.getByText("Author - Would be denied")).toBeInTheDocument();
+    expect(screen.queryByText("Previewing...")).not.toBeInTheDocument();
   });
 
   it("falls back to the package wording when the host gives no reasonText", async () => {
     const evaluate = vi.fn(async () => ({ decision: decision(false) }));
     await setup({ evaluate, categoryId: "finance" });
-    const rows = await screen.findAllByText("Denied: no rule matched (default deny)");
+    const rows = await screen.findAllByText("Would be denied: no rule matched (default deny)");
     expect(rows).toHaveLength(3);
   });
 
   it("shows a plain loading line outside the strips variant", async () => {
     const { evaluate } = deferredEvaluate();
     await setup({ evaluate, categoryId: "finance" });
-    expect(screen.getByText("Checking access...")).toHaveClass("raci-loading");
+    expect(screen.getByText("Previewing...")).toHaveClass("raci-loading");
   });
 
   it("renders host decisions without a trace in the boxes view", async () => {
@@ -348,9 +352,9 @@ describe("evaluate", () => {
     const { calls, evaluate } = deferredEvaluate();
     const { user } = await setup({ evaluate, categoryId: "finance" });
     calls.forEach((c) => c.reject(new Error("down")));
-    expect(await screen.findByRole("alert")).toHaveTextContent("Could not check access.");
+    expect(await screen.findByRole("alert")).toHaveTextContent("Could not preview the result.");
     await user.click(screen.getByRole("button", { name: "Retry" }));
-    expect(screen.getByText("Checking access...")).toBeInTheDocument();
+    expect(screen.getByText("Previewing...")).toBeInTheDocument();
     await waitFor(() => expect(calls).toHaveLength(6));
     calls.slice(3).forEach((c) => c.resolve({ decision: decision(true), reasonText: "back" }));
     expect(await screen.findAllByText("back")).toHaveLength(3);
@@ -374,7 +378,7 @@ describe("evaluate", () => {
     first.forEach((c) => c.resolve({ decision: decision(true), reasonText: "stale answer" }));
     await Promise.resolve();
     expect(screen.queryByText("stale answer")).not.toBeInTheDocument();
-    expect(screen.getByText("Checking access...")).toBeInTheDocument();
+    expect(screen.getByText("Previewing...")).toBeInTheDocument();
     calls
       .slice(3)
       .forEach((c) => c.resolve({ decision: decision(false), reasonText: "fresh answer" }));

@@ -7,8 +7,9 @@ hook-enforced rules). Keep this file current when the build, layout, or public A
 
 A generic, drop-in React library for editing and testing RACI-style access rules: a matrix editor
 (`RulesEditor`), a simulator (`Simulator`) and a settings panel (`SettingsPanel`), on top of a pure
-TypeScript `decide()` and a language-neutral set of test vectors. The host defines its own actions,
-subject kinds and resource tree through a `RaciConfig`; the package knows no product.
+TypeScript `decide()` and a language-neutral set of test vectors. The package shows and edits
+access rules; the host enforces. `decide()` is a pure evaluation helper the host may call, and the
+simulator previews what the rules would allow. The host defines its own actions, subject kinds and resource tree through a `RaciConfig`; the package knows no product.
 
 It ships an npm library (ESM and CJS, with declarations) plus a stylesheet. Two things to keep in
 mind before changing it:
@@ -98,5 +99,5 @@ Follow the logging rules in `CLAUDE.md`. In short:
   the test file exactly (with `@/index` written as `node-raci-editor`). Edit both together.
 - `vectors/decide.json` stays generic and language-neutral; change `vectors/README.md` with it.
 - `decide()` treats a category without `stopInheriting` as false and ignores settings; the editor
-  reads the same flag, so what it shows is what the engine does.
+  reads the same flag, so what it shows is what `decide()` evaluates.
 - No product or brand names anywhere in the code, docs or vectors.

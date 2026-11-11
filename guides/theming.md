@@ -73,8 +73,8 @@ colour is never the only signal.
 
 | State   | Meaning             | Light bg / fg / border            | Dark bg / fg / border             |
 | ------- | ------------------- | --------------------------------- | --------------------------------- |
-| allow   | Access granted      | `#dcfce7` / `#14532d` / `#16a34a` | `#052e16` / `#bbf7d0` / `#22c55e` |
-| deny    | Access denied       | `#fee2e2` / `#7f1d1d` / `#dc2626` | `#450a0a` / `#fecaca` / `#f87171` |
+| allow   | Allow effect        | `#dcfce7` / `#14532d` / `#16a34a` | `#052e16` / `#bbf7d0` / `#22c55e` |
+| deny    | Deny effect         | `#fee2e2` / `#7f1d1d` / `#dc2626` | `#450a0a` / `#fecaca` / `#f87171` |
 | blank   | No rule set         | `#f1f5f9` / `#475569` / `#94a3b8` | `#1e293b` / `#cbd5e1` / `#64748b` |
 | warning | Needs attention     | `#fef3c7` / `#78350f` / `#d97706` | `#451a03` / `#fde68a` / `#f59e0b` |
 | info    | Neutral information | `#dbeafe` / `#1e3a8a` / `#2563eb` | `#172554` / `#bfdbfe` / `#60a5fa` |

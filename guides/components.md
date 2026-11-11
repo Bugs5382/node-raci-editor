@@ -80,7 +80,7 @@ Keyboard:
 
 ## Simulator
 
-Pick a person, optionally add memberships and see what they can do in the category you pass. The
+Pick a person, optionally add memberships and preview what the rules would allow in the category you pass. The
 simulator has no category menu and no resource list: resources are your data, and you choose the
 category.
 
@@ -103,7 +103,7 @@ What it does:
   in the person picker, even when `enabledSubjectKinds` leaves it out. The person's subjects are that pick plus every
   membership added (groups, roles or any other enabled kind), de-duplicated, in the order picked.
 - For each visible action it runs `decide()` with your `ruleSet` and `config.actions` and shows
-  Allowed or Denied, a plain-language reason, and the categories that were checked, nearest first,
+  "Would be allowed" or "Would be denied", a plain-language reason, and the categories that were checked, nearest first,
   with the deciding one marked.
 - With no person it asks you to choose one; with no categories or no visible actions it says so.
 
@@ -115,13 +115,13 @@ To change the category, pass another `categoryId`; the results follow it.
 does not change when the other views are added.
 
 - `"boxes"`: a responsive grid of cards, one per visible action. A card has a verdict header (icon
-  plus the word Allowed or Denied), then boxes: Reason (one sentence), Decided by (subject, effect,
+  plus the words "Would be allowed" or "Would be denied"), then boxes: Reason (one sentence), Decided by (subject, effect,
   category, entry number, or "No rule matched"), Walk (one sub-box per visited category, nearest
   first, with the matching entries as chips tagged direct or implied, the deciding one outlined,
   "Inheriting stopped here" where the walk ended and "no match" where nothing matched) and a
   collapsed Overridden list of matches that lost (for example an allow beaten by a deny).
 - `"strips"`: one full-width strip per visible action: a round icon (check when allowed, dashed
-  minus when denied), a bold "Action - Yes/No" title and one muted reason line. Loading shows
+  minus when denied), a bold "Action - Would be allowed/denied" title and one muted reason line. Loading shows
   skeleton strips and an error shows a danger strip with a Retry button.
 
 All three read the same decision, so switching `variant` never changes an answer. The number and

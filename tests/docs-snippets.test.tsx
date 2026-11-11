@@ -159,7 +159,9 @@ describe("quick start", () => {
     const user = userEvent.setup();
     render(<App />);
     const editor = screen.getByRole("region", { name: /^Rules for / });
-    expect(screen.getByRole("group", { name: "Access simulator" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("group", { name: "Previews what these rules would allow" }),
+    ).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Settings" })).toBeInTheDocument();
 
     await user.type(within(editor).getByPlaceholderText("Search by name"), "ali");

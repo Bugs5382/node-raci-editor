@@ -92,13 +92,14 @@ const row = (name: string) => screen.getByRole("row", { name: new RegExp(`^${nam
 describe("Simulator", () => {
   it("shows empty states and the labelled controls", () => {
     render(<Simulator config={config} ruleSet={ruleSet} />);
-    expect(screen.getByRole("group", { name: "Access simulator" })).toHaveClass(
-      "raci-root",
-      "raci-simulator",
-    );
+    expect(
+      screen.getByRole("group", { name: "Previews what these rules would allow" }),
+    ).toHaveClass("raci-root", "raci-simulator");
     expect(screen.getByRole("combobox", { name: "Person" })).toBeInTheDocument();
     expect(screen.getByRole("combobox", { name: "Extra memberships" })).toBeInTheDocument();
-    expect(screen.getByText("Choose a person to see what they can do.")).toBeInTheDocument();
+    expect(
+      screen.getByText("Choose a person to preview what these rules would allow."),
+    ).toBeInTheDocument();
     expect(screen.queryByRole("table")).not.toBeInTheDocument();
   });
 
@@ -108,7 +109,7 @@ describe("Simulator", () => {
     expect(screen.queryByRole("combobox", { name: "Category" })).not.toBeInTheDocument();
     expect(document.querySelector("select")).toBeNull();
     await pick(user, "Person", "ali", /Alice Ng/);
-    expect(screen.getByText("There are no categories to check.")).toBeInTheDocument();
+    expect(screen.getByText("There are no categories to preview.")).toBeInTheDocument();
   });
 
   it("picks a person and shows allowed with the rule that decided it", async () => {
@@ -120,13 +121,13 @@ describe("Simulator", () => {
     expect(screen.getByRole("table", { name: "Results" })).toBeInTheDocument();
     // approve comes from the rule for all categories
     const approve = row("approve");
-    expect(within(approve).getByText("Allowed")).toBeInTheDocument();
+    expect(within(approve).getByText("Would be allowed")).toBeInTheDocument();
     expect(approve).toHaveTextContent(
-      "Allowed by Alice Ng (approve), from the rules for all categories",
+      "Would be allowed by Alice Ng (approve), from the rules for all categories",
     );
     // no rule for read or author: default deny after walking up
-    expect(row("Read")).toHaveTextContent("Denied");
-    expect(row("Read")).toHaveTextContent("Denied: no rule matched (default deny)");
+    expect(row("Read")).toHaveTextContent("Would be denied");
+    expect(row("Read")).toHaveTextContent("Would be denied: no rule matched (default deny)");
   });
 
   it("adds and removes memberships, which feed the decision", async () => {
@@ -134,12 +135,12 @@ describe("Simulator", () => {
     render(<Simulator config={config} ruleSet={ruleSet} categoryId="finance" />);
     await pick(user, "Person", "bob", /Bob Ray/);
     await pick(user, "Extra memberships", "fin", /Finance team/);
-    expect(row("Author")).toHaveTextContent("Allowed by Finance team in Finance (Author)");
+    expect(row("Author")).toHaveTextContent("Would be allowed by Finance team in Finance (Author)");
     // implied action
-    expect(row("Read")).toHaveTextContent("Allowed by Finance team in Finance (Author)");
+    expect(row("Read")).toHaveTextContent("Would be allowed by Finance team in Finance (Author)");
 
     await user.click(screen.getByRole("button", { name: "Remove Finance team" }));
-    expect(row("Author")).toHaveTextContent("Denied: no rule matched (default deny)");
+    expect(row("Author")).toHaveTextContent("Would be denied: no rule matched (default deny)");
   });
 
   it("lets a deny beat an allow in the same category", async () => {
@@ -149,8 +150,8 @@ describe("Simulator", () => {
     await pick(user, "Extra memberships", "fin", /Finance team/);
     await pick(user, "Extra memberships", "contr", /Contractor/);
     const author = row("Author");
-    expect(within(author).getByText("Denied")).toBeInTheDocument();
-    expect(author).toHaveTextContent("Denied by role:contractor in Finance (Author)");
+    expect(within(author).getByText("Would be denied")).toBeInTheDocument();
+    expect(author).toHaveTextContent("Would be denied by role:contractor in Finance (Author)");
   });
 
   it("shows an inherited reason and the walk path", async () => {
@@ -159,7 +160,7 @@ describe("Simulator", () => {
     await pick(user, "Person", "bob", /Bob Ray/);
     await pick(user, "Extra memberships", "sta", /Staff/);
     const read = row("Read");
-    expect(read).toHaveTextContent("Allowed by Staff (Read), inherited from Company");
+    expect(read).toHaveTextContent("Would be allowed by Staff (Read), inherited from Company");
     const walk = within(read).getByRole("list", { name: "Checked, nearest first" });
     expect(
       within(walk)
@@ -174,8 +175,10 @@ describe("Simulator", () => {
     await pick(user, "Person", "bob", /Bob Ray/);
     await pick(user, "Extra memberships", "sta", /Staff/);
     const read = row("Read");
-    expect(within(read).getByText("Denied")).toBeInTheDocument();
-    expect(read).toHaveTextContent("Denied: no rule matched, and inheriting stopped at Reports");
+    expect(within(read).getByText("Would be denied")).toBeInTheDocument();
+    expect(read).toHaveTextContent(
+      "Would be denied: no rule matched, and inheriting stopped at Reports",
+    );
   });
 
   it("denies by default and labels the all-categories stop in the path", async () => {
@@ -183,7 +186,7 @@ describe("Simulator", () => {
     render(<Simulator config={config} ruleSet={ruleSet} categoryId="legal" />);
     await pick(user, "Person", "bob", /Bob Ray/);
     const read = row("Read");
-    expect(read).toHaveTextContent("Denied: no rule matched (default deny)");
+    expect(read).toHaveTextContent("Would be denied: no rule matched (default deny)");
     const items = within(read)
       .getAllByRole("listitem")
       .map((i) => i.textContent);
@@ -197,7 +200,9 @@ describe("Simulator", () => {
     );
     await pick(user, "Person", "bob", /Bob Ray/);
     await pick(user, "Extra memberships", "sta", /Staff/);
-    expect(row("Read")).toHaveTextContent("Allowed by Staff (Read), inherited from Company");
+    expect(row("Read")).toHaveTextContent(
+      "Would be allowed by Staff (Read), inherited from Company",
+    );
     rerender(<Simulator config={config} ruleSet={ruleSet} categoryId="reports" />);
     expect(row("Read")).toHaveTextContent("inheriting stopped at Reports");
   });
@@ -263,7 +268,7 @@ describe("Simulator", () => {
       <Simulator config={{ ...config, resources: [] }} ruleSet={ruleSet} categoryId="finance" />,
     );
     await pick(user, "Person", "ali", /Alice Ng/);
-    expect(screen.getByText("There are no categories to check.")).toBeInTheDocument();
+    expect(screen.getByText("There are no categories to preview.")).toBeInTheDocument();
     rerender(
       <Simulator
         config={config}
@@ -319,7 +324,9 @@ describe("Simulator", () => {
     await user.click(await screen.findByRole("option", { name: /Alice Ng/ }));
     await user.click(screen.getByRole("button", { name: "Remove Alice Ng" }));
     expect(screen.getByRole("combobox", { name: "Person" })).toBeInTheDocument();
-    expect(screen.getByText("Choose a person to see what they can do.")).toBeInTheDocument();
+    expect(
+      screen.getByText("Choose a person to preview what these rules would allow."),
+    ).toBeInTheDocument();
   });
 
   it("uses host string overrides and a custom class", () => {

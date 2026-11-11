@@ -91,7 +91,7 @@ const Chip = ({
   );
 };
 
-/** Pick a person and see what they may do in a category, using the package's own decide(). */
+/** Pick a person and preview what the rules would allow in a category, using the package's own decide(). Preview only; the host enforces. */
 export const Simulator = (props: SimulatorProps) => {
   const { config, ruleSet, categoryId, className, personKind = "user" } = props;
   const { variant = "list", renderResults, evaluate, show } = props;

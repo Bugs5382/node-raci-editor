@@ -125,7 +125,7 @@ below; an unknown placeholder is left as written. Keys are not namespaced per ho
 ```ts
 const config: RaciConfig = {
   // ...
-  strings: { "editor.title": "Permissions for {category}", "editor.deny": "blocked" },
+  strings: { "editor.title": "Permissions for {category}", "editor.deny": "no" },
 };
 ```
 
@@ -171,50 +171,50 @@ Keys with a variable list their variables in braces. The default text is in the 
 
 ### Simulator (`simulator.*`)
 
-| Key                                | Default                                                              |
-| ---------------------------------- | -------------------------------------------------------------------- |
-| `simulator.title`                  | Access simulator                                                     |
-| `simulator.person`                 | Person                                                               |
-| `simulator.personPlaceholder`      | Search for a person                                                  |
-| `simulator.memberships`            | Extra memberships                                                    |
-| `simulator.membershipsPlaceholder` | Add a group or role                                                  |
-| `simulator.noMatches`              | No matches                                                           |
-| `simulator.remove`                 | Remove {label}                                                       |
-| `simulator.results`                | Results                                                              |
-| `simulator.action`                 | Action                                                               |
-| `simulator.result`                 | Result                                                               |
-| `simulator.why`                    | Why                                                                  |
-| `simulator.walk`                   | Checked, nearest first                                               |
-| `simulator.allowed`                | Allowed                                                              |
-| `simulator.denied`                 | Denied                                                               |
-| `simulator.allCategories`          | All categories                                                       |
-| `simulator.emptyPerson`            | Choose a person to see what they can do.                             |
-| `simulator.emptyCategory`          | There are no categories to check.                                    |
-| `simulator.emptyActions`           | There are no actions to show.                                        |
-| `simulator.reason.entry`           | {verdict} by {subject} in {category} ({action})                      |
-| `simulator.reason.inherited`       | {verdict} by {subject} ({action}), inherited from {category}         |
-| `simulator.reason.global`          | {verdict} by {subject} ({action}), from the rules for all categories |
-| `simulator.reason.stopped`         | Denied: no rule matched, and inheriting stopped at {category}        |
-| `simulator.reason.default`         | Denied: no rule matched (default deny)                               |
-| `simulator.loading`                | Checking access...                                                   |
-| `simulator.error`                  | Could not check access.                                              |
-| `simulator.retry`                  | Retry                                                                |
-| `simulator.strip.title`            | {action} - {answer}                                                  |
-| `simulator.strip.yes`              | Yes                                                                  |
-| `simulator.strip.no`               | No                                                                   |
-| `simulator.box.reason`             | Reason                                                               |
-| `simulator.box.decidedBy`          | Decided by                                                           |
-| `simulator.box.walk`               | Walk                                                                 |
-| `simulator.box.overridden`         | Overridden ({count})                                                 |
-| `simulator.box.noRule`             | No rule matched                                                      |
-| `simulator.box.noMatch`            | no match                                                             |
-| `simulator.box.stopped`            | Inheriting stopped here                                              |
-| `simulator.box.direct`             | direct                                                               |
-| `simulator.box.implied`            | implied                                                              |
-| `simulator.box.deciding`           | deciding                                                             |
-| `simulator.box.effectAllow`        | Allow                                                                |
-| `simulator.box.effectDeny`         | Deny                                                                 |
-| `simulator.box.entry`              | Entry #{n}                                                           |
+| Key                                | Default                                                                |
+| ---------------------------------- | ---------------------------------------------------------------------- |
+| `simulator.title`                  | Previews what these rules would allow                                  |
+| `simulator.person`                 | Person                                                                 |
+| `simulator.personPlaceholder`      | Search for a person                                                    |
+| `simulator.memberships`            | Extra memberships                                                      |
+| `simulator.membershipsPlaceholder` | Add a group or role                                                    |
+| `simulator.noMatches`              | No matches                                                             |
+| `simulator.remove`                 | Remove {label}                                                         |
+| `simulator.results`                | Results                                                                |
+| `simulator.action`                 | Action                                                                 |
+| `simulator.result`                 | Result                                                                 |
+| `simulator.why`                    | Why                                                                    |
+| `simulator.walk`                   | Checked, nearest first                                                 |
+| `simulator.allowed`                | Would be allowed                                                       |
+| `simulator.denied`                 | Would be denied                                                        |
+| `simulator.allCategories`          | All categories                                                         |
+| `simulator.emptyPerson`            | Choose a person to preview what these rules would allow.               |
+| `simulator.emptyCategory`          | There are no categories to preview.                                    |
+| `simulator.emptyActions`           | There are no actions to show.                                          |
+| `simulator.reason.entry`           | {verdict} by {subject} in {category} ({action})                        |
+| `simulator.reason.inherited`       | {verdict} by {subject} ({action}), inherited from {category}           |
+| `simulator.reason.global`          | {verdict} by {subject} ({action}), from the rules for all categories   |
+| `simulator.reason.stopped`         | Would be denied: no rule matched, and inheriting stopped at {category} |
+| `simulator.reason.default`         | Would be denied: no rule matched (default deny)                        |
+| `simulator.loading`                | Previewing...                                                          |
+| `simulator.error`                  | Could not preview the result.                                          |
+| `simulator.retry`                  | Retry                                                                  |
+| `simulator.strip.title`            | {action} - {answer}                                                    |
+| `simulator.strip.yes`              | Would be allowed                                                       |
+| `simulator.strip.no`               | Would be denied                                                        |
+| `simulator.box.reason`             | Reason                                                                 |
+| `simulator.box.decidedBy`          | Decided by                                                             |
+| `simulator.box.walk`               | Walk                                                                   |
+| `simulator.box.overridden`         | Overridden ({count})                                                   |
+| `simulator.box.noRule`             | No rule matched                                                        |
+| `simulator.box.noMatch`            | no match                                                               |
+| `simulator.box.stopped`            | Inheriting stopped here                                                |
+| `simulator.box.direct`             | direct                                                                 |
+| `simulator.box.implied`            | implied                                                                |
+| `simulator.box.deciding`           | deciding                                                               |
+| `simulator.box.effectAllow`        | Allow                                                                  |
+| `simulator.box.effectDeny`         | Deny                                                                   |
+| `simulator.box.entry`              | Entry #{n}                                                             |
 
 ### Settings panel (`settings.*`)
 
