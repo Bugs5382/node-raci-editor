@@ -61,6 +61,8 @@
 }
 
 .raci-editor__scroll {
+  /* Contains the absolutely positioned hidden header text so it cannot widen the page. */
+  position: relative;
   overflow-x: auto;
   border: 1px solid var(--raci-border);
   border-radius: var(--raci-radius-md);
@@ -118,6 +120,7 @@
 
 /* Cells: state is carried by icon and text as well as colour. Every state has the same fixed box. */
 .raci-editor .raci-cell {
+  position: relative;
   display: inline-flex;
   vertical-align: middle;
   flex-direction: column;
@@ -140,10 +143,6 @@
   transition:
     background var(--raci-duration) var(--raci-easing),
     border-color var(--raci-duration) var(--raci-easing);
-}
-
-.raci-editor--compact .raci-cell {
-  flex-direction: row;
 }
 
 .raci-editor .raci-cell--allow {
@@ -189,19 +188,77 @@
   white-space: nowrap;
 }
 
-/* Secondary line: always rendered, so an included cell never changes the box. */
+/*
+ * Secondary line: a small caption laid over the bottom of the box, out of the flow, so the primary
+ * line stays centred in every state. Always rendered (hidden when off), so an included cell never
+ * changes the box.
+ */
 .raci-editor .raci-cell__secondary {
-  max-width: 100%;
-  min-width: 0;
+  position: absolute;
+  bottom: 2px;
+  left: var(--raci-space-1);
+  right: var(--raci-space-1);
   overflow: hidden;
+  text-align: center;
   text-overflow: ellipsis;
+  font-size: 0.75em;
   font-style: italic;
-  line-height: var(--raci-line-height);
+  line-height: 1;
   white-space: nowrap;
+}
+
+/* Compact has one line: the caption sits at the right edge, vertically centred. */
+.raci-editor--compact .raci-cell__secondary {
+  top: 50%;
+  bottom: auto;
+  left: auto;
+  transform: translateY(-50%);
 }
 
 .raci-editor .raci-cell__secondary--off {
   visibility: hidden;
+}
+
+/*
+ * Marks variant: only a check, an X or nothing. Same fixed box (the size comes from the base rule,
+ * never from here), no fill and no border, the mark centred. An included or inherited mark is dimmed.
+ */
+.raci-editor .raci-cell--marks {
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border-color: transparent;
+  border-style: solid;
+  color: var(--raci-blank-fg);
+}
+
+.raci-editor .raci-cell--marks.raci-cell--allow {
+  background: transparent;
+  border-color: transparent;
+  color: var(--raci-allow-fg);
+}
+
+.raci-editor .raci-cell--marks.raci-cell--deny {
+  background: transparent;
+  border-color: transparent;
+  color: var(--raci-deny-fg);
+}
+
+.raci-editor .raci-cell--marks.raci-cell--included {
+  background: transparent;
+  border-color: transparent;
+  color: var(--raci-allow-fg);
+  opacity: 0.4;
+}
+
+.raci-editor .raci-cell--marks:hover:not(:disabled) {
+  background: var(--raci-bg-subtle);
+}
+
+.raci-editor .raci-cell--marks .raci-icon--mark {
+  flex: none;
+  width: 18px;
+  height: 18px;
 }
 
 .raci-editor .raci-cell:disabled {

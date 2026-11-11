@@ -52,4 +52,9 @@ export { Simulator } from "./react/simulator/Simulator.js";
 export type { SimulatorProps } from "./react/simulator/Simulator.js";
 export type { ActionResult, SimulatorVariant, SimulatorViewProps } from "./react/simulator/view.js";
 export { RulesEditor, impliedActions } from "./react/editor/index.js";
-export type { RulesEditorProps } from "./react/editor/index.js";
+export type {
+  CellSizeTokens,
+  CellVariant,
+  RenderCellProps,
+  RulesEditorProps,
+} from "./react/editor/index.js";

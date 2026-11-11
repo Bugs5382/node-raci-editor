@@ -43,6 +43,8 @@ All optional.
 - A "Custom cells" preset: round Y and N cells in the host's colours, empty cells with no glyph, and a
   smaller cell size. The Settings tab has a Cells section to change glyphs, words, tooltips, colours
   and size, with a live preview.
+- A Cell variant switch in the Editor tab: box (default), marks (a check, an X or nothing) and custom
+  (a sample host cell, exported as `demoRenderCell`).
 - Two presets that differ in actions, subject kinds, tree and strings, to show nothing is hard-coded.
 - The rule set as JSON: copy, download, upload with validation, and reset to the sample.
 - A light, dark and system theme switch, and a "Brand override" toggle that only changes tokens.

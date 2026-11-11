@@ -213,3 +213,42 @@ describe("stylesheet: oversized content never shifts a cell", () => {
     expect(css.slice(start, css.indexOf("}", start))).toMatch(/vertical-align:\s*middle/);
   });
 });
+
+describe("cell states with the cell variants", () => {
+  const cfg: RaciConfig = {
+    ...base,
+    cellStates: { allow: { glyph: "Y", colors: { fg: "#064" }, tooltip: "Allowed" } },
+  };
+  it("the marks variant draws the host's glyph and colour instead of the default mark", () => {
+    render(
+      <RulesEditor
+        config={cfg}
+        ruleSet={ruleSet}
+        categoryId="docs"
+        onChange={() => {}}
+        cellVariant="marks"
+      />,
+    );
+    const c = cell("user:bob, View");
+    expect(c).toHaveClass("raci-cell--marks");
+    expect(c.querySelector(".raci-cell__glyph")).toHaveTextContent("Y");
+    expect(c.style.color).toBe("rgb(0, 102, 68)");
+    expect(c).toHaveAttribute("title", "Allowed");
+  });
+  it("renderCell receives the state's tooltip as its title", () => {
+    const titles: string[] = [];
+    render(
+      <RulesEditor
+        config={cfg}
+        ruleSet={ruleSet}
+        categoryId="docs"
+        onChange={() => {}}
+        renderCell={(p) => {
+          titles.push(p.title);
+          return <span>{p.state}</span>;
+        }}
+      />,
+    );
+    expect(titles).toContain("Allowed");
+  });
+});

@@ -177,6 +177,38 @@ The host app owns its resources and checks requests itself: the resource tree an
 - 🎨 **Theme with tokens** — CSS custom properties with light and dark values, zero-specificity defaults.
 - 🪶 **Small and unopinionated** — React and React DOM are peers, nothing else is bundled.
 
+## 🧩 Cell variants
+
+The editor cell is the state box by default. Pass `cellVariant="marks"` for a bare check, X or empty
+cell, or `renderCell` to draw the cell yourself; every variant keeps the same fixed size. See
+[Components](guides/components.md#cell-variants) for the fields.
+
+```tsx
+import type { RenderCellProps, RulesEditorProps } from "node-raci-editor";
+
+// A host cell: a plain button that keeps the fixed size and the editor's accessible name.
+export const HostCell = (cell: RenderCellProps) => (
+  <button
+    type="button"
+    aria-label={cell.label}
+    title={cell.title}
+    disabled={cell.readOnly}
+    style={{ width: cell.size.width, height: cell.size.height }}
+    onClick={cell.onCycle}
+  >
+    {cell.state === "allow" ? "Y" : cell.state === "deny" ? "N" : ""}
+  </button>
+);
+
+// `cellVariant="marks"` draws a check, an X or nothing; `renderCell` draws the whole cell.
+export const MarksEditor = (props: RulesEditorProps) => (
+  <RulesEditor {...props} cellVariant="marks" />
+);
+export const HostCellEditor = (props: RulesEditorProps) => (
+  <RulesEditor {...props} renderCell={HostCell} />
+);
+```
+
 ## 📚 Guides
 
 | Guide                                           | What is in it                                                                                         |
