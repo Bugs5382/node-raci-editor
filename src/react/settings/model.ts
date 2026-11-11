@@ -20,6 +20,7 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 */
+import { normalizeCells } from "@/core/cells";
 import { defaultSettings } from "@/core/types";
 import type { RaciConfig, RaciSettings } from "@/core/types";
 
@@ -79,11 +80,13 @@ export const normalizeSettings = (
     partial?.density === "compact" || partial?.density === "comfortable"
       ? partial.density
       : base.density;
+  const cells = normalizeCells(partial?.cells).value;
   return {
     visibleActions: actions.length > 0 ? actions : base.visibleActions,
     enabledSubjectKinds: kinds.length > 0 ? kinds : base.enabledSubjectKinds,
     showInherited: partial?.showInherited ?? base.showInherited,
     confirmDeny: partial?.confirmDeny ?? base.confirmDeny,
     density,
+    ...(Object.keys(cells).length > 0 ? { cells } : {}),
   };
 };

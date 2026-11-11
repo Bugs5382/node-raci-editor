@@ -69,6 +69,80 @@ interface ActionDef {
     "Would be allowed" and "Would be denied", an obligation reads "Required" and "Not required".
 - Options of the `"ordered"` model, set with `createOrderedModel(options)` (the registered `"ordered"` has the defaults): `ownerKinds` (the subject kinds that may own a category; default `["user"]`, empty switches owners off), `implicitSubjects` (default the built-in Everyone), `ownerActions`, and `superusers: { subjects, actions }` (subjects that always have the listed actions, whatever any row says, like owners but host-supplied and not tied to a category; off unless set, and an action you do not list follows the rows). Manage in a host's config usually implies Read and Author only; list `implies` as you want it.
 
+## Cell appearance
+
+Whoever uses the package can set how the cells look, in two places. Both are optional; nothing
+changes without them.
+
+**Host config, `config.cellStates`.** One entry per state: `allow`, `deny`, `none` (empty),
+`inheritedAllow`, `inheritedDeny` and `included` (an empty cell another cell covers). Every field of
+an entry is optional:
+
+| Field       | Meaning                                                                                                |
+| ----------- | ------------------------------------------------------------------------------------------------------ |
+| `glyph`     | Text, or a function `(state) => ReactNode` for an icon. An empty string draws no glyph.                |
+| `text`      | The word beside the glyph. An empty string hides the word.                                             |
+| `label`     | The state's name in the cell's accessible name ("Alice, Read: yes").                                   |
+| `tooltip`   | The cell's tooltip.                                                                                    |
+| `colors`    | `{ fg, bg, border }`: a CSS colour or `var(--token)`. The green and red defaults are the token values. |
+| `shape`     | `{ radius, borderStyle, borderWidth }`.                                                                |
+| `className` | An extra class on the cell.                                                                            |
+
+**User settings, `settings.cells`.** The serializable part of the same entries (everything except a
+glyph function), plus the cell size: `{ size: { width, height }, states: { allow: { glyph: "Y" } } }`.
+Settings override the host's entry field by field. The size is in px, from 24 to 240 wide and from 16
+to 120 high, so cells can be much smaller than the density defaults (96 by 56 and 144 by 28); empty
+uses the density's size. `normalizeCells(value)` checks any such value and returns what is valid
+with a list of what it dropped; `normalizeSettings` and the settings panel use it, so what you
+store is valid.
+
+**The Settings panel** has a Cells section: a live preview of the six states drawn by the real cell,
+the size, and for each state a glyph, a word, a tooltip and three colour inputs. It emits through
+`onChange` as `settings.cells` and stores nothing; the host persists what it receives and passes it
+back. An empty text field keeps the default (to draw nothing, type a single space).
+
+**Guarantees.** The box size comes from the size tokens (`--raci-cell-width` and
+`--raci-cell-height`) only. A glyph or word that is too big is clipped, never resizes the box, the
+row or the column, and stays centred. The state is still carried by the glyph or word as well as
+colour, so choosing colours with little contrast is only a matter of taste, not of meaning.
+
+## Subjects without a directory
+
+A subject is a matcher your app defines. The package gives no meaning to any kind or id except the
+built-in `everyone:*`, which it labels "Everyone" (string `editor.everyone`). Your app may have no
+users, groups or roles at all, and a subject can be a capability such as `can:ack` or `has:approve`.
+
+```ts
+interface MatcherDef {
+  id: string;
+  label: string;
+  description?: string;
+  group?: string;
+}
+interface ContextDef {
+  id: string;
+  label: string;
+  subjects: string[];
+}
+// config.matchers?: MatcherDef[]   config.contexts?: ContextDef[]   config.subjectKinds may be []
+```
+
+- **The editor.** With `matchers` set, or with no `subjectKinds`, it shows no kind chooser and no
+  search. The next row is chosen from a plain list: Everyone, then your matchers (listed together
+  by `group`), leaving out the ones already in the grid. Kinds with a lookup keep working and can be
+  mixed with the list. Rows, cells and the stored rule set are the same as for any subject.
+- **The asker.** `decide()` and the simulator take the list of matchers that apply to whoever or
+  whatever is asking (`Person.subjects`, also exported as the alias `Context`). Your app resolves
+  it; the package never learns how a match is computed, so a predicate is just another entry.
+- **The simulator.** The person picker becomes a context picker. With `contexts` it shows a list of
+  named contexts (the label is the string `simulator.context`, "Context" by default; call it
+  Account, Request or anything else). With `matchers` it also shows a checkbox per matcher, "Which
+  of these apply?", so the asker can be built by hand. No directory lookup is needed, and Everyone
+  always applies. Without `contexts`, matchers and no kinds, the preview starts at once.
+- **Words.** The words user, group, role and person are defaults in the string tables, and the one
+  default kind name the simulator prefers for a person is `DEFAULT_PERSON_KIND` in the defaults
+  module; set `personKind` to use another. A test checks that no other code shows or compares them.
+
 ## Subject kinds
 
 Subjects are whatever kinds your app has (user, group, role, team, department, service account, ...); the package assumes none of them. With one kind there is no kind chooser, and a stored subject of a kind you did not configure is shown as stored, kept when rows change and still evaluated.

@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 */
 import { createOrderedModel } from "@/core/models/ordered";
 import { listModels, registerModel } from "@/core/registry";
-import type { RaciConfig, ResourceNode, RuleSet, SubjectOption } from "@/core/types";
+import type { RaciConfig, RaciSettings, ResourceNode, RuleSet, SubjectOption } from "@/core/types";
 
 /** A named bundle of host configuration and a seed rule set, to show nothing is hard-coded. */
 export interface Preset {
@@ -34,6 +34,8 @@ export interface Preset {
   initialCategory: string;
   /** Heading labels shown first; the demo switch can change it. Default `"auto"`. */
   headerMode?: "full" | "short" | "auto";
+  /** Settings the demo starts with, checked like any stored settings. */
+  settings?: Partial<RaciSettings>;
 }
 
 /** Pretend network latency for subject search, in milliseconds. */
@@ -424,6 +426,110 @@ const shortSeed: RuleSet = {
   },
 };
 
+const cellsConfig: RaciConfig = {
+  ...docsConfig,
+  cellStates: {
+    allow: {
+      glyph: "Y",
+      text: "",
+      label: "yes",
+      tooltip: "Allowed",
+      colors: { fg: "#065f46", bg: "#d1fae5", border: "#10b981" },
+      shape: { radius: "999px" },
+    },
+    deny: {
+      glyph: "N",
+      text: "",
+      label: "no",
+      tooltip: "Denied",
+      colors: { fg: "#991b1b", bg: "#fee2e2", border: "#ef4444" },
+      shape: { radius: "999px" },
+    },
+    none: { glyph: "", text: "" },
+    included: { glyph: "y", text: "", colors: { fg: "#065f46" } },
+    inheritedAllow: { glyph: "Y", text: "" },
+    inheritedDeny: { glyph: "N", text: "" },
+  },
+};
+
+const capTree: ResourceNode[] = [
+  {
+    id: "policies",
+    label: "Policies",
+    children: [
+      {
+        id: "it",
+        label: "IT",
+        children: [
+          { id: "access", label: "Door entry" },
+          { id: "networks", label: "Networks" },
+        ],
+      },
+      {
+        id: "hr",
+        label: "People",
+        children: [
+          { id: "onboarding", label: "Onboarding" },
+          { id: "leave", label: "Leave" },
+        ],
+      },
+      {
+        id: "finance",
+        label: "Finance",
+        children: [
+          { id: "expenses", label: "Expenses" },
+          { id: "audit", label: "Audit" },
+        ],
+      },
+    ],
+  },
+];
+
+/** No users, groups or roles: subjects are capabilities the host resolves, and contexts are not people. */
+const capConfig: RaciConfig = {
+  actions: [
+    { id: "read", label: "Read" },
+    { id: "edit", label: "Edit", implies: ["read"] },
+    { id: "approve", label: "Approve", implies: ["read"] },
+    { id: "ack", label: "Acknowledge" },
+  ],
+  subjectKinds: [],
+  matchers: [
+    { id: "can:read", label: "Can read", group: "Access" },
+    { id: "can:edit", label: "Can edit", group: "Access" },
+    {
+      id: "can:ack",
+      label: "Can acknowledge",
+      description: "Anyone who must acknowledge",
+      group: "Duties",
+    },
+    { id: "has:approve", label: "Can approve", group: "Duties" },
+    { id: "in:review", label: "In review" },
+  ],
+  contexts: [
+    { id: "hire", label: "New hire", subjects: ["can:ack", "can:read"] },
+    { id: "reviewer", label: "Reviewer", subjects: ["has:approve", "can:read"] },
+    { id: "guest", label: "Guest", subjects: [] },
+  ],
+  resources: capTree,
+  strings: { "simulator.context": "Context", "editor.subject": "Applies to" },
+};
+
+const capSeed: RuleSet = {
+  parents: parentsOf(capTree),
+  categories: {
+    policies: {
+      entries: [
+        { subject: "everyone:*", action: "read", effect: "allow" },
+        { subject: "can:ack", action: "ack", effect: "allow" },
+        { subject: "has:approve", action: "approve", effect: "allow" },
+      ],
+    },
+    it: { entries: [{ subject: "can:edit", action: "edit", effect: "allow" }] },
+    access: { entries: [{ subject: "in:review", action: "read", effect: "deny" }] },
+  },
+};
+
 export const presets: Preset[] = [
   {
     id: "org",
@@ -446,6 +552,21 @@ export const presets: Preset[] = [
     seed: shortSeed,
     initialCategory: "access",
     headerMode: "short",
+  },
+  {
+    id: "cells",
+    label: "Custom cells",
+    config: cellsConfig,
+    seed: docsSeed,
+    initialCategory: "drafts",
+    settings: { cells: { size: { width: 64, height: 36 } } },
+  },
+  {
+    id: "capabilities",
+    label: "Capabilities only",
+    config: capConfig,
+    seed: capSeed,
+    initialCategory: "access",
   },
 ];
 

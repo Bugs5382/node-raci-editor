@@ -26,6 +26,8 @@ export const editorStrings: Record<string, string> = {
   "editor.pathSeparator": " / ",
   "editor.subject": "Subject",
   "editor.everyone": "Everyone",
+  "editor.addPlaceholder": "Add a subject",
+  "editor.pickMatcher": "Choose who to add",
   "editor.key": "Key",
   "editor.group.access": "Access",
   "editor.group.obligation": "Obligations",

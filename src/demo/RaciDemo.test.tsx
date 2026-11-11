@@ -360,3 +360,56 @@ describe("the short-labels preset on the ordered model", () => {
     expect(approve).toHaveTextContent("Would be denied");
   });
 });
+
+describe("the custom cells preset", () => {
+  it("draws the host's glyphs and colours at a smaller cell size", async () => {
+    const user = userEvent.setup();
+    render(<RaciDemo />);
+    await user.selectOptions(screen.getByRole("combobox", { name: "Preset" }), "cells");
+    const glyphs = Array.from(
+      document.querySelectorAll(".raci-editor tbody .raci-cell__glyph"),
+    ).map((g) => g.textContent);
+    expect(glyphs).toContain("Y");
+    const root = document.querySelector(".raci-editor") as HTMLElement;
+    expect(root.style.getPropertyValue("--raci-cell-width")).toBe("64px");
+  });
+
+  it("lets the Settings tab change the look, with a live preview", async () => {
+    const user = userEvent.setup();
+    render(<RaciDemo initialPreset="cells" />);
+    await user.click(screen.getByRole("tab", { name: "Settings" }));
+    const cells = screen.getByRole("group", { name: "Cells" });
+    expect(cells.querySelectorAll("[data-testid=cells-preview] .raci-cell")).toHaveLength(6);
+    await user.type(screen.getByRole("textbox", { name: "Allow glyph" }), "!");
+    await user.click(screen.getByRole("tab", { name: "Editor" }));
+    const glyphs = Array.from(
+      document.querySelectorAll(".raci-editor tbody .raci-cell__glyph"),
+    ).map((g) => g.textContent);
+    expect(glyphs).toContain("!");
+  });
+});
+
+describe("the capabilities-only preset", () => {
+  it("edits with a flat choice: no kind chooser, no search, no directory", async () => {
+    const user = userEvent.setup();
+    render(<RaciDemo />);
+    await user.selectOptions(screen.getByRole("combobox", { name: "Preset" }), "capabilities");
+    expect(document.querySelector(".raci-editor input[role=combobox]")).toBeNull();
+    const choice = screen.getByRole("combobox", { name: "Choose who to add" });
+    await user.selectOptions(choice, "can:read");
+    expect(screen.getByRole("rowheader", { name: "Can read" })).toBeInTheDocument();
+    expect(screen.getByRole("rowheader", { name: "Everyone" })).toBeInTheDocument();
+  });
+
+  it("previews contexts in the simulator and has no kinds in the settings", async () => {
+    const user = userEvent.setup();
+    render(<RaciDemo initialPreset="capabilities" />);
+    await user.click(screen.getByRole("tab", { name: "Simulator" }));
+    expect(screen.queryByRole("combobox", { name: "Person" })).toBeNull();
+    await user.selectOptions(screen.getByRole("combobox", { name: "Context" }), "hire");
+    const row = screen.getByRole("rowheader", { name: "Acknowledge" }).closest("tr") as HTMLElement;
+    expect(row).toHaveTextContent("Would be allowed");
+    await user.click(screen.getByRole("tab", { name: "Settings" }));
+    expect(screen.queryByRole("group", { name: "Subject kinds" })).toBeNull();
+  });
+});
