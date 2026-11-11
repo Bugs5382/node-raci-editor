@@ -18,10 +18,12 @@
         "types": "./dist/index.d.cts",
         "default": "./dist/index.cjs"
       }
-    }
+    },
+    "./vectors/decide.json": "./vectors/decide.json"
   },
   "files": [
-    "dist"
+    "dist",
+    "vectors/decide.json"
   ],
   "config": {
     "packMaxUnpackedBytes": 250000,
