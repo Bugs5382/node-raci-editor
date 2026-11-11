@@ -34,7 +34,8 @@
     },
     "./demo.css": "./dist/demo.css",
     "./styles.css": "./dist/styles.css",
-    "./vectors/decide.json": "./vectors/decide.json"
+    "./vectors/decide.json": "./vectors/decide.json",
+    "./vectors/nearest.json": "./vectors/nearest.json"
   },
   "files": [
     "bin",
@@ -42,7 +43,7 @@
     "vectors"
   ],
   "config": {
-    "packMaxUnpackedBytes": 650000,
+    "packMaxUnpackedBytes": 700000,
     "packMaxGrowthPercent": 25
   },
   "engines": {

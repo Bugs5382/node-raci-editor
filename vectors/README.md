@@ -1,6 +1,17 @@
 # Shared decide() test vectors
 
-`decide.json` is a language-neutral set of test cases for the access decision. The TypeScript package, a mock server and a Go implementation all run the same file, so they must agree. `decide()` is a pure evaluation helper the host may call; the host enforces.
+The vector files are language-neutral sets of test cases for the access decision. The TypeScript package, a mock server and a Go implementation all run the same files, so they must agree. `decide()` is a pure evaluation helper the host may call; the host enforces.
+
+## Files per model
+
+There is one file per rule model. A file's `model` field names the model its cases belong to, and `version` is bumped when that model's behaviour changes.
+
+| File           | Model       | Notes                                                                                           |
+| -------------- | ----------- | ----------------------------------------------------------------------------------------------- |
+| `nearest.json` | `"nearest"` | The built-in default model. Importable as `node-raci-editor/vectors/nearest.json`.              |
+| `decide.json`  | `"nearest"` | The original name, kept as an alias. It has no `model` field (absent means `"nearest"`) and its cases are identical to `nearest.json`; a test keeps them equal. |
+
+A runner picks the model from `model` (default `"nearest"`), runs every case of the file through that model, and skips a model it has not implemented with a visible skip, never a silent pass. Every model file uses the same format; the algorithm section describes `"nearest"`.
 
 ## Format
 

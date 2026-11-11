@@ -1,7 +1,11 @@
 # Pluggable rule models: design
 
-Status: design only. Nothing on this page is implemented, no code, export or verdict changes with it.
-Implementation is a separate change set after the initial build merges. Tracked in issue #15.
+Status: PR A (steps 1 and 2) is implemented: the `RaciModel` interface, the registry
+(`registerModel`, `getModel`, `listModels`) with `"nearest"` extracted from `decide()`, and the
+per-model vector files (`vectors/nearest.json`, with `vectors/decide.json` kept as its alias). There
+is no behaviour change. In this step `ModelInput` is the `decide()` input as it is, `describeEntry`
+takes the entry only (no label functions yet) and the editor and simulator do not read models.
+Everything from step 3 on, including `"ordered"`, is still design only. Tracked in issue #15.
 
 ## Proposal summary
 

@@ -28,6 +28,15 @@ OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 export * from "./core/types.js";
 export { decide } from "./core/decide.js";
+export { getModel, listModels, registerModel } from "./core/registry.js";
+export type {
+  LegendItem,
+  ModelCapabilities,
+  ModelInput,
+  ModelIssue,
+  ModelResult,
+  RaciModel,
+} from "./core/model.js";
 export { vectorSubjects } from "./core/vectors.js";
 export type { VectorPerson } from "./core/vectors.js";
 export {

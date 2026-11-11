@@ -1,6 +1,6 @@
 # Test vectors
 
-`vectors/decide.json` is a language-neutral list of questions and expected answers for the access
+`vectors/nearest.json` (and `vectors/decide.json`, its alias with identical cases) is a language-neutral list of questions and expected answers for the access
 decision. The TypeScript package, a mock server and a Go implementation all run the same file, so
 they have to agree. `decide()` is a pure evaluation helper the host may call; the host enforces.
 The file ships in the npm package and is importable as
