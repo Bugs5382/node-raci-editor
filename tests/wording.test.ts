@@ -1,3 +1,25 @@
+/*
+MIT License
+
+Copyright (c) 2026 Shane
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+*/
 /**
  * The package shows and edits access rules; the host enforces them. User-visible text, docs and
  * TSDoc must use show and preview language, never claim the package enforces anything.
@@ -62,15 +84,17 @@ const denied: [string, RegExp][] = [
 
 const hits = (file: string): string[] => {
   const out: string[] = [];
-  readFileSync(file, "utf8")
-    .split("\n")
-    .forEach((line, i) => {
-      let rest = line;
-      for (const a of allowed) rest = rest.replace(a, "");
-      for (const [name, re] of denied) {
-        if (re.test(rest)) out.push(`${relative(root, file)}:${i + 1} [${name}] ${line.trim()}`);
-      }
-    });
+  // The licence header the build stamps on source files is legal text, not package wording.
+  const text = readFileSync(file, "utf8").replace(/^(#![^\n]*\n)?\/\*\n[\s\S]*?\*\/\n/, (m) =>
+    m.replace(/[^\n]/g, ""),
+  );
+  text.split("\n").forEach((line, i) => {
+    let rest = line;
+    for (const a of allowed) rest = rest.replace(a, "");
+    for (const [name, re] of denied) {
+      if (re.test(rest)) out.push(`${relative(root, file)}:${i + 1} [${name}] ${line.trim()}`);
+    }
+  });
   return out;
 };
 
