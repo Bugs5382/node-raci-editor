@@ -61,6 +61,8 @@
 }
 
 .raci-editor__scroll {
+  /* Contains the absolutely positioned hidden header text so it cannot widen the page. */
+  position: relative;
   overflow-x: auto;
   border: 1px solid var(--raci-border);
   border-radius: var(--raci-radius-md);

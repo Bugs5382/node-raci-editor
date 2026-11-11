@@ -184,4 +184,11 @@ describe("stylesheet fixes one size for every state", () => {
       }
     }
   });
+
+  it("contains the absolutely positioned hidden text inside the scroll area", () => {
+    // Without a positioned scroll area the hidden header text is placed against the page body, at
+    // the table's far edge, and widens the whole page on a narrow screen (issue 21).
+    expect(css).toMatch(/\.raci-visually-hidden \{[^}]*position: absolute/);
+    expect(decl(rule(".raci-editor__scroll"), "position")).toBe("relative");
+  });
 });
