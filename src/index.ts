@@ -8,3 +8,6 @@ export * from "./core/types.js";
 export { decide } from "./core/decide.js";
 export { vectorSubjects } from "./core/vectors.js";
 export type { VectorPerson } from "./core/vectors.js";
+
+export { Simulator } from "./react/simulator/Simulator.js";
+export type { SimulatorProps } from "./react/simulator/Simulator.js";
