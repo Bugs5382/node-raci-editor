@@ -85,6 +85,7 @@ const Workbench = ({ presetId }: { presetId: string }) => {
   const [variant, setVariant] = useState<SimulatorVariant>("list");
   const [cell, setCell] = useState<"box" | "marks" | "custom">("box");
   const [start, setStart] = useState<"edit" | "view">("edit");
+  const [headings, setHeadings] = useState<"auto" | "full" | "short">(preset.headerMode ?? "auto");
   const [settings, setSettings] = useState<RaciSettings>(() => defaultSettings(config));
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -175,6 +176,19 @@ const Workbench = ({ presetId }: { presetId: string }) => {
         <div role="tabpanel" id={panelId} aria-labelledby={tabId(tab)} className="demo-panel">
           {tab === "editor" && (
             <>
+              <div className="demo-actions" role="group" aria-label="Heading labels">
+                {(["auto", "full", "short"] as const).map((v) => (
+                  <button
+                    key={v}
+                    type="button"
+                    className="demo-button"
+                    aria-pressed={headings === v}
+                    onClick={() => setHeadings(v)}
+                  >
+                    {v}
+                  </button>
+                ))}
+              </div>
               <div className="demo-actions" role="group" aria-label="Editor start">
                 {(["edit", "view"] as const).map((v) => (
                   <button
@@ -203,6 +217,7 @@ const Workbench = ({ presetId }: { presetId: string }) => {
               </div>
               <RulesEditor
                 key={start}
+                headerMode={headings}
                 config={config}
                 ruleSet={ruleSet}
                 categoryId={categoryId}

@@ -85,6 +85,15 @@ export const explainDecision = (decision: Decision, ctx: ReasonContext): string 
     if (by.category === ALL_CATEGORIES) return t("simulator.reason.global", vars);
     return t("simulator.reason.inherited", vars);
   }
+  const verdict = t(decision.allowed ? "simulator.allowed" : "simulator.denied");
+  if (decision.reason === "owner") return t("simulator.reason.owner", { verdict });
+  if (decision.reason === "superuser") return t("simulator.reason.superuser", { verdict });
+  if (decision.reason === "requires") {
+    return t("simulator.reason.requires", {
+      verdict,
+      action: ctx.actionLabel(decision.gatedBy ?? ""),
+    });
+  }
   if (decision.stoppedAt !== undefined) {
     return t("simulator.reason.stopped", { category: ctx.categoryLabel(decision.stoppedAt) });
   }

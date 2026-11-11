@@ -20,6 +20,8 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 */
+import { createOrderedModel } from "@/core/models/ordered";
+import { listModels, registerModel } from "@/core/registry";
 import type { RaciConfig, ResourceNode, RuleSet, SubjectOption } from "@/core/types";
 
 /** A named bundle of host configuration and a seed rule set, to show nothing is hard-coded. */
@@ -30,6 +32,8 @@ export interface Preset {
   seed: RuleSet;
   /** Category selected first. */
   initialCategory: string;
+  /** Heading labels shown first; the demo switch can change it. Default `"auto"`. */
+  headerMode?: "full" | "short" | "auto";
 }
 
 /** Pretend network latency for subject search, in milliseconds. */
@@ -284,6 +288,142 @@ const docsSeed: RuleSet = {
   },
 };
 
+const shortTree: ResourceNode[] = [
+  {
+    id: "policies",
+    label: "Policies",
+    children: [
+      {
+        id: "it",
+        label: "IT",
+        children: [
+          { id: "access", label: "Door entry" },
+          { id: "networks", label: "Networks" },
+        ],
+      },
+      {
+        id: "hr",
+        label: "People",
+        children: [
+          { id: "onboarding", label: "Onboarding" },
+          { id: "leave", label: "Leave" },
+        ],
+      },
+      {
+        id: "finance",
+        label: "Finance",
+        children: [
+          { id: "expenses", label: "Expenses" },
+          { id: "audit", label: "Audit" },
+        ],
+      },
+    ],
+  },
+];
+
+const shortPeople: SubjectOption[] = [
+  { id: "user:ines", label: "Ines Moreau", detail: "ines@example.test" },
+  { id: "user:omar", label: "Omar Haddad", detail: "omar@example.test" },
+  { id: "user:tess", label: "Tess Walker", detail: "tess@example.test" },
+];
+const shortAdmins: SubjectOption[] = [{ id: "role:admin", label: "Site administrator" }];
+const shortTeams: SubjectOption[] = [
+  { id: "group:secops", label: "Security operations" },
+  { id: "group:finance", label: "Finance team" },
+];
+
+/** Short headings (R A APV M ACK) in two host-named column groups, with the built-in Everyone subject. */
+const shortConfig: RaciConfig = {
+  actions: [
+    {
+      id: "r",
+      label: "Read",
+      shortLabel: "R",
+      description: "See the document",
+      group: "permissions",
+    },
+    {
+      id: "a",
+      label: "Author",
+      shortLabel: "A",
+      description: "Create and change",
+      implies: ["r"],
+      group: "permissions",
+    },
+    {
+      id: "m",
+      label: "Manage",
+      shortLabel: "M",
+      description: "Change who has what",
+      implies: ["a", "r"],
+      group: "obligations",
+    },
+    {
+      id: "apv",
+      label: "Approve",
+      shortLabel: "APV",
+      implies: ["r"],
+      group: "permissions",
+    },
+    { id: "ack", label: "Acknowledge", shortLabel: "ACK", group: "obligations" },
+  ],
+  subjectKinds: [
+    memoryKind("user", "Person", shortPeople),
+    memoryKind("group", "Team", shortTeams),
+    memoryKind("role", "Role", shortAdmins),
+  ],
+  resources: shortTree,
+  // The host names and orders the groups: Read, Author and Approve are permissions; Manage and
+  // Acknowledge are obligation rules.
+  groups: [
+    { id: "permissions", label: "Permissions" },
+    { id: "obligations", label: "Obligations" },
+  ],
+};
+
+/**
+ * The "ordered" model for this preset, with site administrators (the `role:admin` subject) who
+ * always have Read, Author and Manage, whatever any row says. Approve and Acknowledge are left
+ * out on purpose: they follow the rows. The demo's simulator evaluates with it.
+ */
+const SHORT_MODEL_ID = "demo-ordered";
+if (!listModels().some((m) => m.id === SHORT_MODEL_ID)) {
+  registerModel(
+    createOrderedModel({
+      id: SHORT_MODEL_ID,
+      label: "Ordered rows with site administrators",
+      superusers: { subjects: ["role:admin"], actions: ["r", "a", "m"] },
+    }),
+  );
+}
+
+const shortSeed: RuleSet = {
+  model: SHORT_MODEL_ID,
+  parents: parentsOf(shortTree),
+  categories: {
+    policies: {
+      entries: [
+        { subject: "everyone:*", action: "r", effect: "allow" },
+        { subject: "everyone:*", action: "ack", effect: "allow" },
+      ],
+    },
+    it: {
+      owners: ["user:omar"],
+      entries: [{ subject: "group:secops", action: "m", effect: "allow" }],
+    },
+    networks: { entries: [{ subject: "group:finance", action: "r", effect: "deny" }] },
+    access: {
+      entries: [
+        { subject: "user:ines", action: "r", effect: "allow" },
+        { subject: "user:ines", action: "a", effect: "allow" },
+        { subject: "user:ines", action: "ack", effect: "deny" },
+        { subject: "group:secops", action: "apv", effect: "allow" },
+      ],
+    },
+    finance: { entries: [{ subject: "group:finance", action: "a", effect: "allow" }] },
+  },
+};
+
 export const presets: Preset[] = [
   {
     id: "org",
@@ -298,6 +438,14 @@ export const presets: Preset[] = [
     config: docsConfig,
     seed: docsSeed,
     initialCategory: "drafts",
+  },
+  {
+    id: "short",
+    label: "Short labels",
+    config: shortConfig,
+    seed: shortSeed,
+    initialCategory: "access",
+    headerMode: "short",
   },
 ];
 

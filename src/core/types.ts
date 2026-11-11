@@ -60,12 +60,20 @@ export interface RuleSet {
 export interface ActionDef {
   id: string;
   label?: string;
-  /** A short header for narrow grids. Falls back to `label`. */
+  /** A short header for narrow or compact grids (for example one to three letters). Falls back to `label`. */
   shortLabel?: string;
   description?: string;
   implies?: string[];
-  /** `"access"` (default) states what a person may do; `"obligation"` states what a person must do. */
+  /**
+   * `"access"` (default) states what a subject may do; `"obligation"` states what a subject must
+   * do. The editor groups the columns by kind when no `group` is given and both kinds are present.
+   */
   kind?: "access" | "obligation";
+  /**
+   * The column group this action belongs to, a host-chosen id (see `RaciConfig.groups`). Wins over
+   * `kind`. With no `group` the group is the `kind`, or `"access"` when there is none.
+   */
+  group?: string;
   /** Actions that must also be allowed for this one to be allowed (distinct from `implies`). */
   requires?: string[];
   /** Whether a category's owners always have this action. Default: true, except for an obligation. */
@@ -196,6 +204,18 @@ export interface RaciConfig {
   resources: ResourceNode[];
   /** Overrides for any UI string, by key; see the configuration guide for the keys. */
   strings?: Partial<Record<string, string>>;
+  /**
+   * The column groups, in the order they are drawn, each with the host's label ("Permissions",
+   * "Obligations", or anything). A group id used by an action but not listed here comes after the
+   * listed ones.
+   */
+  groups?: { id: string; label: string }[];
+  /**
+   * Group labels by group id, for a group `groups` does not label. The ids `access` and
+   * `obligation` default to the strings `editor.group.access` and `editor.group.obligation`; any
+   * other id with no label shows as the id.
+   */
+  kindLabels?: Partial<Record<string, string>>;
 }
 
 /** Display and behaviour settings the SettingsPanel edits; the editor and simulator read them. */

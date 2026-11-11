@@ -311,3 +311,52 @@ describe("editor start", () => {
     expect(JSON.stringify(shownJson())).not.toBe(before);
   });
 });
+
+describe("the short-labels preset", () => {
+  it("shows R A APV M ACK under Permissions and Obligations, with the full names as names", async () => {
+    const user = userEvent.setup();
+    render(<RaciDemo />);
+    await user.selectOptions(screen.getByRole("combobox", { name: "Preset" }), "short");
+    const heads = Array.from(
+      document.querySelectorAll<HTMLElement>("thead tr:last-child th[scope=col]"),
+    ).map((th) => th.textContent?.trim());
+    expect(heads.slice(1, 6)).toEqual(["R", "A", "APV", "M", "ACK"]);
+    expect(screen.getAllByRole("columnheader", { name: "Acknowledge" })[0]).toHaveTextContent(
+      "ACK",
+    );
+    expect(screen.getAllByRole("columnheader", { name: "Permissions" }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole("columnheader", { name: "Obligations" }).length).toBeGreaterThan(0);
+    expect(screen.getByRole("rowheader", { name: "Everyone" })).toBeInTheDocument();
+  });
+
+  it("has a switch for the heading labels", async () => {
+    const user = userEvent.setup();
+    render(<RaciDemo initialPreset="short" />);
+    const group = screen.getByRole("group", { name: "Heading labels" });
+    expect(group.querySelectorAll("button")).toHaveLength(3);
+    await user.click(screen.getByRole("button", { name: "full" }));
+    const heads = Array.from(
+      document.querySelectorAll<HTMLElement>("thead tr:last-child th[scope=col]"),
+    ).map((th) => th.textContent?.trim());
+    expect(heads.slice(1, 6)).toEqual(["Read", "Author", "Approve", "Manage", "Acknowledge"]);
+  });
+});
+
+describe("the short-labels preset on the ordered model", () => {
+  it("explains a site administrator in the simulator", async () => {
+    const user = userEvent.setup();
+    render(<RaciDemo initialPreset="short" />);
+    await user.click(screen.getByRole("tab", { name: "Simulator" }));
+    await user.type(screen.getByRole("combobox", { name: "Person" }), "Ines");
+    await user.click(await screen.findByRole("option", { name: /Ines Moreau/ }, { timeout: 2000 }));
+    await user.type(screen.getByRole("combobox", { name: "Extra memberships" }), "Site");
+    await user.click(
+      await screen.findByRole("option", { name: /Site administrator/ }, { timeout: 2000 }),
+    );
+    const manage = screen.getByRole("rowheader", { name: "Manage" }).closest("tr") as HTMLElement;
+    expect(manage).toHaveTextContent("Would be allowed");
+    expect(manage).toHaveTextContent("always has this action");
+    const approve = screen.getByRole("rowheader", { name: "Approve" }).closest("tr") as HTMLElement;
+    expect(approve).toHaveTextContent("Would be denied");
+  });
+});

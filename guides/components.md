@@ -19,22 +19,23 @@ that root so the [theme tokens](theming.md) apply.
 
 A matrix of subjects (rows) by actions (columns) for the entries of one category.
 
-| Prop                        | Type                                   | Notes                                                                                              |
-| --------------------------- | -------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| `config`                    | `RaciConfig`                           | Actions, subject kinds, resources, strings.                                                        |
-| `ruleSet`                   | `RuleSet`                              | The whole rule set; the editor reads the entries of `categoryId`.                                  |
-| `categoryId`                | `string`                               | The category being edited. Change it to move to another category.                                  |
-| `onChange`                  | `(next: RuleSet) => void`              | Called with the new rule set after each edit.                                                      |
-| `settings`                  | `Partial<RaciSettings>`                | Optional. Missing fields use `defaultSettings(config)`.                                            |
-| `readOnly`                  | `boolean`                              | Optional, default `false`. Disables the cells, the checkbox and the picker, and hides Remove.      |
-| `cellVariant`               | `"box" \| "marks"`                     | Optional, default `"box"`. The look of a cell; see "Cell variants" below.                          |
-| `renderCell`                | `(cell: RenderCellProps) => ReactNode` | Optional. Draws every cell itself; wins over `cellVariant`. See "Cell variants".                   |
-| `defaultMode`               | `"edit" \| "view"`                     | Optional, default `"edit"` (today's behaviour). `"view"` starts read-only; see "Read-only start".  |
-| `mode`, `onModeChange`      | `"edit" \| "view"`, `(mode) => void`   | Optional. Control the mode yourself.                                                               |
-| `canEdit`, `readOnlyReason` | `boolean`, `string`                    | Optional. When `canEdit` is false, Edit is hidden, or disabled with your reason when you give one. |
-| `onSave`, `onCancel`        | `(ruleSet) => void`, `() => void`      | Optional. Save hands you the working copy once; Cancel reports that it was discarded.              |
-| `confirmDiscard`            | `() => boolean \| Promise<boolean>`    | Optional. Asked before unsaved changes are discarded; a built-in dialog is the default.            |
-| `className`                 | `string`                               | Optional.                                                                                          |
+| Prop                        | Type                                   | Notes                                                                                                             |
+| --------------------------- | -------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `config`                    | `RaciConfig`                           | Actions, subject kinds, resources, strings.                                                                       |
+| `ruleSet`                   | `RuleSet`                              | The whole rule set; the editor reads the entries of `categoryId`.                                                 |
+| `categoryId`                | `string`                               | The category being edited. Change it to move to another category.                                                 |
+| `onChange`                  | `(next: RuleSet) => void`              | Called with the new rule set after each edit.                                                                     |
+| `settings`                  | `Partial<RaciSettings>`                | Optional. Missing fields use `defaultSettings(config)`.                                                           |
+| `readOnly`                  | `boolean`                              | Optional, default `false`. Disables the cells, the checkbox and the picker, and hides Remove.                     |
+| `cellVariant`               | `"box" \| "marks"`                     | Optional, default `"box"`. The look of a cell; see "Cell variants" below.                                         |
+| `renderCell`                | `(cell: RenderCellProps) => ReactNode` | Optional. Draws every cell itself; wins over `cellVariant`. See "Cell variants".                                  |
+| `defaultMode`               | `"edit" \| "view"`                     | Optional, default `"edit"` (today's behaviour). `"view"` starts read-only; see "Read-only start".                 |
+| `mode`, `onModeChange`      | `"edit" \| "view"`, `(mode) => void`   | Optional. Control the mode yourself.                                                                              |
+| `canEdit`, `readOnlyReason` | `boolean`, `string`                    | Optional. When `canEdit` is false, Edit is hidden, or disabled with your reason when you give one.                |
+| `onSave`, `onCancel`        | `(ruleSet) => void`, `() => void`      | Optional. Save hands you the working copy once; Cancel reports that it was discarded.                             |
+| `confirmDiscard`            | `() => boolean \| Promise<boolean>`    | Optional. Asked before unsaved changes are discarded; a built-in dialog is the default.                           |
+| `headerMode`                | `"full" \| "short" \| "auto"`          | Optional, default `"auto"`. Which action heading is shown; see `ActionDef.shortLabel` in the configuration guide. |
+| `className`                 | `string`                               | Optional.                                                                                                         |
 
 What it does:
 
@@ -179,6 +180,19 @@ export const HostCellEditor = (props: RulesEditorProps) => (
 
 The demo has a Cell variant switch (box, marks, custom) and exports `demoRenderCell`, a sample host
 cell, from `node-raci-editor/demo`.
+
+## Headings and groups
+
+- **`headerMode`.** `"full"` shows each action's label, `"short"` its `shortLabel`, and `"auto"` (the
+  default) shows short labels at compact density or when the grid's scroll area is narrower than 40
+  rem, and full labels otherwise. Wherever a short label is shown, the heading's accessible name is
+  the full label and its tooltip is the full label plus the description.
+- **Grouped columns.** The host groups the columns: `ActionDef.group` (an id of your choosing) with
+  `config.groups` for the order and labels, or `ActionDef.kind` with `config.kindLabels`. With more
+  than one group the columns sit under one heading per group, a thin divider marks where each group
+  starts, and the inherited tables and the key for short headings use the same groups. Editing,
+  sizes and keyboard behaviour are the same as in an ungrouped grid.
+- **Everyone.** The built-in subject `everyone:*` shows as the string `editor.everyone`.
 
 ## Simulator
 
