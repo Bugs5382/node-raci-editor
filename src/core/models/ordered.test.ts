@@ -31,7 +31,7 @@ const actions: ActionDef[] = [
   { id: "read" },
   { id: "author", implies: ["read"] },
   { id: "approve", implies: ["read"], kind: "obligation", ownerHas: true },
-  { id: "manage", implies: ["author", "approve", "read"] },
+  { id: "manage", implies: ["author", "read"] },
   { id: "ack", kind: "obligation", requires: ["read"] },
 ];
 
@@ -114,11 +114,12 @@ describe("rows, order and empty cells", () => {
     });
   });
 
-  it("a manage cell answers read, author and approve but not ack", () => {
+  it("a manage cell answers read and author, never approve or ack", () => {
     const set = rs([e("user:a", "manage", "allow")]);
-    for (const a of ["read", "author", "approve", "manage"]) {
+    for (const a of ["read", "author", "manage"]) {
       expect(ask(set, ["user:a"], a).allowed).toBe(true);
     }
+    expect(ask(set, ["user:a"], "approve").allowed).toBe(false);
     expect(ask(set, ["user:a"], "ack").allowed).toBe(false);
   });
 });
@@ -408,6 +409,16 @@ describe("an allowed higher action gives the lower one, even over a deny", () =>
     const readOnly = rs([e("user:a", "read", "allow")]);
     expect(ask(readOnly, who, "author").allowed).toBe(false);
   });
+  it("Manage gives Read and Author but never Approve, even over a deny of the lower ones", () => {
+    const set = rs([
+      e("user:a", "read", "deny"),
+      e("user:a", "author", "deny"),
+      e("user:a", "manage", "allow"),
+    ]);
+    expect(ask(set, who, "read").allowed).toBe(true);
+    expect(ask(set, who, "author").allowed).toBe(true);
+    expect(ask(set, who, "approve").allowed).toBe(false);
+  });
   it("a denied Author does not give or take Read", () => {
     const set = rs([e("user:a", "author", "deny"), e("user:a", "read", "allow")]);
     expect(ask(set, who, "read").allowed).toBe(true);
@@ -445,5 +456,58 @@ describe("an allowed higher action gives the lower one, even over a deny", () =>
       action: "read",
     });
     expect(trace.some((t) => t.kind === "confer" && t.action === "author")).toBe(true);
+  });
+});
+
+describe("site administrators (superusers), off unless configured", () => {
+  const su = createOrderedModel({
+    id: "ordered-su",
+    superusers: { subjects: ["role:admin"], actions: ["read", "author", "manage"] },
+  });
+  const ask2 = (set: RuleSet, subjects: string[], action: string) =>
+    su.evaluate({ ruleSet: set, actions, person: { subjects }, category: "c", action });
+  const admin = ["role:admin"];
+
+  it("is off in the built-in model", () => {
+    const set = rs([e("role:admin", "read", "deny")]);
+    expect(ask(set, admin, "read").allowed).toBe(false);
+  });
+  it("lets nothing take away the listed actions, even an explicit deny", () => {
+    const set = rs([e("role:admin", "read", "deny"), e(EVERYONE, "manage", "deny")]);
+    for (const a of ["read", "manage"]) {
+      const { decision } = ask2(set, admin, a);
+      expect(decision).toMatchObject({ allowed: true, reason: "superuser" });
+      expect(decision.decidedBy).toBeUndefined();
+    }
+  });
+  it("records a superuser step", () => {
+    const { trace } = ask2(rs([]), admin, "read");
+    expect(trace[0]).toMatchObject({ kind: "superuser", matched: "role:admin" });
+  });
+  it("does not cover actions that are not listed: Approve and Ack follow the rows", () => {
+    const set = rs([e("role:admin", "approve", "deny")]);
+    expect(ask2(set, admin, "approve").decision).toMatchObject({ allowed: false, reason: "entry" });
+    expect(ask2(rs([]), admin, "approve").decision).toMatchObject({
+      allowed: false,
+      reason: "default-deny",
+    });
+  });
+  it("an Everyone row still covers a site admin, so an obligation applies to them", () => {
+    const set = rs([e(EVERYONE, "read", "allow"), e(EVERYONE, "ack", "allow")]);
+    expect(ask2(set, admin, "ack").decision).toMatchObject({ allowed: true, reason: "entry" });
+    const overridden = rs([
+      e("role:admin", "ack", "deny"),
+      e(EVERYONE, "read", "allow"),
+      e(EVERYONE, "ack", "allow"),
+    ]);
+    expect(ask2(overridden, admin, "ack").decision.allowed).toBe(false);
+  });
+  it("applies only to the listed subjects", () => {
+    const set = rs([e("user:x", "read", "deny")]);
+    expect(ask2(set, ["user:x"], "read").decision.allowed).toBe(false);
+  });
+  it("reports the superuser capability only when configured", () => {
+    expect(su.capabilities.superuser).toBe(true);
+    expect(getModel("ordered").capabilities.superuser).toBe(false);
   });
 });

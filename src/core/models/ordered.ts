@@ -47,6 +47,12 @@ export interface OrderedOptions {
   implicitSubjects?: string[];
   /** The actions owners always have. Default: each action's `ownerHas`, else every non-obligation action. */
   ownerActions?: string[];
+  /**
+   * Subjects that always have the listed actions, whatever any row says: nothing can take it away,
+   * as for owners, but supplied by the host and not tied to a category. Off unless configured.
+   * An action not listed (an obligation, say) follows the rows like anyone else's.
+   */
+  superusers?: { subjects: string[]; actions: string[] };
 }
 
 const kindOf = (subject: string): string => {
@@ -121,6 +127,13 @@ export const createOrderedModel = (options: OrderedOptions = {}): RaciModel => {
 
     // One action, no gating. `record` adds owner and category steps to the trace.
     const core = (act: string, record: boolean): Decision => {
+      if (options.superusers?.actions.includes(act)) {
+        const matched = options.superusers.subjects.find((s) => subjects.has(s));
+        if (matched !== undefined) {
+          if (record) trace.push({ category, matches: [], kind: "superuser", matched });
+          return { allowed: true, reason: "superuser", path: [category] };
+        }
+      }
       if (ownerHas(act)) {
         for (const [i, cat] of chain.entries()) {
           const matched = (ruleSet.categories[cat]?.owners ?? []).find(
@@ -212,7 +225,7 @@ export const createOrderedModel = (options: OrderedOptions = {}): RaciModel => {
       ordering: true,
       ownEffect: false,
       owners: ownerKinds.length > 0,
-      superuser: false,
+      superuser: options.superusers !== undefined,
       gating: true,
       stopInheriting: false,
       wildcardCategory: false,

@@ -23,6 +23,7 @@ OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 import { readdirSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { actionPool } from "./pools.js";
+import { createOrderedModel } from "./models/ordered.js";
 import { getModel } from "./registry.js";
 import { vectorSubjects } from "./vectors.js";
 import type { VectorFile } from "./vectors.js";
@@ -73,7 +74,10 @@ describe("vector files per model", () => {
 
       for (const tc of file.cases) {
         it(tc.name, () => {
-          const { decision } = getModel(id).evaluate({
+          const model = file.options
+            ? createOrderedModel({ ...file.options, id: `${id}-vectors` })
+            : getModel(id);
+          const { decision } = model.evaluate({
             ruleSet: tc.ruleSet,
             actions: file.actions,
             person: { subjects: vectorSubjects(tc.person) },

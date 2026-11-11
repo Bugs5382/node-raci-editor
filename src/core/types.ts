@@ -100,7 +100,8 @@ export type DecideReason =
   | "entry" // a matching entry decided
   | "default-deny" // nothing matched on the walk
   | "owner" // the category's owner list decided ("ordered" model)
-  | "requires"; // a required action was not allowed ("ordered" model)
+  | "requires" // a required action was not allowed ("ordered" model)
+  | "superuser"; // a host-listed superuser subject always has this action ("ordered" model)
 
 /** One entry that matched the asked action while walking a category. */
 export interface TraceMatch {
@@ -122,13 +123,13 @@ export interface TraceStep {
   matches: TraceMatch[];
   /** True when the category stops inheriting, which ends the walk here. */
   stopInheriting?: boolean;
-  /** `"category"` when absent. `"owners"`, `"gate"` and `"confer"` come from the "ordered" model. */
-  kind?: "category" | "owners" | "gate" | "confer";
+  /** `"category"` when absent. `"owners"`, `"gate"`, `"confer"` and `"superuser"` come from the "ordered" model. */
+  kind?: "category" | "owners" | "gate" | "confer" | "superuser";
   /** 0-based position of the step in the evaluation. */
   order?: number;
   /** For a gate step, the required action examined; for a confer step, the higher action that gave the asked one. */
   action?: string;
-  /** For an owners step, the owner subject that matched. */
+  /** For an owners or superuser step, the subject that matched. */
   matched?: string;
 }
 

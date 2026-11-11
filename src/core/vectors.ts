@@ -78,6 +78,8 @@ export interface VectorFile {
   /** Id of the rule model the file's cases belong to. Absent means `"nearest"`. */
   model?: string;
   actions: ActionDef[];
+  /** Options for the model that runs the file, for models that take them (`ordered`: `superusers`). */
+  options?: { superusers?: { subjects: string[]; actions: string[] } };
   cases: VectorCase[];
   /** Approver pool and obligation lists, for models that have them. */
   pools?: VectorPool[];

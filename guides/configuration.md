@@ -49,6 +49,7 @@ interface ActionDef {
     for an obligation, so owners are not required to acknowledge unless the host says so.
   - `outcome` holds the words for an allowed and a denied result of this action.
   - `shortLabel` is a short heading for narrow grids; it falls back to `label`.
+- Options of the `"ordered"` model, set with `createOrderedModel(options)` (the registered `"ordered"` has the defaults): `ownerKinds` (the subject kinds that may own a category; default `["user"]`, empty switches owners off), `implicitSubjects` (default the built-in Everyone), `ownerActions`, and `superusers: { subjects, actions }` (subjects that always have the listed actions, whatever any row says, like owners but host-supplied and not tied to a category; off unless set, and an action you do not list follows the rows). Manage in a host's config usually implies Read and Author only; list `implies` as you want it.
 
 ## Subject kinds
 
