@@ -29,25 +29,10 @@ import type {
   TraceMatch,
   TraceStep,
 } from "../types.js";
+import { closure } from "./closure.js";
 import type { LegendItem, ModelInput, ModelIssue, ModelResult, RaciModel } from "../model.js";
 
 const STAR = "*";
-
-/** Every action an entry on `id` covers: itself plus all it implies, transitively. Cycle safe. */
-const closure = (id: string, byId: Map<string, ActionDef>): Set<string> => {
-  const seen = new Set<string>([id]);
-  const queue = [id];
-  while (queue.length > 0) {
-    const next = byId.get(queue.pop() as string);
-    for (const implied of next?.implies ?? []) {
-      if (!seen.has(implied)) {
-        seen.add(implied);
-        queue.push(implied);
-      }
-    }
-  }
-  return seen;
-};
 
 /**
  * Evaluate one question under the "nearest" rules. A pure evaluation helper the host may call; the

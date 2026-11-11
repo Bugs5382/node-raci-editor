@@ -164,7 +164,7 @@ describe("stylesheet fixes one size for every state", () => {
     expect(decl(cell, "min-width")).toBeUndefined();
     expect(decl(cell, "min-height")).toBeUndefined();
     expect(decl(cell, "overflow")).toBe("hidden");
-    expect(rule(".raci-editor--compact .raci-cell")).not.toMatch(/(?:^|[\s;{])(?:min-)?height:/);
+    expect(css).not.toMatch(/\.raci-editor--compact \.raci-cell \{[^}]*(?:min-)?height:/);
     expect(rule(".raci-editor .raci-cell__text")).toMatch(/text-overflow: ellipsis/);
     expect(rule(".raci-editor .raci-cell__secondary")).toMatch(/text-overflow: ellipsis/);
   });
@@ -183,5 +183,26 @@ describe("stylesheet fixes one size for every state", () => {
         expect(rule(`.raci-editor ${s}`), s).not.toMatch(SIZE);
       }
     }
+  });
+
+  it("contains the absolutely positioned hidden text inside the scroll area", () => {
+    // Without a positioned scroll area the hidden header text is placed against the page body, at
+    // the table's far edge, and widens the whole page on a narrow screen (issue 21).
+    expect(css).toMatch(/\.raci-visually-hidden \{[^}]*position: absolute/);
+    expect(decl(rule(".raci-editor__scroll"), "position")).toBe("relative");
+  });
+
+  it("centres the primary line in the box and keeps the secondary line out of the flow", () => {
+    // The reserved "included" line used to take a row inside the box and push the state word up
+    // (and aside, in compact). Out of flow, it cannot move the primary line off the centre.
+    const cell = rule(".raci-editor .raci-cell");
+    expect(decl(cell, "position")).toBe("relative");
+    expect(decl(cell, "display")).toBe("inline-flex");
+    expect(decl(cell, "align-items")).toBe("center");
+    expect(decl(cell, "justify-content")).toBe("center");
+    const secondary = rule(".raci-editor .raci-cell__secondary");
+    expect(decl(secondary, "position")).toBe("absolute");
+    expect(decl(rule(".raci-editor .raci-cell__primary"), "justify-content")).toBe("center");
+    expect(css).not.toMatch(/\.raci-editor--compact \.raci-cell \{[^}]*flex-direction/);
   });
 });

@@ -32,7 +32,12 @@ describe("public surface", () => {
     }
   });
 
-  it("keeps the demo surface to the component and the data builders", () => {
-    expect(Object.keys(demo).sort()).toEqual(["RaciDemo", "demoPresets", "demoRuleSet"]);
+  it("keeps the demo surface to the component, the data builders and the sample cell", () => {
+    expect(Object.keys(demo).sort()).toEqual([
+      "RaciDemo",
+      "demoPresets",
+      "demoRenderCell",
+      "demoRuleSet",
+    ]);
   });
 });

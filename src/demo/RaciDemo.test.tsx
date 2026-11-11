@@ -249,3 +249,65 @@ describe("props", () => {
     expect(document.querySelectorAll(".raci-simulator")).toHaveLength(1);
   });
 });
+
+describe("cell variants", () => {
+  it("offers box, marks and custom, and switches the editor cells", async () => {
+    const user = userEvent.setup();
+    render(<RaciDemo />);
+    const group = screen.getByRole("group", { name: "Cell variant" });
+    expect(group.querySelectorAll("button")).toHaveLength(3);
+    expect(screen.getByRole("button", { name: "box" })).toHaveAttribute("aria-pressed", "true");
+    expect(document.querySelector(".raci-cell--marks")).toBeNull();
+
+    await user.click(screen.getByRole("button", { name: "marks" }));
+    expect(document.querySelector("tbody .raci-cell--marks")).not.toBeNull();
+    expect(document.querySelector(".raci-cell__text")).toBeNull();
+
+    await user.click(screen.getByRole("button", { name: "custom" }));
+    expect(document.querySelector("tbody .raci-cell")).toBeNull();
+    expect(document.querySelector("tbody .demo-custom-cell")).not.toBeNull();
+
+    await user.click(screen.getByRole("button", { name: "box" }));
+    expect(document.querySelector("tbody .raci-cell")).not.toBeNull();
+  });
+
+  it("keeps editing working in the custom cell", async () => {
+    const user = userEvent.setup();
+    render(<RaciDemo />);
+    await user.click(screen.getByRole("button", { name: "custom" }));
+    const before = JSON.stringify(shownJson());
+    await user.click(document.querySelector("tbody .demo-custom-cell") as HTMLElement);
+    expect(JSON.stringify(shownJson())).not.toBe(before);
+  });
+});
+
+describe("editor start", () => {
+  it("starts editable by default and offers an opt-in read-only start", async () => {
+    const user = userEvent.setup();
+    render(<RaciDemo />);
+    const group = screen.getByRole("group", { name: "Editor start" });
+    expect(group.querySelectorAll("button")).toHaveLength(2);
+    expect(screen.getByRole("button", { name: "editable" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    expect(screen.queryByRole("button", { name: "Edit" })).toBeNull();
+    for (const c of document.querySelectorAll("tbody button.raci-cell")) expect(c).toBeEnabled();
+
+    await user.click(screen.getByRole("button", { name: "read-only" }));
+    expect(screen.getByRole("button", { name: "Edit" })).toBeInTheDocument();
+    for (const c of document.querySelectorAll("tbody button.raci-cell")) expect(c).toBeDisabled();
+  });
+
+  it("Edit, change, Save in the read-only start keeps the change", async () => {
+    const user = userEvent.setup();
+    render(<RaciDemo />);
+    await user.click(screen.getByRole("button", { name: "read-only" }));
+    const before = JSON.stringify(shownJson());
+    await user.click(screen.getByRole("button", { name: "Edit" }));
+    await user.click(document.querySelector("tbody button.raci-cell") as HTMLElement);
+    await user.click(screen.getByRole("button", { name: "Save" }));
+    expect(screen.getByRole("button", { name: "Edit" })).toBeInTheDocument();
+    expect(JSON.stringify(shownJson())).not.toBe(before);
+  });
+});

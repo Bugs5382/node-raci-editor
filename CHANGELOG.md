@@ -6,8 +6,14 @@
 
 #### 🚀 Features
 
+- feat(editor): an opt-in read-only start with Edit, Save and Cancel @Bugs5382 (#30)
+- feat(editor): cellVariant and renderCell so the host can choose the cell @Bugs5382 (#24)
 - feat(core): RaciModel interface and registry with nearest extracted @Bugs5382 (#18)
 - feat(package): generic access-rules editor, simulator and settings @Bugs5382 (#10)
+
+#### 🐛 Bug Fixes
+
+- fix(editor): contain hidden header text and centre the state label @Bugs5382 (#22)
 
 #### 📄 Documentation
 
