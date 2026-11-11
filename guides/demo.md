@@ -88,6 +88,7 @@ DOM bundled into the page (79 kB gzipped; this is the page only, the `./demo` ex
 React). The `./demo` export adds about 19 kB per format and `demo.css` 6 kB. Nothing outside the
 `files` allowlist ships: no source, tests or maps.
 
-`config.packMaxUnpackedBytes` was raised from 400000 to 600000 on purpose for this, which leaves
-about 57 kB of headroom. Because the growth is intended, the PR carries the `pack-size-override`
+`config.packMaxUnpackedBytes` was raised from 400000 to 600000 on purpose for this, and then to
+650000 when the boxes and strips simulator views and the demo's view switch pushed the package to
+604.3 kB unpacked (about 46 kB of headroom). Because the growth is intended, the PR carries the `pack-size-override`
 label for `check:pack:growth`.

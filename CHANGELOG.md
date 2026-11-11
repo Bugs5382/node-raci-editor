@@ -8,7 +8,10 @@
 
 - feat(demo): `node-raci-editor/demo` exports `RaciDemo` (a ready-to-render demo with both presets, tabs, JSON view, theme switch and brand override), `demoPresets` and `demoRuleSet`; `node-raci-editor/demo.css` is its stylesheet (#9)
 - feat(demo): the built demo page ships in the package as `dist/demo-site`, served by the new `raci-editor-demo` command (Node standard library only, port 5179 by default); the Vite app in `demo/` now only mounts `RaciDemo` (#9)
-- chore(repo): `config.packMaxUnpackedBytes` raised from 400000 to 600000 for the demo (206.9 kB to 546.0 kB unpacked; see guides/demo.md) (#9)
+- chore(repo): `config.packMaxUnpackedBytes` raised from 400000 to 650000 for the demo and the extra simulator views (206.9 kB to about 604 kB unpacked; see guides/demo.md) (#9)
+- feat(simulator): `variant` ("list" default, "boxes", "strips"), `renderResults`, `evaluate` and `show` (`memberships`) props, new strings under `simulator.box.*`, `simulator.strip.*` and `simulator.loading`, `simulator.error`, `simulator.retry`; the default list view is unchanged (#11)
+- feat(simulator)!: remove the built-in category menu and `onCategoryChange`; the host passes `categoryId`, and without it the simulator shows the empty-category state (#11)
+- feat(core): `decide(input, { trace: true })` adds a per-category `trace`; verdicts are identical with and without it (#11)
 
 #### Bug Fixes
 

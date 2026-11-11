@@ -60,3 +60,29 @@ describe("shared vectors", () => {
     });
   }
 });
+
+describe("trace does not change verdicts", () => {
+  it("gives identical allowed, reason and decidedBy with trace on and off", () => {
+    for (const tc of file.cases) {
+      const base = {
+        ruleSet: tc.ruleSet,
+        actions: file.actions,
+        person: { subjects: vectorSubjects(tc.person) },
+        category: tc.category,
+        action: tc.action,
+      };
+      const plain = decide(base);
+      const traced = decide(base, { trace: true });
+      expect(traced.allowed, tc.name).toBe(plain.allowed);
+      expect(traced.reason, tc.name).toBe(plain.reason);
+      expect(traced.decidedBy, tc.name).toEqual(plain.decidedBy);
+      expect(traced.path, tc.name).toEqual(plain.path);
+      expect(traced.stoppedAt, tc.name).toBe(plain.stoppedAt);
+      expect("trace" in plain, tc.name).toBe(false);
+      expect(
+        traced.trace?.map((s) => s.category),
+        tc.name,
+      ).toEqual(plain.path);
+    }
+  });
+});

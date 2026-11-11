@@ -1,7 +1,7 @@
 import "@testing-library/jest-dom/vitest";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import type { RaciConfig, RuleSet, SubjectOption } from "@/core/types";
 import { Simulator } from "@/react/simulator/Simulator";
 
@@ -98,21 +98,17 @@ describe("Simulator", () => {
     );
     expect(screen.getByRole("combobox", { name: "Person" })).toBeInTheDocument();
     expect(screen.getByRole("combobox", { name: "Extra memberships" })).toBeInTheDocument();
-    expect(screen.getByRole("combobox", { name: "Category" })).toBeInTheDocument();
     expect(screen.getByText("Choose a person to see what they can do.")).toBeInTheDocument();
     expect(screen.queryByRole("table")).not.toBeInTheDocument();
   });
 
-  it("indents the category tree", () => {
+  it("renders no category picker and asks for a category when none is given", async () => {
+    const user = userEvent.setup();
     render(<Simulator config={config} ruleSet={ruleSet} />);
-    const opts = within(screen.getByRole("combobox", { name: "Category" })).getAllByRole("option");
-    expect(opts.map((o) => o.textContent?.trim())).toEqual([
-      "Company",
-      "Finance",
-      "Reports",
-      "Legal",
-    ]);
-    expect(opts[2]?.textContent?.startsWith("    ")).toBe(true);
+    expect(screen.queryByRole("combobox", { name: "Category" })).not.toBeInTheDocument();
+    expect(document.querySelector("select")).toBeNull();
+    await pick(user, "Person", "ali", /Alice Ng/);
+    expect(screen.getByText("There are no categories to check.")).toBeInTheDocument();
   });
 
   it("picks a person and shows allowed with the rule that decided it", async () => {
@@ -194,36 +190,16 @@ describe("Simulator", () => {
     expect(items).toEqual(["Legal", "All categories"]);
   });
 
-  it("uses an uncontrolled category and reports changes", async () => {
+  it("follows the category the host passes", async () => {
     const user = userEvent.setup();
-    const onCategoryChange = vi.fn();
-    render(<Simulator config={config} ruleSet={ruleSet} onCategoryChange={onCategoryChange} />);
-    const select = screen.getByRole("combobox", { name: "Category" });
-    expect(select).toHaveValue("company");
+    const { rerender } = render(
+      <Simulator config={config} ruleSet={ruleSet} categoryId="finance" />,
+    );
     await pick(user, "Person", "bob", /Bob Ray/);
     await pick(user, "Extra memberships", "sta", /Staff/);
-    expect(row("Read")).toHaveTextContent("Allowed by Staff in Company (Read)");
-    await user.selectOptions(select, "reports");
-    expect(onCategoryChange).toHaveBeenCalledWith("reports");
-    expect(select).toHaveValue("reports");
+    expect(row("Read")).toHaveTextContent("Allowed by Staff (Read), inherited from Company");
+    rerender(<Simulator config={config} ruleSet={ruleSet} categoryId="reports" />);
     expect(row("Read")).toHaveTextContent("inheriting stopped at Reports");
-  });
-
-  it("follows a controlled category and does not change it itself", async () => {
-    const user = userEvent.setup();
-    const onCategoryChange = vi.fn();
-    render(
-      <Simulator
-        config={config}
-        ruleSet={ruleSet}
-        categoryId="legal"
-        onCategoryChange={onCategoryChange}
-      />,
-    );
-    const select = screen.getByRole("combobox", { name: "Category" });
-    await user.selectOptions(select, "finance");
-    expect(onCategoryChange).toHaveBeenCalledWith("finance");
-    expect(select).toHaveValue("legal");
   });
 
   it("honours visible actions from settings and falls back to ids", async () => {
@@ -232,6 +208,7 @@ describe("Simulator", () => {
       <Simulator
         config={config}
         ruleSet={ruleSet}
+        categoryId="finance"
         settings={{ visibleActions: ["approve", "ghost", "read"] }}
       />,
     );
@@ -283,11 +260,18 @@ describe("Simulator", () => {
   it("shows empty states for no categories and no actions", async () => {
     const user = userEvent.setup();
     const { rerender } = render(
-      <Simulator config={{ ...config, resources: [] }} ruleSet={ruleSet} />,
+      <Simulator config={{ ...config, resources: [] }} ruleSet={ruleSet} categoryId="finance" />,
     );
     await pick(user, "Person", "ali", /Alice Ng/);
     expect(screen.getByText("There are no categories to check.")).toBeInTheDocument();
-    rerender(<Simulator config={config} ruleSet={ruleSet} settings={{ visibleActions: [] }} />);
+    rerender(
+      <Simulator
+        config={config}
+        ruleSet={ruleSet}
+        categoryId="finance"
+        settings={{ visibleActions: [] }}
+      />,
+    );
     expect(screen.getByText("There are no actions to show.")).toBeInTheDocument();
   });
 

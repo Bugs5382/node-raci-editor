@@ -1,4 +1,6 @@
 /* Component styles: filled in by the component work. */
 @import "./editor.css";
 @import "./simulator.css";
+@import "./simulator-boxes.css";
+@import "./simulator-strips.css";
 @import "./settings.css";

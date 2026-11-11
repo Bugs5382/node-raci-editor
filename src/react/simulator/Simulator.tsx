@@ -1,7 +1,14 @@
-import { useId, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 import { decide } from "@/core/decide";
 import { defaultSettings } from "@/core/types";
-import type { RaciConfig, RaciSettings, RuleSet, SubjectOption } from "@/core/types";
+import type {
+  Decision,
+  Person,
+  RaciConfig,
+  RaciSettings,
+  RuleSet,
+  SubjectOption,
+} from "@/core/types";
 import { makeT } from "@/react/strings";
 import {
   categoryLabel,
@@ -10,8 +17,11 @@ import {
   personFromPicks,
   subjectLabel,
 } from "@/react/simulator/model";
+import { Boxes } from "@/react/simulator/Boxes";
 import { SubjectPicker } from "@/react/simulator/SubjectPicker";
+import { Strips, StripsSkeleton } from "@/react/simulator/Strips";
 import { simulatorStrings } from "@/react/simulator/strings";
+import type { ActionResult, SimulatorVariant, SimulatorViewProps } from "@/react/simulator/view";
 
 /** Props of `Simulator`. */
 export interface SimulatorProps {
@@ -19,17 +29,31 @@ export interface SimulatorProps {
   config: RaciConfig;
   /** The rules to evaluate. */
   ruleSet: RuleSet;
-  /** The category to check. When given, the simulator follows it; otherwise it keeps its own. */
+  /** The category to check, chosen by the host. Without it the simulator shows the empty-category state. */
   categoryId?: string;
-  /** Called when the user picks another category in the simulator. */
-  onCategoryChange?: (id: string) => void;
   /** The subject kind the person is picked from. Defaults to `"user"`. */
   personKind?: string;
   /** Display settings; missing fields use the defaults. */
   settings?: Partial<RaciSettings>;
   /** Extra class on the root element. */
   className?: string;
+  /** The built-in results view: `list` (default), `boxes` or `strips`. */
+  variant?: SimulatorVariant;
+  /** Replaces the results region only. Called once the results are ready. */
+  renderResults?: (view: SimulatorViewProps) => React.ReactNode;
+  /**
+   * Host-side evaluation, one call per visible action. When set, `decide()` is not run and the
+   * simulator shows loading and error (with retry) states. Memoize it: a new function re-runs.
+   */
+  evaluate?: (q: { person: Person; category: string; action: string }) => Promise<{
+    decision: Decision;
+    reasonText?: string;
+  }>;
+  /** Hide parts the host does not want. Defaults to shown. */
+  show?: { memberships?: boolean };
 }
+
+type EvalState = { key: string; status: "ready" | "error"; results: ActionResult[] };
 
 const Verdict = ({ allowed, text }: { allowed: boolean; text: string }) => {
   return (
@@ -69,10 +93,10 @@ const Chip = ({
 
 /** Pick a person and see what they may do in a category, using the package's own decide(). */
 export const Simulator = (props: SimulatorProps) => {
-  const { config, ruleSet, categoryId, onCategoryChange, className, personKind = "user" } = props;
+  const { config, ruleSet, categoryId, className, personKind = "user" } = props;
+  const { variant = "list", renderResults, evaluate, show } = props;
   const t = useMemo(() => makeT(config, simulatorStrings), [config]);
   const titleId = useId();
-  const categoryFieldId = useId();
 
   const settings: RaciSettings = { ...defaultSettings(config), ...props.settings };
   const enabledKey = settings.enabledSubjectKinds.join("\n");
@@ -91,9 +115,7 @@ export const Simulator = (props: SimulatorProps) => {
   const [person, setPerson] = useState<SubjectOption | null>(null);
   const [memberships, setMemberships] = useState<SubjectOption[]>([]);
   const flat = useMemo(() => flattenResources(config.resources), [config.resources]);
-  const [ownCategory, setOwnCategory] = useState("");
-  const category =
-    categoryId ?? (flat.some((c) => c.id === ownCategory) ? ownCategory : (flat[0]?.id ?? ""));
+  const category = categoryId ?? "";
 
   const allLabel = t("simulator.allCategories");
   const labelOf = (id: string) => categoryLabel(flat, id, allLabel);
@@ -109,9 +131,66 @@ export const Simulator = (props: SimulatorProps) => {
   const picks = [...(person ? [person.id] : []), ...memberships.map((m) => m.id)];
   const who = personFromPicks(picks);
 
-  const changeCategory = (id: string) => {
-    setOwnCategory(id);
-    onCategoryChange?.(id);
+  const why = (decision: Decision) =>
+    explainDecision(decision, {
+      t,
+      category,
+      categoryLabel: labelOf,
+      subjectLabel: (s) => subjectLabel(config.subjectKinds, s),
+      actionLabel,
+    });
+
+  const ready = person !== null && category !== "" && flat.length > 0 && actions.length > 0;
+  const evalKey =
+    evaluate && ready ? JSON.stringify([picks, category, actions.map((a) => a.id)]) : null;
+  const [attempt, setAttempt] = useState(0);
+  const [evalState, setEvalState] = useState<EvalState | null>(null);
+  const runKey = `${evalKey}#${attempt}`;
+  useEffect(() => {
+    if (evalKey === null || !evaluate) return;
+    let live = true;
+    Promise.all(
+      actions.map(async (action): Promise<ActionResult> => {
+        const r = await evaluate({ person: who, category, action: action.id });
+        return { action, decision: r.decision, reasonText: r.reasonText ?? why(r.decision) };
+      }),
+    ).then(
+      (list) => live && setEvalState({ key: runKey, status: "ready", results: list }),
+      () => live && setEvalState({ key: runKey, status: "error", results: [] }),
+    );
+    return () => {
+      live = false;
+    };
+    // The key stands for picks, category and actions; `evaluate` re-runs when the host changes it.
+  }, [runKey, evaluate]);
+
+  let status: SimulatorViewProps["status"] = "idle";
+  let list: ActionResult[] = [];
+  if (ready) {
+    if (evalKey !== null) {
+      const current = evalState?.key === runKey ? evalState : null;
+      status = current?.status ?? "loading";
+      list = current?.results ?? [];
+    } else {
+      status = "ready";
+      list = actions.map((action) => {
+        const decision = decide(
+          { ruleSet, actions: config.actions, person: who, category, action: action.id },
+          { trace: true },
+        );
+        return { action, decision, reasonText: why(decision) };
+      });
+    }
+  }
+  const view: SimulatorViewProps = {
+    person: person ? who : null,
+    category,
+    results: list,
+    status,
+    retry: status === "error" ? () => setAttempt((n) => n + 1) : undefined,
+    labelOf,
+    subjectLabel: (s) => subjectLabel(config.subjectKinds, s),
+    t,
   };
 
   let results: React.ReactNode;
@@ -121,6 +200,28 @@ export const Simulator = (props: SimulatorProps) => {
     results = <p className="raci-empty">{t("simulator.emptyCategory")}</p>;
   } else if (actions.length === 0) {
     results = <p className="raci-empty">{t("simulator.emptyActions")}</p>;
+  } else if (status === "loading") {
+    results =
+      variant === "strips" ? (
+        <StripsSkeleton count={actions.length} label={t("simulator.loading")} />
+      ) : (
+        <p className="raci-loading">{t("simulator.loading")}</p>
+      );
+  } else if (status === "error") {
+    results = (
+      <div className={variant === "strips" ? "raci-strip raci-strip--error" : "raci-error"}>
+        <span role="alert">{t("simulator.error")}</span>
+        <button type="button" className="raci-retry" onClick={view.retry}>
+          {t("simulator.retry")}
+        </button>
+      </div>
+    );
+  } else if (renderResults) {
+    results = renderResults(view);
+  } else if (variant === "boxes") {
+    results = <Boxes {...view} />;
+  } else if (variant === "strips") {
+    results = <Strips {...view} />;
   } else {
     results = (
       <table className="raci-table" aria-label={t("simulator.results")}>
@@ -132,21 +233,7 @@ export const Simulator = (props: SimulatorProps) => {
           </tr>
         </thead>
         <tbody>
-          {actions.map((a) => {
-            const decision = decide({
-              ruleSet,
-              actions: config.actions,
-              person: who,
-              category,
-              action: a.id,
-            });
-            const why = explainDecision(decision, {
-              t,
-              category,
-              categoryLabel: labelOf,
-              subjectLabel: (s) => subjectLabel(config.subjectKinds, s),
-              actionLabel,
-            });
+          {list.map(({ action: a, decision, reasonText }) => {
             const decidedIn = decision.decidedBy?.category;
             return (
               <tr key={a.id}>
@@ -158,7 +245,7 @@ export const Simulator = (props: SimulatorProps) => {
                   />
                 </td>
                 <td>
-                  <p className="raci-reason">{why}</p>
+                  <p className="raci-reason">{reasonText}</p>
                   <ol className="raci-walk" aria-label={t("simulator.walk")}>
                     {decision.path.map((id) => (
                       <li key={id} data-decided={id === decidedIn || undefined}>
@@ -209,47 +296,30 @@ export const Simulator = (props: SimulatorProps) => {
             />
           )}
         </div>
-        <div className="raci-field">
-          <SubjectPicker
-            label={t("simulator.memberships")}
-            placeholder={t("simulator.membershipsPlaceholder")}
-            noMatches={t("simulator.noMatches")}
-            kinds={memberKinds}
-            exclude={memberships.map((m) => m.id)}
-            onPick={(o) => setMemberships((m) => [...m, o])}
-          />
-          {memberships.length > 0 ? (
-            <ul className="raci-chips">
-              {memberships.map((m) => (
-                <Chip
-                  key={m.id}
-                  label={m.label}
-                  remove={t("simulator.remove", { label: m.label })}
-                  onRemove={() => setMemberships((all) => all.filter((x) => x.id !== m.id))}
-                />
-              ))}
-            </ul>
-          ) : null}
-        </div>
-        {flat.length > 0 ? (
+        {show?.memberships === false ? null : (
           <div className="raci-field">
-            <label className="raci-label" htmlFor={categoryFieldId}>
-              {t("simulator.category")}
-            </label>
-            <select
-              id={categoryFieldId}
-              className="raci-select"
-              value={category}
-              onChange={(e) => changeCategory(e.target.value)}
-            >
-              {flat.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {"  ".repeat(c.depth) + c.label}
-                </option>
-              ))}
-            </select>
+            <SubjectPicker
+              label={t("simulator.memberships")}
+              placeholder={t("simulator.membershipsPlaceholder")}
+              noMatches={t("simulator.noMatches")}
+              kinds={memberKinds}
+              exclude={memberships.map((m) => m.id)}
+              onPick={(o) => setMemberships((m) => [...m, o])}
+            />
+            {memberships.length > 0 ? (
+              <ul className="raci-chips">
+                {memberships.map((m) => (
+                  <Chip
+                    key={m.id}
+                    label={m.label}
+                    remove={t("simulator.remove", { label: m.label })}
+                    onRemove={() => setMemberships((all) => all.filter((x) => x.id !== m.id))}
+                  />
+                ))}
+              </ul>
+            ) : null}
           </div>
-        ) : null}
+        )}
       </div>
       <div className="raci-results" aria-live="polite">
         {results}

@@ -79,17 +79,22 @@ Keyboard:
 
 ## Simulator
 
-Pick a person, optionally add memberships, choose a category and see what they can do.
+Pick a person, optionally add memberships and see what they can do in the category you pass. The
+simulator has no category menu and no resource list: resources are your data, and you choose the
+category.
 
-| Prop               | Type                    | Notes                                                                                                                            |
-| ------------------ | ----------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| `config`           | `RaciConfig`            | Needs a subject kind for the person (`user` unless you set `personKind`).                                                        |
-| `ruleSet`          | `RuleSet`               | The rules to evaluate.                                                                                                           |
-| `categoryId`       | `string`                | Optional. When set, the simulator follows it. When omitted it keeps its own choice and starts at the first category of the tree. |
-| `onCategoryChange` | `(id: string) => void`  | Optional. Called when the user picks another category in the menu.                                                               |
-| `personKind`       | `string`                | Optional. The subject kind the person is picked from. Default `"user"`.                                                          |
-| `settings`         | `Partial<RaciSettings>` | Optional. `visibleActions` picks and orders the rows; `enabledSubjectKinds` limits the memberships picker; `density` applies.    |
-| `className`        | `string`                | Optional.                                                                                                                        |
+| Prop            | Type                                        | Notes                                                                                                                                                                                 |
+| --------------- | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `config`        | `RaciConfig`                                | Needs a subject kind for the person (`user` unless you set `personKind`).                                                                                                             |
+| `ruleSet`       | `RuleSet`                                   | The rules to evaluate.                                                                                                                                                                |
+| `categoryId`    | `string`                                    | The category to check, chosen by your app. Without it the simulator shows the empty-category state (`simulator.emptyCategory`). `config.resources` only supplies labels and the walk. |
+| `personKind`    | `string`                                    | Optional. The subject kind the person is picked from. Default `"user"`.                                                                                                               |
+| `settings`      | `Partial<RaciSettings>`                     | Optional. `visibleActions` picks and orders the rows; `enabledSubjectKinds` limits the memberships picker; `density` applies.                                                         |
+| `className`     | `string`                                    | Optional.                                                                                                                                                                             |
+| `variant`       | `SimulatorVariant`                          | Optional. `"list"` (default), `"boxes"` or `"strips"`. See Variants.                                                                                                                  |
+| `renderResults` | `(view: SimulatorViewProps) => ReactNode`   | Optional. Replaces the results region only.                                                                                                                                           |
+| `evaluate`      | `(q) => Promise<{ decision, reasonText? }>` | Optional. Host-side evaluation; `decide()` is not run. See Evaluating on your server.                                                                                                 |
+| `show`          | `{ memberships?: boolean }`                 | Optional. Set `memberships` to `false` to hide the memberships picker.                                                                                                                |
 
 What it does:
 
@@ -101,15 +106,60 @@ What it does:
   with the deciding one marked.
 - With no person it asks you to choose one; with no categories or no visible actions it says so.
 
-If you pass `categoryId` and keep your own state for it, wire `onCategoryChange` to that state, or
-the menu will snap back after each choice.
+To change the category, pass another `categoryId`; the results follow it.
+
+### Variants
+
+`variant` picks the built-in results view. The default, `"list"`, is the table described above and
+does not change when the other views are added.
+
+- `"boxes"`: a responsive grid of cards, one per visible action. A card has a verdict header (icon
+  plus the word Allowed or Denied), then boxes: Reason (one sentence), Decided by (subject, effect,
+  category, entry number, or "No rule matched"), Walk (one sub-box per visited category, nearest
+  first, with the matching entries as chips tagged direct or implied, the deciding one outlined,
+  "Inheriting stopped here" where the walk ended and "no match" where nothing matched) and a
+  collapsed Overridden list of matches that lost (for example an allow beaten by a deny).
+- `"strips"`: one full-width strip per visible action: a round icon (check when allowed, dashed
+  minus when denied), a bold "Action - Yes/No" title and one muted reason line. Loading shows
+  skeleton strips and an error shows a danger strip with a Retry button.
+
+All three read the same decision, so switching `variant` never changes an answer. The number and
+labels of the rows come from `config.actions` and `settings.visibleActions`.
+
+### Replacing the results
+
+`renderResults(view)` replaces only the results region. The pickers, the polite live region, the
+empty states and the loading and error states stay in the package; the function is called once the
+results are ready. `view` is a `SimulatorViewProps`: `person`, `category`, `results` (one
+`ActionResult` of `action`, `decision` and `reasonText` per visible action), `status`, `retry`,
+`labelOf`, `subjectLabel` and `t`.
+
+### Evaluating on your server
+
+A host that evaluates on its server and supplies its own wording passes `evaluate`. It is called
+once per visible action with `{ person, category, action }` and returns `{ decision, reasonText? }`;
+the package wording is used when `reasonText` is left out. While it runs the simulator shows a
+loading state, a failure shows an error with Retry, and an answer that arrives after the person,
+memberships, category or actions changed is dropped. Memoize `evaluate`: a new function re-runs the
+evaluation. Use `show` to hide the memberships picker when the server decides those.
+
+### Trace
+
+`decide(input, { trace: true })` returns the same decision plus `trace`, one `TraceStep` per visited
+category (`category`, `matches`, `stopInheriting`). Each `TraceMatch` has the `entry`, its `index`
+in the category, `via` (`"direct"` or `"implied"`) and `decisive`. Without the option the decision
+has no `trace` key and verdicts are identical. The boxes view uses the trace; the simulator asks
+for it for every decision it computes, and a host decision without a trace still renders.
+
+Types: `SimulatorVariant`, `ActionResult`, `SimulatorViewProps`, `TraceStep`, `TraceMatch` and
+`DecideOptions` are exported.
 
 Accessibility: the root is a labelled group; the results are a table inside a polite live region,
 so a change is announced; each verdict has an icon and a word; the walk is an ordered list; the
-pickers are comboboxes.
+pickers are comboboxes. In the boxes view each card is an article named by its action.
 
 Keyboard: Tab through the controls; in a picker, Down and Up move through results, Enter picks and
-Escape closes the list. The category menu is a native `select`.
+Escape closes the list.
 
 ## SettingsPanel
 

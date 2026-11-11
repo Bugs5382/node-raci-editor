@@ -5,6 +5,7 @@ import type { RaciSettings, ResourceNode, RuleSet } from "@/core/types";
 import { RulesEditor } from "@/react/editor/index";
 import { SettingsPanel } from "@/react/settings/index";
 import { Simulator } from "@/react/simulator/Simulator";
+import type { SimulatorVariant } from "@/react/simulator/view";
 import { nodeLabel, presetById, presets } from "./data";
 import { parseRuleSet, readTheme, serializeRuleSet, writeTheme } from "./io";
 import type { ThemeChoice } from "./io";
@@ -58,6 +59,7 @@ const Workbench = ({ presetId }: { presetId: string }) => {
   const [ruleSet, setRuleSet] = useState<RuleSet>(preset.seed);
   const [categoryId, setCategoryId] = useState(preset.initialCategory);
   const [tab, setTab] = useState<TabId>("editor");
+  const [variant, setVariant] = useState<SimulatorVariant>("list");
   const [settings, setSettings] = useState<RaciSettings>(() => defaultSettings(config));
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -156,13 +158,28 @@ const Workbench = ({ presetId }: { presetId: string }) => {
             />
           )}
           {tab === "simulator" && (
-            <Simulator
-              config={config}
-              ruleSet={ruleSet}
-              categoryId={categoryId}
-              onCategoryChange={setCategoryId}
-              settings={settings}
-            />
+            <>
+              <div className="demo-actions" role="group" aria-label="Simulator view">
+                {(["list", "boxes", "strips"] as const).map((v) => (
+                  <button
+                    key={v}
+                    type="button"
+                    className="demo-button"
+                    aria-pressed={variant === v}
+                    onClick={() => setVariant(v)}
+                  >
+                    {v}
+                  </button>
+                ))}
+              </div>
+              <Simulator
+                config={config}
+                ruleSet={ruleSet}
+                categoryId={categoryId}
+                settings={settings}
+                variant={variant}
+              />
+            </>
           )}
           {tab === "settings" && (
             <SettingsPanel config={config} value={settings} onChange={setSettings} />
