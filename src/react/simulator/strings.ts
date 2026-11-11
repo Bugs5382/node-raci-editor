@@ -24,6 +24,11 @@ OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 export const simulatorStrings: Record<string, string> = {
   "simulator.title": "Previews what these rules would allow",
   "simulator.person": "Person",
+  "simulator.context": "Context",
+  "simulator.contextPlaceholder": "Choose a context",
+  "simulator.toggles": "Which of these apply?",
+  "simulator.everyone": "Everyone",
+  "simulator.emptyContext": "Choose a context to preview what these rules would allow.",
   "simulator.personPlaceholder": "Search for a person",
   "simulator.memberships": "Extra memberships",
   "simulator.membershipsPlaceholder": "Add a membership",

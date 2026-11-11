@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 */
 import { getModel } from "./registry.js";
 import { EVERYONE } from "./models/ordered.js";
-import type { ActionDef, RuleSet } from "./types.js";
+import type { ActionDef, RuleSet, TraceStep } from "./types.js";
 
 /** One person to consider in a pool: an id the host knows and the matchers that apply to them. */
 export interface PoolPerson {
@@ -33,8 +33,11 @@ export interface PoolPerson {
 /** One entry of a pool: who, and why. */
 export interface PoolEntry {
   person: string;
-  /** `"owner"` for an owner of the category or an ancestor; `"entry"` when a row allowed it. */
-  reason: "owner" | "entry";
+  /**
+   * `"owner"` for an owner of the category or an ancestor; `"superuser"` for a host-listed
+   * superuser; `"entry"` when a row allowed it.
+   */
+  reason: "owner" | "superuser" | "entry";
   /** Where the person owns, or where the deciding row is. */
   category: string;
   /** 0-based position of the deciding row, when reason is `"entry"`. */
@@ -63,7 +66,9 @@ export interface PoolInput {
  */
 export const actionPool = (input: PoolInput): PoolEntry[] => {
   const model = getModel(input.model ?? input.ruleSet.model);
-  const out: PoolEntry[] = [];
+  const owners: PoolEntry[] = [];
+  const superusers: PoolEntry[] = [];
+  const rows: PoolEntry[] = [];
   for (const person of input.people) {
     const { decision, trace } = model.evaluate({
       ruleSet: input.ruleSet,
@@ -73,21 +78,25 @@ export const actionPool = (input: PoolInput): PoolEntry[] => {
       action: input.action,
     });
     if (!decision.allowed) continue;
-    if (decision.reason === "owner") {
-      const step = trace.find((s) => s.kind === "owners");
-      out.push({ person: person.id, reason: "owner", category: step?.category ?? input.category });
+    if (decision.reason === "owner" || decision.reason === "superuser") {
+      // These two decisions always record their own step, which names the category.
+      const kind = decision.reason === "owner" ? "owners" : "superuser";
+      const step = trace.find((t) => t.kind === kind) as TraceStep;
+      const entry: PoolEntry = {
+        person: person.id,
+        reason: decision.reason,
+        category: step.category,
+      };
+      (decision.reason === "owner" ? owners : superusers).push(entry);
       continue;
     }
-    const by = decision.decidedBy;
-    const hit = trace.find((s) => s.category === by?.category)?.matches.find((m) => m.decisive);
-    const entry: PoolEntry = {
-      person: person.id,
-      reason: "entry",
-      category: by?.category ?? input.category,
-    };
+    // An allow that is neither of those came from a row, so the deciding entry is recorded.
+    const by = decision.decidedBy as NonNullable<typeof decision.decidedBy>;
+    const hit = trace.find((s) => s.category === by.category)?.matches.find((m) => m.decisive);
+    const entry: PoolEntry = { person: person.id, reason: "entry", category: by.category };
     if (hit?.row !== undefined) entry.row = hit.row;
-    if (by?.entry.subject === EVERYONE) entry.everyone = true;
-    out.push(entry);
+    if (by.entry.subject === EVERYONE) entry.everyone = true;
+    rows.push(entry);
   }
-  return [...out.filter((p) => p.reason === "owner"), ...out.filter((p) => p.reason !== "owner")];
+  return [...owners, ...superusers, ...rows];
 };

@@ -22,9 +22,9 @@ OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 */
 import { useId, useMemo, useRef, useState } from "react";
 import type { ChangeEvent, KeyboardEvent, RefObject } from "react";
-import { defaultSettings } from "@/core/types";
 import type { RaciSettings, ResourceNode, RuleSet } from "@/core/types";
 import { RulesEditor } from "@/react/editor/index";
+import { normalizeSettings } from "@/react/settings/model";
 import { demoRenderCell } from "@/demo/cells";
 import { SettingsPanel } from "@/react/settings/index";
 import { Simulator } from "@/react/simulator/Simulator";
@@ -86,7 +86,9 @@ const Workbench = ({ presetId }: { presetId: string }) => {
   const [cell, setCell] = useState<"box" | "marks" | "custom">("box");
   const [start, setStart] = useState<"edit" | "view">("edit");
   const [headings, setHeadings] = useState<"auto" | "full" | "short">(preset.headerMode ?? "auto");
-  const [settings, setSettings] = useState<RaciSettings>(() => defaultSettings(config));
+  const [settings, setSettings] = useState<RaciSettings>(() =>
+    normalizeSettings(config, preset.settings),
+  );
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const fileInput: RefObject<HTMLInputElement | null> = useRef(null);

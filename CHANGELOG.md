@@ -6,6 +6,7 @@
 
 #### 🚀 Features
 
+- feat(editor): configurable cell appearance, sizes and a Cells settings section @Bugs5382 (#34)
 - feat(editor): short labels, header mode and grouped action columns @Bugs5382 (#32)
 - feat(core): the ordered rule model, its vectors and the pool lists @Bugs5382 (#28)
 - feat(editor): an opt-in read-only start with Edit, Save and Cancel @Bugs5382 (#30)
@@ -15,10 +16,12 @@
 
 #### 🐛 Bug Fixes
 
+- fix(core): list superusers in pools and cover the ordered model's remaining branches @Bugs5382 (#42)
 - fix(editor): contain hidden header text and centre the state label @Bugs5382 (#22)
 
 #### 📄 Documentation
 
+- docs(models): make the ordered model match the owner's description @Bugs5382 (#26)
 - docs(changelog): leave CHANGELOG.md to the changelog action @Bugs5382 (#20)
 
 ### Extra

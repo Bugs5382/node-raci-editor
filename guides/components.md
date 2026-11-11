@@ -351,6 +351,10 @@ What it does:
 - **Behavior.** Show inherited entries, confirm before saving a Deny, and stop inheriting by
   default.
 - **Density.** Comfortable or compact (radio buttons).
+- **Cells.** A live preview of the six cell states, the cell size in px, and for each state a glyph, a
+  word, a tooltip and colour inputs (see "Cell appearance" in the [configuration guide](configuration.md)).
+  Values are validated and normalized before they are emitted as `settings.cells`; a bad size is
+  explained and not emitted. The package stores nothing.
 - **Reset to defaults.** Calls `onChange(defaultSettings(config))`.
 - Ids in `value` that the config no longer has are ignored in the list. Use
   `normalizeSettings` to clean a stored value.
