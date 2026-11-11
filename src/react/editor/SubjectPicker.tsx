@@ -92,23 +92,25 @@ export const SubjectPicker = ({ kinds, existing, onPick, t }: SubjectPickerProps
 
   return (
     <div className="raci-picker" role="group" aria-label={t("editor.addSubject")}>
-      <label className="raci-picker__kind">
-        <span className="raci-visually-hidden">{t("editor.kind")}</span>
-        <select
-          className="raci-select"
-          value={kind?.kind ?? ""}
-          onChange={(e) => {
-            setKindId(e.target.value);
-            setResults([]);
-          }}
-        >
-          {kinds.map((k) => (
-            <option key={k.kind} value={k.kind}>
-              {k.label}
-            </option>
-          ))}
-        </select>
-      </label>
+      {kinds.length > 1 && (
+        <label className="raci-picker__kind">
+          <span className="raci-visually-hidden">{t("editor.kind")}</span>
+          <select
+            className="raci-select"
+            value={kind?.kind ?? ""}
+            onChange={(e) => {
+              setKindId(e.target.value);
+              setResults([]);
+            }}
+          >
+            {kinds.map((k) => (
+              <option key={k.kind} value={k.kind}>
+                {k.label}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
       <div className="raci-picker__search">
         <input
           className="raci-input"

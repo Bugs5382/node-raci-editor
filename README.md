@@ -2,6 +2,8 @@
 
 > 🧭 Generic drop-in React rules editor, simulator and settings for RACI-style access rules, with a pure TypeScript decide() and shared test vectors.
 
+Subjects are whatever kinds your app has (user, group, role, team, department, service account, ...); the package assumes none of them.
+
 You describe your actions, your kinds of subject (users, groups, roles, whatever you have) and your
 resource tree. The package gives you a matrix editor for the rules of one category, a simulator that
 previews "what would these rules allow this person here, and why", and a settings panel. The rules are one plain JSON
@@ -72,7 +74,7 @@ export const App = () => {
 ```
 
 Type a name in the editor's search box, pick Alice, and click a cell to cycle it: not set, allow,
-deny. The simulator needs a `user` subject kind to find the person it simulates.
+deny. The simulator picks the person from the `user` kind, or from your first kind when you have none.
 
 ## 🎬 Demo
 
@@ -119,6 +121,7 @@ The host app owns its resources and checks requests itself: the resource tree an
   | people, groups, roles:      |  (search +   |   out:       onChange(ruleSet)|
   | lookup and labels           |   labels)    +-------------------------------+
   +-----------------------------+
+   subjects: whatever kinds your app has
                                                +-------------------------------+
   +-----------------------------+  actions     |                               |
   | Actions and what they imply |------------->|  Simulator                    |

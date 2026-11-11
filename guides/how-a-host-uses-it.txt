@@ -12,6 +12,7 @@
   | people, groups, roles:      |  (search +   |   out:       onChange(ruleSet)|
   | lookup and labels           |   labels)    +-------------------------------+
   +-----------------------------+
+   subjects: whatever kinds your app has
                                                +-------------------------------+
   +-----------------------------+  actions     |                               |
   | Actions and what they imply |------------->|  Simulator                    |
