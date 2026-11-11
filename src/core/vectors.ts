@@ -24,9 +24,12 @@ import type { ActionDef, Effect, Person, RuleSet } from "./types.js";
 
 /** A person as written in the shared vectors file. */
 export interface VectorPerson {
-  id: string;
+  /** The user id; empty or absent when the person has no user subject (a matcher-only context). */
+  id?: string;
   groups: string[];
   roles: string[];
+  /** Extra matchers that apply, such as `can:ack`, added after the derived ones. */
+  subjects?: string[];
 }
 
 /** The decided-by summary a vector case expects. */
@@ -45,9 +48,29 @@ export interface VectorCase {
   action: string;
   expect: {
     allowed: boolean;
-    reason: "entry" | "default-deny";
+    reason: "entry" | "default-deny" | "owner" | "requires";
     decidedBy: VectorDecidedBy | null;
+    /** For reason `"requires"`, the required action that was not allowed. */
+    gatedBy?: string;
   };
+  /** Set (to the difference number in the design guide) when the case follows an open question. */
+  pending?: string;
+}
+
+/** One pool case: who an action answers allowed for in a category, owners first. */
+export interface VectorPool {
+  name: string;
+  ruleSet: RuleSet;
+  people: { id: string; subjects: string[] }[];
+  category: string;
+  action: string;
+  expect: {
+    person: string;
+    reason: "owner" | "entry";
+    category: string;
+    row?: number;
+    everyone?: true;
+  }[];
 }
 
 export interface VectorFile {
@@ -56,13 +79,16 @@ export interface VectorFile {
   model?: string;
   actions: ActionDef[];
   cases: VectorCase[];
+  /** Approver pool and obligation lists, for models that have them. */
+  pools?: VectorPool[];
 }
 
 /** Derive the subject strings for a vector person: `user:<id>`, `group:<g>`, `role:<r>`. */
 export const vectorSubjects = (person: VectorPerson): Person["subjects"] => {
   return [
-    `user:${person.id}`,
+    ...(person.id ? [`user:${person.id}`] : []),
     ...person.groups.map((g) => `group:${g}`),
     ...person.roles.map((r) => `role:${r}`),
+    ...(person.subjects ?? []),
   ];
 };

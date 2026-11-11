@@ -1,0 +1,1282 @@
+{
+  "version": 1,
+  "model": "ordered",
+  "actions": [
+    {
+      "id": "read"
+    },
+    {
+      "id": "author",
+      "implies": [
+        "read"
+      ]
+    },
+    {
+      "id": "approve",
+      "implies": [
+        "read"
+      ],
+      "kind": "obligation",
+      "ownerHas": true
+    },
+    {
+      "id": "manage",
+      "implies": [
+        "author",
+        "approve",
+        "read"
+      ]
+    },
+    {
+      "id": "ack",
+      "kind": "obligation",
+      "requires": [
+        "read"
+      ]
+    }
+  ],
+  "cases": [
+    {
+      "name": "order: a deny row above an allow row denies",
+      "ruleSet": {
+        "categories": {
+          "c": {
+            "entries": [
+              {
+                "subject": "user:d",
+                "action": "read",
+                "effect": "deny"
+              },
+              {
+                "subject": "group:f",
+                "action": "read",
+                "effect": "allow"
+              }
+            ]
+          }
+        },
+        "parents": {}
+      },
+      "person": {
+        "id": "d",
+        "groups": [
+          "f"
+        ],
+        "roles": []
+      },
+      "category": "c",
+      "action": "read",
+      "expect": {
+        "allowed": false,
+        "reason": "entry",
+        "decidedBy": {
+          "category": "c",
+          "subject": "user:d",
+          "action": "read",
+          "effect": "deny"
+        }
+      }
+    },
+    {
+      "name": "order: the same rows swapped allow",
+      "ruleSet": {
+        "categories": {
+          "c": {
+            "entries": [
+              {
+                "subject": "group:f",
+                "action": "read",
+                "effect": "allow"
+              },
+              {
+                "subject": "user:d",
+                "action": "read",
+                "effect": "deny"
+              }
+            ]
+          }
+        },
+        "parents": {}
+      },
+      "person": {
+        "id": "d",
+        "groups": [
+          "f"
+        ],
+        "roles": []
+      },
+      "category": "c",
+      "action": "read",
+      "expect": {
+        "allowed": true,
+        "reason": "entry",
+        "decidedBy": {
+          "category": "c",
+          "subject": "group:f",
+          "action": "read",
+          "effect": "allow"
+        }
+      }
+    },
+    {
+      "name": "order: a row with an empty cell for the action is skipped",
+      "ruleSet": {
+        "categories": {
+          "c": {
+            "entries": [
+              {
+                "subject": "user:d",
+                "action": "author",
+                "effect": "allow"
+              },
+              {
+                "subject": "group:f",
+                "action": "ack",
+                "effect": "allow"
+              }
+            ]
+          }
+        },
+        "parents": {}
+      },
+      "person": {
+        "id": "d",
+        "groups": [
+          "f"
+        ],
+        "roles": []
+      },
+      "category": "c",
+      "action": "ack",
+      "expect": {
+        "allowed": true,
+        "reason": "entry",
+        "decidedBy": {
+          "category": "c",
+          "subject": "group:f",
+          "action": "ack",
+          "effect": "allow"
+        }
+      }
+    },
+    {
+      "name": "order: a cell on the asked action beats an implied cell in the same row",
+      "ruleSet": {
+        "categories": {
+          "c": {
+            "entries": [
+              {
+                "subject": "user:d",
+                "action": "author",
+                "effect": "allow"
+              },
+              {
+                "subject": "user:d",
+                "action": "read",
+                "effect": "deny"
+              }
+            ]
+          }
+        },
+        "parents": {}
+      },
+      "person": {
+        "id": "d",
+        "groups": [],
+        "roles": []
+      },
+      "category": "c",
+      "action": "read",
+      "expect": {
+        "allowed": false,
+        "reason": "entry",
+        "decidedBy": {
+          "category": "c",
+          "subject": "user:d",
+          "action": "read",
+          "effect": "deny"
+        }
+      }
+    },
+    {
+      "name": "per action: Shane reaches ack through the IT group row",
+      "ruleSet": {
+        "categories": {
+          "c": {
+            "entries": [
+              {
+                "subject": "user:shane",
+                "action": "author",
+                "effect": "allow"
+              },
+              {
+                "subject": "group:it",
+                "action": "ack",
+                "effect": "allow"
+              }
+            ]
+          }
+        },
+        "parents": {}
+      },
+      "person": {
+        "id": "shane",
+        "groups": [
+          "it"
+        ],
+        "roles": []
+      },
+      "category": "c",
+      "action": "ack",
+      "expect": {
+        "allowed": true,
+        "reason": "entry",
+        "decidedBy": {
+          "category": "c",
+          "subject": "group:it",
+          "action": "ack",
+          "effect": "allow"
+        }
+      }
+    },
+    {
+      "name": "per action: the consultant's red ack at the top denies ack",
+      "ruleSet": {
+        "categories": {
+          "c": {
+            "entries": [
+              {
+                "subject": "user:vciso",
+                "action": "read",
+                "effect": "allow"
+              },
+              {
+                "subject": "user:vciso",
+                "action": "author",
+                "effect": "allow"
+              },
+              {
+                "subject": "user:vciso",
+                "action": "ack",
+                "effect": "deny"
+              },
+              {
+                "subject": "group:it",
+                "action": "read",
+                "effect": "allow"
+              },
+              {
+                "subject": "group:it",
+                "action": "author",
+                "effect": "allow"
+              },
+              {
+                "subject": "group:it",
+                "action": "ack",
+                "effect": "allow"
+              },
+              {
+                "subject": "everyone:*",
+                "action": "read",
+                "effect": "allow"
+              },
+              {
+                "subject": "everyone:*",
+                "action": "ack",
+                "effect": "allow"
+              }
+            ]
+          }
+        },
+        "parents": {}
+      },
+      "person": {
+        "id": "vciso",
+        "groups": [],
+        "roles": []
+      },
+      "category": "c",
+      "action": "ack",
+      "expect": {
+        "allowed": false,
+        "reason": "entry",
+        "decidedBy": {
+          "category": "c",
+          "subject": "user:vciso",
+          "action": "ack",
+          "effect": "deny"
+        }
+      }
+    },
+    {
+      "name": "per action: the same row below the everyone row requires ack",
+      "ruleSet": {
+        "categories": {
+          "c": {
+            "entries": [
+              {
+                "subject": "group:it",
+                "action": "read",
+                "effect": "allow"
+              },
+              {
+                "subject": "group:it",
+                "action": "author",
+                "effect": "allow"
+              },
+              {
+                "subject": "group:it",
+                "action": "ack",
+                "effect": "allow"
+              },
+              {
+                "subject": "everyone:*",
+                "action": "read",
+                "effect": "allow"
+              },
+              {
+                "subject": "everyone:*",
+                "action": "ack",
+                "effect": "allow"
+              },
+              {
+                "subject": "user:vciso",
+                "action": "read",
+                "effect": "allow"
+              },
+              {
+                "subject": "user:vciso",
+                "action": "author",
+                "effect": "allow"
+              },
+              {
+                "subject": "user:vciso",
+                "action": "ack",
+                "effect": "deny"
+              }
+            ]
+          }
+        },
+        "parents": {}
+      },
+      "person": {
+        "id": "vciso",
+        "groups": [],
+        "roles": []
+      },
+      "category": "c",
+      "action": "ack",
+      "expect": {
+        "allowed": true,
+        "reason": "entry",
+        "decidedBy": {
+          "category": "c",
+          "subject": "everyone:*",
+          "action": "ack",
+          "effect": "allow"
+        }
+      }
+    },
+    {
+      "name": "per action: the consultant's empty approve is denied by default",
+      "ruleSet": {
+        "categories": {
+          "c": {
+            "entries": [
+              {
+                "subject": "user:vciso",
+                "action": "read",
+                "effect": "allow"
+              },
+              {
+                "subject": "user:vciso",
+                "action": "author",
+                "effect": "allow"
+              },
+              {
+                "subject": "user:vciso",
+                "action": "ack",
+                "effect": "deny"
+              },
+              {
+                "subject": "group:it",
+                "action": "read",
+                "effect": "allow"
+              },
+              {
+                "subject": "group:it",
+                "action": "author",
+                "effect": "allow"
+              },
+              {
+                "subject": "group:it",
+                "action": "ack",
+                "effect": "allow"
+              },
+              {
+                "subject": "everyone:*",
+                "action": "read",
+                "effect": "allow"
+              },
+              {
+                "subject": "everyone:*",
+                "action": "ack",
+                "effect": "allow"
+              }
+            ]
+          }
+        },
+        "parents": {}
+      },
+      "person": {
+        "id": "vciso",
+        "groups": [],
+        "roles": []
+      },
+      "category": "c",
+      "action": "approve",
+      "expect": {
+        "allowed": false,
+        "reason": "default-deny",
+        "decidedBy": null
+      }
+    },
+    {
+      "name": "everyone: an everyone row matches a person with no other subject",
+      "ruleSet": {
+        "categories": {
+          "c": {
+            "entries": [
+              {
+                "subject": "everyone:*",
+                "action": "read",
+                "effect": "allow"
+              },
+              {
+                "subject": "everyone:*",
+                "action": "ack",
+                "effect": "allow"
+              }
+            ]
+          }
+        },
+        "parents": {}
+      },
+      "person": {
+        "id": "nobody",
+        "groups": [],
+        "roles": []
+      },
+      "category": "c",
+      "action": "ack",
+      "expect": {
+        "allowed": true,
+        "reason": "entry",
+        "decidedBy": {
+          "category": "c",
+          "subject": "everyone:*",
+          "action": "ack",
+          "effect": "allow"
+        }
+      }
+    },
+    {
+      "name": "inheritance: the child's own row wins over the inherited row",
+      "ruleSet": {
+        "categories": {
+          "it": {
+            "entries": [
+              {
+                "subject": "group:staff",
+                "action": "read",
+                "effect": "allow"
+              }
+            ]
+          },
+          "pol": {
+            "entries": [
+              {
+                "subject": "user:dave",
+                "action": "read",
+                "effect": "deny"
+              }
+            ]
+          }
+        },
+        "parents": {
+          "pol": "it"
+        }
+      },
+      "person": {
+        "id": "dave",
+        "groups": [
+          "staff"
+        ],
+        "roles": []
+      },
+      "category": "pol",
+      "action": "read",
+      "expect": {
+        "allowed": false,
+        "reason": "entry",
+        "decidedBy": {
+          "category": "pol",
+          "subject": "user:dave",
+          "action": "read",
+          "effect": "deny"
+        }
+      }
+    },
+    {
+      "name": "inheritance: an inherited row decides when no child row speaks",
+      "ruleSet": {
+        "categories": {
+          "it": {
+            "entries": [
+              {
+                "subject": "group:staff",
+                "action": "read",
+                "effect": "allow"
+              }
+            ]
+          },
+          "pol": {
+            "entries": [
+              {
+                "subject": "user:dave",
+                "action": "read",
+                "effect": "deny"
+              }
+            ]
+          }
+        },
+        "parents": {
+          "pol": "it"
+        }
+      },
+      "person": {
+        "id": "zoe",
+        "groups": [
+          "staff"
+        ],
+        "roles": []
+      },
+      "category": "pol",
+      "action": "read",
+      "expect": {
+        "allowed": true,
+        "reason": "entry",
+        "decidedBy": {
+          "category": "it",
+          "subject": "group:staff",
+          "action": "read",
+          "effect": "allow"
+        }
+      }
+    },
+    {
+      "name": "inheritance: a grandparent's rows come after the parent's",
+      "ruleSet": {
+        "categories": {
+          "a": {
+            "entries": [
+              {
+                "subject": "group:g",
+                "action": "read",
+                "effect": "allow"
+              }
+            ]
+          },
+          "b": {
+            "entries": [
+              {
+                "subject": "group:g",
+                "action": "read",
+                "effect": "deny"
+              }
+            ]
+          },
+          "c": {
+            "entries": []
+          }
+        },
+        "parents": {
+          "c": "b",
+          "b": "a"
+        }
+      },
+      "person": {
+        "id": "x",
+        "groups": [
+          "g"
+        ],
+        "roles": []
+      },
+      "category": "c",
+      "action": "read",
+      "expect": {
+        "allowed": false,
+        "reason": "entry",
+        "decidedBy": {
+          "category": "b",
+          "subject": "group:g",
+          "action": "read",
+          "effect": "deny"
+        }
+      }
+    },
+    {
+      "name": "inheritance: a stored stopInheriting is ignored",
+      "ruleSet": {
+        "categories": {
+          "it": {
+            "entries": [
+              {
+                "subject": "group:staff",
+                "action": "read",
+                "effect": "allow"
+              }
+            ]
+          },
+          "pol": {
+            "stopInheriting": true,
+            "entries": []
+          }
+        },
+        "parents": {
+          "pol": "it"
+        }
+      },
+      "person": {
+        "id": "zoe",
+        "groups": [
+          "staff"
+        ],
+        "roles": []
+      },
+      "category": "pol",
+      "action": "read",
+      "expect": {
+        "allowed": true,
+        "reason": "entry",
+        "decidedBy": {
+          "category": "it",
+          "subject": "group:staff",
+          "action": "read",
+          "effect": "allow"
+        }
+      }
+    },
+    {
+      "name": "owners: an owner is allowed over a deny",
+      "ruleSet": {
+        "categories": {
+          "it": {
+            "owners": [
+              "user:erin"
+            ],
+            "entries": []
+          },
+          "pol": {
+            "entries": [
+              {
+                "subject": "user:erin",
+                "action": "read",
+                "effect": "deny"
+              },
+              {
+                "subject": "user:erin",
+                "action": "ack",
+                "effect": "deny"
+              }
+            ]
+          }
+        },
+        "parents": {
+          "pol": "it"
+        }
+      },
+      "person": {
+        "id": "erin",
+        "groups": [],
+        "roles": []
+      },
+      "category": "pol",
+      "action": "read",
+      "expect": {
+        "allowed": true,
+        "reason": "owner",
+        "decidedBy": null
+      }
+    },
+    {
+      "name": "owners: an ancestor's owner is an owner in the child",
+      "ruleSet": {
+        "categories": {
+          "it": {
+            "owners": [
+              "user:erin"
+            ],
+            "entries": []
+          },
+          "pol": {
+            "entries": [
+              {
+                "subject": "user:erin",
+                "action": "read",
+                "effect": "deny"
+              },
+              {
+                "subject": "user:erin",
+                "action": "ack",
+                "effect": "deny"
+              }
+            ]
+          }
+        },
+        "parents": {
+          "pol": "it"
+        }
+      },
+      "person": {
+        "id": "erin",
+        "groups": [],
+        "roles": []
+      },
+      "category": "pol",
+      "action": "author",
+      "expect": {
+        "allowed": true,
+        "reason": "owner",
+        "decidedBy": null
+      }
+    },
+    {
+      "name": "owners: an owner is not required to acknowledge, the rows decide",
+      "ruleSet": {
+        "categories": {
+          "it": {
+            "owners": [
+              "user:erin"
+            ],
+            "entries": []
+          },
+          "pol": {
+            "entries": [
+              {
+                "subject": "user:erin",
+                "action": "read",
+                "effect": "deny"
+              },
+              {
+                "subject": "user:erin",
+                "action": "ack",
+                "effect": "deny"
+              }
+            ]
+          }
+        },
+        "parents": {
+          "pol": "it"
+        }
+      },
+      "person": {
+        "id": "erin",
+        "groups": [],
+        "roles": []
+      },
+      "category": "pol",
+      "action": "ack",
+      "expect": {
+        "allowed": false,
+        "reason": "entry",
+        "decidedBy": {
+          "category": "pol",
+          "subject": "user:erin",
+          "action": "ack",
+          "effect": "deny"
+        }
+      }
+    },
+    {
+      "name": "owners: a group in the owner list is not an owner",
+      "ruleSet": {
+        "categories": {
+          "it": {
+            "owners": [
+              "group:ops"
+            ],
+            "entries": []
+          }
+        },
+        "parents": {}
+      },
+      "person": {
+        "id": "o",
+        "groups": [
+          "ops"
+        ],
+        "roles": []
+      },
+      "category": "it",
+      "action": "read",
+      "expect": {
+        "allowed": false,
+        "reason": "default-deny",
+        "decidedBy": null
+      }
+    },
+    {
+      "name": "owners: an owner can approve",
+      "ruleSet": {
+        "categories": {
+          "it": {
+            "owners": [
+              "user:erin"
+            ],
+            "entries": []
+          },
+          "pol": {
+            "entries": [
+              {
+                "subject": "user:erin",
+                "action": "read",
+                "effect": "deny"
+              },
+              {
+                "subject": "user:erin",
+                "action": "ack",
+                "effect": "deny"
+              }
+            ]
+          }
+        },
+        "parents": {
+          "pol": "it"
+        }
+      },
+      "person": {
+        "id": "erin",
+        "groups": [],
+        "roles": []
+      },
+      "category": "pol",
+      "action": "approve",
+      "expect": {
+        "allowed": true,
+        "reason": "owner",
+        "decidedBy": null
+      }
+    },
+    {
+      "name": "implies: a manage cell answers author",
+      "ruleSet": {
+        "categories": {
+          "c": {
+            "entries": [
+              {
+                "subject": "user:m",
+                "action": "manage",
+                "effect": "allow"
+              }
+            ]
+          }
+        },
+        "parents": {}
+      },
+      "person": {
+        "id": "m",
+        "groups": [],
+        "roles": []
+      },
+      "category": "c",
+      "action": "author",
+      "expect": {
+        "allowed": true,
+        "reason": "entry",
+        "decidedBy": {
+          "category": "c",
+          "subject": "user:m",
+          "action": "manage",
+          "effect": "allow"
+        }
+      }
+    },
+    {
+      "name": "implies: a manage cell does not answer ack",
+      "ruleSet": {
+        "categories": {
+          "c": {
+            "entries": [
+              {
+                "subject": "user:m",
+                "action": "manage",
+                "effect": "allow"
+              }
+            ]
+          }
+        },
+        "parents": {}
+      },
+      "person": {
+        "id": "m",
+        "groups": [],
+        "roles": []
+      },
+      "category": "c",
+      "action": "ack",
+      "expect": {
+        "allowed": false,
+        "reason": "default-deny",
+        "decidedBy": null
+      }
+    },
+    {
+      "name": "requires: ack with a read deny is denied, gated by read",
+      "ruleSet": {
+        "categories": {
+          "c": {
+            "entries": [
+              {
+                "subject": "user:carl",
+                "action": "read",
+                "effect": "deny"
+              },
+              {
+                "subject": "everyone:*",
+                "action": "read",
+                "effect": "allow"
+              },
+              {
+                "subject": "everyone:*",
+                "action": "ack",
+                "effect": "allow"
+              }
+            ]
+          }
+        },
+        "parents": {}
+      },
+      "person": {
+        "id": "carl",
+        "groups": [],
+        "roles": []
+      },
+      "category": "c",
+      "action": "ack",
+      "expect": {
+        "allowed": false,
+        "reason": "requires",
+        "decidedBy": null,
+        "gatedBy": "read"
+      }
+    },
+    {
+      "name": "requires: ack with read allowed is allowed",
+      "ruleSet": {
+        "categories": {
+          "c": {
+            "entries": [
+              {
+                "subject": "user:carl",
+                "action": "read",
+                "effect": "deny"
+              },
+              {
+                "subject": "everyone:*",
+                "action": "read",
+                "effect": "allow"
+              },
+              {
+                "subject": "everyone:*",
+                "action": "ack",
+                "effect": "allow"
+              }
+            ]
+          }
+        },
+        "parents": {}
+      },
+      "person": {
+        "id": "zed",
+        "groups": [],
+        "roles": []
+      },
+      "category": "c",
+      "action": "ack",
+      "expect": {
+        "allowed": true,
+        "reason": "entry",
+        "decidedBy": {
+          "category": "c",
+          "subject": "everyone:*",
+          "action": "ack",
+          "effect": "allow"
+        }
+      }
+    },
+    {
+      "name": "requires: an action with no requires needs no read",
+      "ruleSet": {
+        "categories": {
+          "c": {
+            "entries": [
+              {
+                "subject": "user:b",
+                "action": "approve",
+                "effect": "allow"
+              }
+            ]
+          }
+        },
+        "parents": {}
+      },
+      "person": {
+        "id": "b",
+        "groups": [],
+        "roles": []
+      },
+      "category": "c",
+      "action": "approve",
+      "expect": {
+        "allowed": true,
+        "reason": "entry",
+        "decidedBy": {
+          "category": "c",
+          "subject": "user:b",
+          "action": "approve",
+          "effect": "allow"
+        }
+      }
+    },
+    {
+      "name": "matchers: a capability matcher with no users decides",
+      "ruleSet": {
+        "categories": {
+          "c": {
+            "entries": [
+              {
+                "subject": "can:ack",
+                "action": "ack",
+                "effect": "allow"
+              },
+              {
+                "subject": "can:ack",
+                "action": "read",
+                "effect": "allow"
+              }
+            ]
+          }
+        },
+        "parents": {}
+      },
+      "person": {
+        "id": "",
+        "groups": [],
+        "roles": [],
+        "subjects": [
+          "can:ack"
+        ]
+      },
+      "category": "c",
+      "action": "ack",
+      "expect": {
+        "allowed": true,
+        "reason": "entry",
+        "decidedBy": {
+          "category": "c",
+          "subject": "can:ack",
+          "action": "ack",
+          "effect": "allow"
+        }
+      }
+    },
+    {
+      "name": "edge: an unknown asked action is a default deny",
+      "ruleSet": {
+        "categories": {
+          "c": {
+            "entries": [
+              {
+                "subject": "user:a",
+                "action": "read",
+                "effect": "allow"
+              }
+            ]
+          }
+        },
+        "parents": {}
+      },
+      "person": {
+        "id": "a",
+        "groups": [],
+        "roles": []
+      },
+      "category": "c",
+      "action": "nope",
+      "expect": {
+        "allowed": false,
+        "reason": "default-deny",
+        "decidedBy": null
+      }
+    },
+    {
+      "name": "edge: a cycle in parents ends the walk",
+      "ruleSet": {
+        "categories": {
+          "a": {
+            "entries": []
+          },
+          "b": {
+            "entries": []
+          }
+        },
+        "parents": {
+          "a": "b",
+          "b": "a"
+        }
+      },
+      "person": {
+        "id": "a",
+        "groups": [],
+        "roles": []
+      },
+      "category": "a",
+      "action": "read",
+      "expect": {
+        "allowed": false,
+        "reason": "default-deny",
+        "decidedBy": null
+      }
+    }
+  ],
+  "pools": [
+    {
+      "name": "pool: owners first, then people whose rows allow approve",
+      "ruleSet": {
+        "categories": {
+          "it": {
+            "owners": [
+              "user:erin"
+            ],
+            "entries": []
+          },
+          "pol": {
+            "entries": [
+              {
+                "subject": "user:ann",
+                "action": "approve",
+                "effect": "deny"
+              },
+              {
+                "subject": "group:finance",
+                "action": "approve",
+                "effect": "allow"
+              }
+            ]
+          }
+        },
+        "parents": {
+          "pol": "it"
+        }
+      },
+      "people": [
+        {
+          "id": "erin",
+          "subjects": [
+            "user:erin"
+          ]
+        },
+        {
+          "id": "dave",
+          "subjects": [
+            "user:dave",
+            "group:finance"
+          ]
+        },
+        {
+          "id": "ann",
+          "subjects": [
+            "user:ann",
+            "group:finance"
+          ]
+        },
+        {
+          "id": "bob",
+          "subjects": [
+            "user:bob"
+          ]
+        }
+      ],
+      "category": "pol",
+      "action": "approve",
+      "expect": [
+        {
+          "person": "erin",
+          "reason": "owner",
+          "category": "it"
+        },
+        {
+          "person": "dave",
+          "reason": "entry",
+          "category": "pol",
+          "row": 1
+        }
+      ]
+    },
+    {
+      "name": "pool: an everyone row marks everyone",
+      "ruleSet": {
+        "categories": {
+          "c": {
+            "entries": [
+              {
+                "subject": "everyone:*",
+                "action": "read",
+                "effect": "allow"
+              },
+              {
+                "subject": "everyone:*",
+                "action": "ack",
+                "effect": "allow"
+              }
+            ]
+          }
+        },
+        "parents": {}
+      },
+      "people": [
+        {
+          "id": "a",
+          "subjects": [
+            "user:a"
+          ]
+        },
+        {
+          "id": "b",
+          "subjects": [
+            "user:b"
+          ]
+        }
+      ],
+      "category": "c",
+      "action": "ack",
+      "expect": [
+        {
+          "person": "a",
+          "reason": "entry",
+          "category": "c",
+          "row": 0,
+          "everyone": true
+        },
+        {
+          "person": "b",
+          "reason": "entry",
+          "category": "c",
+          "row": 0,
+          "everyone": true
+        }
+      ]
+    }
+  ]
+}
