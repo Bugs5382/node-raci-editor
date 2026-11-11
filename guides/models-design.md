@@ -202,10 +202,10 @@ Algorithm for one question (`person`, `action`, `category`), numbered:
 
 1. Unknown asked action: denied, reason `default-deny`, empty path. Build `subjects` from the
    person plus the implicit subjects.
-2. Owners. If the action is in the model option `ownerActions` and any category in the chain lists
-   an owner that is in `subjects`, answer allowed, reason `owner`, and stop. `ownerActions`
-   defaults to the host's access-and-approve actions and never contains an obligation to
-   acknowledge: owners are not required to acknowledge by default. Owners run before every row,
+2. Owners. If the action is one owners have and any category in the chain lists
+   an owner that is in `subjects`, answer allowed, reason `owner`, and stop. Which actions owners have is each
+   action's `ownerHas`; it defaults to true except for an obligation, so owners are not required to
+   acknowledge unless the host says so (the model option `ownerActions` overrides it). Owners run before every row,
    so no row, however far up, can deny them.
 3. Rows. Walk the effective list top down. The first row whose subject matches and that speaks to
    the action decides: green allows, red denies. Empty cells are skipped.
@@ -299,8 +299,8 @@ are written fresh from this document.
 | Per action, the first non-blank allow or deny wins; a blank cell falls through                                             | Empty = not matching, skip; per action, top down                 | Step 3                                                           | None                                                                       |
 | Chain: the target's rows, then each ancestor's                                                                             | Child's own rows first, then inherited rows, always shown        | Effective list, step 3                                           | None; no stop-inheriting in either                                         |
 | Subjects: a person, a directory group, everyone; groups match case-insensitively or by directory id                        | User, group, Everyone                                            | `user:`, `group:`, `everyone:*`                                  | Case folding and ids are the host's: subjects are matched as exact strings |
-| Owners: user ids only, several, inherited down, evaluated before rules, never acknowledge                                  | Owners people only, several, inherited, immune to a deny, no Ack | Step 2, `owners`, `ownerActions`                                 | See difference 5 (Manage)                                                  |
-| Owners get read, approve and author automatically                                                                          | Owners get Read, Author, Approve and the new Manage              | `ownerActions`                                                   | See difference 5                                                           |
+| Owners: user ids only, several, inherited down, evaluated before rules, never acknowledge                                  | Owners people only, several, inherited, immune to a deny, no Ack | Step 2, `owners`, `ownerHas`                                     | See difference 5 (Manage)                                                  |
+| Owners get read, approve and author automatically                                                                          | Owners get Read, Author, Approve and the new Manage              | `ownerHas`                                                       | See difference 5                                                           |
 | A site admin reads everything but is never an automatic approver or author                                                 | Not mentioned                                                    | Not in the model                                                 | See difference 3                                                           |
 | An "own only" setting: allowed, but only for what the subject created                                                      | Not mentioned                                                    | Not in the model (the `own` capability stays for a custom model) | See difference 4                                                           |
 | Read gates author and approve; an allowed author or approve confers read                                                   | Author and Approve imply Read; Ack requires Read                 | `implies` (step 4) and `requires` (step 6)                       | See differences 1 and 2                                                    |
@@ -309,7 +309,7 @@ are written fresh from this document.
 | A reason line for each answer: the deciding rule with its number and category, or owner, or default deny, or requires read | Not mentioned                                                    | `decidedBy`, `reason`, trace (step 7) and `describeEntry`        | The package's wording is its own, keyed strings                            |
 | The simulator is the same function run on unsaved rules                                                                    | Not mentioned                                                    | Models are pure; `evaluate` takes any rule set                   | None                                                                       |
 | A list of everyone informed, leaving Everyone out as noise                                                                 | Everyone as an acknowledge row means all must acknowledge        | Obligation listing (section 5)                                   | See difference 6                                                           |
-| Approvers: owners plus anyone with an approve rule; approval levels per secret are the host's                              | Owners plus anyone who matches Approve are the pool              | `approverPool` (section 5)                                       | Approval levels stay in the host's workflow                                |
+| Approvers: owners plus anyone with an approve rule; approval levels per secret are the host's                              | Owners plus anyone who matches Approve are the pool              | `actionPool` (section 5)                                         | Approval levels stay in the host's workflow                                |
 | Four actions (read, informed, approve, author-and-manage in one)                                                           | Read, Author, Approve, Ack, and Manage as a new action           | Host's `config.actions`                                          | See difference 5                                                           |
 
 ### 3.4 Differences for the owner to decide
@@ -548,12 +548,13 @@ Two questions, one set of rules:
 
 Lists for a category, from the same rules (headless functions next to `decide`):
 
-- `approverPool(ruleSet, category, people, config)` returns the owners (inherited) and everyone
-  whose Approve is allowed, each as a `PoolEntry`, owners first. The simulator shows it as a list
-  with the reason for each ("owner of X", "row #2 of X").
-- `obligated(ruleSet, category, people, action, config)` does the same for any obligation action,
-  for example the acknowledge list. An Everyone row that makes it required is shown as "everyone",
-  not as a list of every person (difference 6).
+- `actionPool({ ruleSet, actions, category, people, action })` returns the people for whom the
+  action answers allowed, owners (inherited) first, each as a `PoolEntry` (`person`, `reason`
+  `owner` or `entry`, `category`, `row`, and `everyone: true` when an Everyone row decided). For the
+  approve action it is the approver pool; for an obligation action such as acknowledge it is the
+  list of people it applies to. The simulator shows it with the reason for each ("owner of X",
+  "row #2 of X"). An Everyone row is shown as "everyone", not as a list of every person
+  (difference 6).
 
 For a host that evaluates on its server, `evaluate` returns a `Decision`-like value and these same
 fields drive the same views.
@@ -615,7 +616,7 @@ Cases for `ordered` (at least 24, by group):
 | Grid headings and result words | `config.kindLabels` for the Access and Obligations headings; `ActionDef.outcome` for per-action result words.                             |
 | A model of its own             | `model={myModel}` (object) or `registerModel(myModel)` and its id; or `models={{...}}`.                                                   |
 | Rules evaluated on its server  | The `Simulator` `evaluate` prop returning a decision; the model supplies only presentation.                                               |
-| The people to list             | An array of people (their subjects) to `approverPool` and `obligated`; the package does not know who exists.                              |
+| The people to list             | An array of people (their subjects) to `actionPool`; the package does not know who exists.                                                |
 | Subjects without a directory   | `config.matchers`, `config.contexts` (or toggles), `ownerKinds`; `subjectKinds` may be empty.                                             |
 | Locks and read-only            | `isLocked` and the read-only reason, as for any model.                                                                                    |
 
