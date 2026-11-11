@@ -6,6 +6,7 @@
 
 #### 🚀 Features
 
+- feat(core): RaciModel interface and registry with nearest extracted @Bugs5382 (#18)
 - feat(package): generic access-rules editor, simulator and settings @Bugs5382 (#10)
 
 #### 📄 Documentation
