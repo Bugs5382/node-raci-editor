@@ -5,6 +5,5 @@
  */
 
 /** Greet a name. Replace with the package's real entry point. */
-export function hello(name: string): string {
-  return `Hello, ${name}!`;
-}
+export const hello = (name: string): string => `Hello, ${name}!`;
+export * from "@/core/types";

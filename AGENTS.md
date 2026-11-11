@@ -7,30 +7,43 @@ hook-enforced rules). Keep this file current when the build, layout, or public A
 
 Generic drop-in React rules editor, simulator and settings for RACI-style access rules, with a pure TypeScript decide() and shared test vectors.
 
-<!-- Fill in: what the project does, what it ships (library, service, action, CLI), and the one or
-two things an agent must understand before changing it. -->
+It ships an npm library (ESM and CJS, with declarations) plus a stylesheet. Two things to keep in
+mind before changing it:
+
+- `src/core` is pure TypeScript with no React and no DOM, and is held to 100% test coverage.
+  The React layer in `src/react` sits on top of it and never reimplements its logic.
+- Colors, spacing and type come from CSS custom properties in `src/styles/tokens.css`; components
+  style themselves with those tokens only.
 
 ## Using node-raci-editor
 
-<!-- If this project is consumed by others (a library/plugin/action), describe the contract a
-consumer must respect: the single entry point, the public surface, required options, and anything
-that must not be bypassed. Delete this section for a leaf application. -->
+- Entry point: `node-raci-editor` (everything is exported from `src/index.ts`).
+- Stylesheet: `import "node-raci-editor/styles.css"` (built to `dist/styles.css`).
+- Peer dependencies: `react` and `react-dom`, version 18 or newer.
+- Test vectors for `decide()` ship as `vectors/decide.json` when present.
 
 ## Layout
 
-<!-- The directories that matter and what lives in each. Keep it short; point at the entry points. -->
-
-- `src/` - <what>
-- `<tests dir>/` - <what>
+- `src/index.ts` - the public entry point: exports only.
+- `src/core/` - the pure TypeScript domain model and `decide()`; node tests, 100% coverage gate.
+- `src/react/` - the React components; tests run in jsdom.
+- `src/styles/` - `index.css` imports `tokens.css` and `components.css`; built to `dist/styles.css`.
+- `demo/` - a Vite app that imports the package source through the `@/` alias (not published).
+- `tests/` - cross-module tests (optional); unit tests sit next to their module.
+- `vectors/` - shared `decide()` test vectors (published once present).
+- `scripts/` - repo tooling: CSS build, pack and install checks.
+- Imports use the `@/` alias for `src/` (`@/core/types`), never `../../`.
 
 ## Build, test, lint
 
-<!-- The exact commands. Pull these from package.json scripts (npm), the Taskfile (Go/Task), or
-pyproject (Python) so they stay accurate. -->
-
-- Build: `<command>`
-- Test: `<command>` (note any service/fixture the integration tests require)
-- Lint: `<command>`
+- Build: `npm run build` (tsdown for JS and declarations, then `scripts/buildCss.mjs` writes
+  `dist/styles.css` by inlining the `@import`s)
+- Test: `npm test` (`npm run test:coverage` for the 100% core gate); `*.test.ts` run in node,
+  `src/react/**` and `*.test.tsx` run in jsdom with jest-dom
+- Lint: `npm run lint` (Oxlint, shared config from `@bugs5382/node-oxlint-config`; `lint:fix`)
+- Format: `npm run format` / `npm run format:check` (oxfmt); there is no ESLint or Prettier
+- Types: `npm run typecheck` (covers `src`, `demo` and `tests`)
+- Demo: `npm run demo:dev` (port 5179) and `npm run demo:build`
 - Package checks (npm packages), after a build: `npm run check:pack` (contents and ceiling),
   `npm run check:pack:growth` (growth against the last release), `npm run check:install`
   (install the tarball, import ESM and CJS); see CLAUDE.md "npm package contents"
