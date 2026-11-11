@@ -122,11 +122,11 @@ export interface TraceStep {
   matches: TraceMatch[];
   /** True when the category stops inheriting, which ends the walk here. */
   stopInheriting?: boolean;
-  /** `"category"` when absent. `"owners"` and `"gate"` come from the "ordered" model. */
-  kind?: "category" | "owners" | "gate";
+  /** `"category"` when absent. `"owners"`, `"gate"` and `"confer"` come from the "ordered" model. */
+  kind?: "category" | "owners" | "gate" | "confer";
   /** 0-based position of the step in the evaluation. */
   order?: number;
-  /** For a gate step, the required action examined. */
+  /** For a gate step, the required action examined; for a confer step, the higher action that gave the asked one. */
   action?: string;
   /** For an owners step, the owner subject that matched. */
   matched?: string;

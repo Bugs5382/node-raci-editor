@@ -97,12 +97,6 @@ describe("rows, order and empty cells", () => {
     expect(d.decidedBy?.entry.subject).toBe("group:it");
   });
 
-  it("a cell on the asked action beats an implied cell in the same row", () => {
-    const set = rs([e("user:a", "author", "allow"), e("user:a", "read", "deny")]);
-    expect(ask(set, ["user:a"], "read")).toMatchObject({ allowed: false });
-    expect(ask(set, ["user:a"], "author")).toMatchObject({ allowed: true });
-  });
-
   it("matches the built-in everyone subject for a person with no other subject", () => {
     const set = rs([e(EVERYONE, "ack", "allow"), e(EVERYONE, "read", "allow")]);
     expect(ask(set, [], "ack").allowed).toBe(true);
@@ -383,5 +377,73 @@ describe("actionPool", () => {
     const list = actionPool({ ruleSet: all, actions, category: "c", people, action: "ack" });
     expect(list).toHaveLength(4);
     expect(list.every((p) => p.everyone === true)).toBe(true);
+  });
+});
+
+describe("an allowed higher action gives the lower one, even over a deny", () => {
+  const who = ["user:a"];
+  it("Author gives Read over a Read deny in the same row", () => {
+    const set = rs([e("user:a", "author", "allow"), e("user:a", "read", "deny")]);
+    const d = ask(set, who, "read");
+    expect(d).toMatchObject({ allowed: true, reason: "entry" });
+    expect(d.decidedBy?.entry).toEqual(e("user:a", "author", "allow"));
+    expect(ask(set, who, "author").allowed).toBe(true);
+  });
+  it("Author gives Read over a Read deny in a row above it", () => {
+    const set = rs([e("user:a", "read", "deny"), e(EVERYONE, "author", "allow")]);
+    expect(ask(set, who, "read")).toMatchObject({ allowed: true, reason: "entry" });
+  });
+  it("Approve gives Read, and Manage gives Read through Author", () => {
+    expect(
+      ask(rs([e("user:a", "read", "deny"), e("user:a", "approve", "allow")]), who, "read").allowed,
+    ).toBe(true);
+    expect(
+      ask(rs([e("user:a", "read", "deny"), e("user:a", "manage", "allow")]), who, "read").allowed,
+    ).toBe(true);
+  });
+  it("gives only downward, never sideways or up", () => {
+    const set = rs([e("user:a", "author", "allow")]);
+    expect(ask(set, who, "approve").allowed).toBe(false);
+    expect(ask(set, who, "manage").allowed).toBe(false);
+    const readOnly = rs([e("user:a", "read", "allow")]);
+    expect(ask(readOnly, who, "author").allowed).toBe(false);
+  });
+  it("a denied Author does not give or take Read", () => {
+    const set = rs([e("user:a", "author", "deny"), e("user:a", "read", "allow")]);
+    expect(ask(set, who, "read").allowed).toBe(true);
+    expect(ask(set, who, "author").allowed).toBe(false);
+  });
+  it("an owner's action gives the lower ones too", () => {
+    const set: RuleSet = {
+      model: "ordered",
+      categories: { c: { owners: ["user:o"], entries: [e("user:o", "read", "deny")] } },
+      parents: {},
+    };
+    expect(ask(set, ["user:o"], "read")).toMatchObject({ allowed: true, reason: "owner" });
+  });
+  it("makes acknowledge possible: the conferred Read satisfies requires", () => {
+    const set = rs([
+      e("user:a", "read", "deny"),
+      e("user:a", "author", "allow"),
+      e(EVERYONE, "ack", "allow"),
+    ]);
+    expect(ask(set, who, "ack")).toMatchObject({ allowed: true, reason: "entry" });
+    const noAuthor = rs([e("user:a", "read", "deny"), e(EVERYONE, "ack", "allow")]);
+    expect(ask(noAuthor, who, "ack")).toMatchObject({
+      allowed: false,
+      reason: "requires",
+      gatedBy: "read",
+    });
+  });
+  it("records the step in the trace", () => {
+    const set = rs([e("user:a", "read", "deny"), e("user:a", "author", "allow")]);
+    const { trace } = getModel("ordered").evaluate({
+      ruleSet: set,
+      actions,
+      person: { subjects: who },
+      category: "c",
+      action: "read",
+    });
+    expect(trace.some((t) => t.kind === "confer" && t.action === "author")).toBe(true);
   });
 });

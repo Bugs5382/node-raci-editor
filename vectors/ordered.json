@@ -160,7 +160,7 @@
       }
     },
     {
-      "name": "order: a cell on the asked action beats an implied cell in the same row",
+      "name": "readdeny: Author gives Read over a Read deny in the same row",
       "ruleSet": {
         "categories": {
           "c": {
@@ -188,13 +188,271 @@
       "category": "c",
       "action": "read",
       "expect": {
+        "allowed": true,
+        "reason": "entry",
+        "decidedBy": {
+          "category": "c",
+          "subject": "user:d",
+          "action": "author",
+          "effect": "allow"
+        }
+      }
+    },
+    {
+      "name": "readdeny: Author gives Read over a Read deny in a row above",
+      "ruleSet": {
+        "categories": {
+          "c": {
+            "entries": [
+              {
+                "subject": "user:d",
+                "action": "read",
+                "effect": "deny"
+              },
+              {
+                "subject": "everyone:*",
+                "action": "author",
+                "effect": "allow"
+              }
+            ]
+          }
+        },
+        "parents": {}
+      },
+      "person": {
+        "id": "d",
+        "groups": [],
+        "roles": []
+      },
+      "category": "c",
+      "action": "read",
+      "expect": {
+        "allowed": true,
+        "reason": "entry",
+        "decidedBy": {
+          "category": "c",
+          "subject": "everyone:*",
+          "action": "author",
+          "effect": "allow"
+        }
+      }
+    },
+    {
+      "name": "readdeny: Approve gives Read over a Read deny",
+      "ruleSet": {
+        "categories": {
+          "c": {
+            "entries": [
+              {
+                "subject": "user:d",
+                "action": "read",
+                "effect": "deny"
+              },
+              {
+                "subject": "user:d",
+                "action": "approve",
+                "effect": "allow"
+              }
+            ]
+          }
+        },
+        "parents": {}
+      },
+      "person": {
+        "id": "d",
+        "groups": [],
+        "roles": []
+      },
+      "category": "c",
+      "action": "read",
+      "expect": {
+        "allowed": true,
+        "reason": "entry",
+        "decidedBy": {
+          "category": "c",
+          "subject": "user:d",
+          "action": "approve",
+          "effect": "allow"
+        }
+      }
+    },
+    {
+      "name": "readdeny: Manage gives Read over a Read deny",
+      "ruleSet": {
+        "categories": {
+          "c": {
+            "entries": [
+              {
+                "subject": "user:d",
+                "action": "read",
+                "effect": "deny"
+              },
+              {
+                "subject": "user:d",
+                "action": "manage",
+                "effect": "allow"
+              }
+            ]
+          }
+        },
+        "parents": {}
+      },
+      "person": {
+        "id": "d",
+        "groups": [],
+        "roles": []
+      },
+      "category": "c",
+      "action": "read",
+      "expect": {
+        "allowed": true,
+        "reason": "entry",
+        "decidedBy": {
+          "category": "c",
+          "subject": "user:d",
+          "action": "manage",
+          "effect": "allow"
+        }
+      }
+    },
+    {
+      "name": "readdeny: Author does not give Approve",
+      "ruleSet": {
+        "categories": {
+          "c": {
+            "entries": [
+              {
+                "subject": "user:d",
+                "action": "author",
+                "effect": "allow"
+              }
+            ]
+          }
+        },
+        "parents": {}
+      },
+      "person": {
+        "id": "d",
+        "groups": [],
+        "roles": []
+      },
+      "category": "c",
+      "action": "approve",
+      "expect": {
         "allowed": false,
+        "reason": "default-deny",
+        "decidedBy": null
+      }
+    },
+    {
+      "name": "readdeny: a Read allow does not give Author",
+      "ruleSet": {
+        "categories": {
+          "c": {
+            "entries": [
+              {
+                "subject": "user:d",
+                "action": "read",
+                "effect": "allow"
+              }
+            ]
+          }
+        },
+        "parents": {}
+      },
+      "person": {
+        "id": "d",
+        "groups": [],
+        "roles": []
+      },
+      "category": "c",
+      "action": "author",
+      "expect": {
+        "allowed": false,
+        "reason": "default-deny",
+        "decidedBy": null
+      }
+    },
+    {
+      "name": "readdeny: a denied Author does not take Read away",
+      "ruleSet": {
+        "categories": {
+          "c": {
+            "entries": [
+              {
+                "subject": "user:d",
+                "action": "author",
+                "effect": "deny"
+              },
+              {
+                "subject": "user:d",
+                "action": "read",
+                "effect": "allow"
+              }
+            ]
+          }
+        },
+        "parents": {}
+      },
+      "person": {
+        "id": "d",
+        "groups": [],
+        "roles": []
+      },
+      "category": "c",
+      "action": "read",
+      "expect": {
+        "allowed": true,
         "reason": "entry",
         "decidedBy": {
           "category": "c",
           "subject": "user:d",
           "action": "read",
-          "effect": "deny"
+          "effect": "allow"
+        }
+      }
+    },
+    {
+      "name": "readdeny: the Read an Author gives satisfies the acknowledge requirement",
+      "ruleSet": {
+        "categories": {
+          "c": {
+            "entries": [
+              {
+                "subject": "user:d",
+                "action": "read",
+                "effect": "deny"
+              },
+              {
+                "subject": "user:d",
+                "action": "author",
+                "effect": "allow"
+              },
+              {
+                "subject": "everyone:*",
+                "action": "ack",
+                "effect": "allow"
+              }
+            ]
+          }
+        },
+        "parents": {}
+      },
+      "person": {
+        "id": "d",
+        "groups": [],
+        "roles": []
+      },
+      "category": "c",
+      "action": "ack",
+      "expect": {
+        "allowed": true,
+        "reason": "entry",
+        "decidedBy": {
+          "category": "c",
+          "subject": "everyone:*",
+          "action": "ack",
+          "effect": "allow"
         }
       }
     },

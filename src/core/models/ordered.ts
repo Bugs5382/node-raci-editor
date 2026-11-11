@@ -78,7 +78,8 @@ const rowsOf = (entries: Entry[]): Row[] => {
  * Build an "ordered" model. Per action, rows are read from the top of the effective list (the
  * category's own rows, then its parent's, and so on); the first row that matches and has a green
  * or red cell for the action decides, and an empty cell is skipped. Owners are checked before any
- * row. `implies` widens what a cell covers; `requires` narrows a final verdict. A pure evaluation
+ * row. `implies` widens what a cell covers, and an allowed higher action gives the lower ones even
+ * over an explicit deny of the lower one; `requires` narrows a final verdict. A pure evaluation
  * helper the host may call; the host enforces.
  */
 export const createOrderedModel = (options: OrderedOptions = {}): RaciModel => {
@@ -166,10 +167,28 @@ export const createOrderedModel = (options: OrderedOptions = {}): RaciModel => {
       return { allowed: false, reason: "default-deny", path };
     };
 
-    const decision = core(action, true);
+    // An allowed higher action gives every action it implies, even over an explicit deny of the
+    // lower one: Author gives Read whatever a row says about Read. Only downward, and only from
+    // what a row or an owner allows (no chaining through other gifts).
+    const confer = (act: string, record: boolean): Decision | undefined => {
+      for (const higher of actions) {
+        if (higher.id === act || !covers(higher.id, act)) continue;
+        const d = core(higher.id, false);
+        if (!d.allowed) continue;
+        if (record) trace.push({ category, matches: [], kind: "confer", action: higher.id });
+        return { ...d };
+      }
+      return undefined;
+    };
+    const answer = (act: string, record: boolean): Decision => {
+      const d = core(act, record);
+      return d.allowed ? d : (confer(act, record) ?? d);
+    };
+
+    const decision = answer(action, true);
     if (decision.allowed && decision.reason === "entry") {
       for (const required of byId.get(action)?.requires ?? []) {
-        const gate = core(required, false);
+        const gate = answer(required, false);
         trace.push({ category, matches: [], kind: "gate", action: required });
         if (!gate.allowed) {
           return finish({

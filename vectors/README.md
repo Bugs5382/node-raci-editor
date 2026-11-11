@@ -77,7 +77,7 @@ An entry matches when `entry.subject` is one of the person's subjects and the as
 - A category may carry `owners` (subjects of the kinds the model allows; `"user"` by default).
 - A `person` may leave `id` empty and list extra matchers in `subjects` (for example `can:ack`), added after the derived ones. The built-in subject `everyone:*` is added by the model.
 - `expect.reason` also takes `"owner"` and `"requires"`; `expect.gatedBy` names the required action that was not allowed. When an owner is what allows it, `decidedBy` is `null`.
-- A case with a `pending` field follows an open question in the design guide (the number of the difference). None are pending yet.
+- A case with a `pending` field follows an open question in the design guide (the number of the difference). None are pending.
 - `pools` is a list of `{ name, ruleSet, people, category, action, expect }`: who the action answers allowed for, owners first, each as `{ person, reason, category, row?, everyone? }`. `row` is the 0-based position of the deciding row in its category.
 
 ### Algorithm of the ordered model
@@ -85,5 +85,6 @@ An entry matches when `entry.subject` is one of the person's subjects and the as
 1. An unknown asked action is a default deny with an empty path. The person's subjects gain the built-in `everyone:*`.
 2. If the action is one owners have (`ownerHas`, else any action that is not an obligation) and a category in the chain lists an owner of an allowed kind who is among the subjects, allow with reason `owner`. Owners are checked before every row.
 3. Otherwise walk the chain, the category then its parents (a repeat ends the walk; there is no `"*"` category and `stopInheriting` is ignored). Group each category's entries into rows by subject, in order of first appearance. The first row whose subject matches and that has a cell for the asked action (or, failing that, a cell on an action that implies it) decides: allow or deny. A cell on the asked action beats an implied cell in the same row. Rows with no such cell are skipped.
-4. No row decided: default deny.
-5. If the answer is an allow from a row and the action lists `requires`, each required action is answered by steps 2 to 4; if any is denied the answer is a deny with reason `requires` and `gatedBy`.
+4. If the answer is not an allow, an allowed higher action gives it: any other action that implies the asked one (directly or through others) and is itself allowed by a row or an owner makes the answer an allow, decided by that higher action's entry, even over an explicit deny of the lower action. Author gives Read whatever a row says about Read. It only goes down, never sideways or up, and a denied higher action gives nothing.
+5. Otherwise no row decided: default deny.
+6. If the answer is an allow from a row and the action lists `requires`, each required action is answered by steps 2 to 5 (so a Read given by Author counts); if any is denied the answer is a deny with reason `requires` and `gatedBy`.
