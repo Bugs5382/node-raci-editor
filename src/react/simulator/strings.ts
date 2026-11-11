@@ -4,7 +4,7 @@ export const simulatorStrings: Record<string, string> = {
   "simulator.person": "Person",
   "simulator.personPlaceholder": "Search for a person",
   "simulator.memberships": "Extra memberships",
-  "simulator.membershipsPlaceholder": "Add a group or role",
+  "simulator.membershipsPlaceholder": "Add a membership",
   "simulator.noMatches": "No matches",
   "simulator.remove": "Remove {label}",
   "simulator.results": "Results",

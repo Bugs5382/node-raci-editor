@@ -31,7 +31,7 @@ export interface SimulatorProps {
   ruleSet: RuleSet;
   /** The category to check, chosen by the host. Without it the simulator shows the empty-category state. */
   categoryId?: string;
-  /** The subject kind the person is picked from. Defaults to `"user"`. */
+  /** The subject kind the person is picked from. Defaults to `"user"` when the config has that kind, else the first kind in the config. */
   personKind?: string;
   /** Display settings; missing fields use the defaults. */
   settings?: Partial<RaciSettings>;
@@ -93,7 +93,11 @@ const Chip = ({
 
 /** Pick a person and preview what the rules would allow in a category, using the package's own decide(). Preview only; the host enforces. */
 export const Simulator = (props: SimulatorProps) => {
-  const { config, ruleSet, categoryId, className, personKind = "user" } = props;
+  const { config, ruleSet, categoryId, className } = props;
+  // Without personKind: "user" when the host has that kind, else the host's first kind.
+  const hasUser = config.subjectKinds.some((k) => k.kind === "user");
+  const personKind =
+    props.personKind ?? (hasUser ? "user" : (config.subjectKinds[0]?.kind ?? "user"));
   const { variant = "list", renderResults, evaluate, show } = props;
   const t = useMemo(() => makeT(config, simulatorStrings), [config]);
   const titleId = useId();
@@ -296,7 +300,7 @@ export const Simulator = (props: SimulatorProps) => {
             />
           )}
         </div>
-        {show?.memberships === false ? null : (
+        {show?.memberships === false || memberKinds.length === 0 ? null : (
           <div className="raci-field">
             <SubjectPicker
               label={t("simulator.memberships")}

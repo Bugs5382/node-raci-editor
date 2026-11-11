@@ -37,6 +37,8 @@ interface ActionDef {
 
 ## Subject kinds
 
+Subjects are whatever kinds your app has (user, group, role, team, department, service account, ...); the package assumes none of them. With one kind there is no kind chooser, and a stored subject of a kind you did not configure is shown as stored, kept when rows change and still evaluated.
+
 ```ts
 interface SubjectKind {
   kind: string;
@@ -61,7 +63,7 @@ interface SubjectOption {
   just pick (rows loaded from storage). Return `undefined` to fall back to the label remembered
   from the last pick, then to the raw subject string. Keep it synchronous and cheap: it runs on
   every render of a row.
-- The simulator finds the person with the kind named by its `personKind` prop (default `user`),
+- The simulator finds the person with the kind named by its `personKind` prop (default `user` when the config has that kind, else its first kind),
   whether or not the settings enable it. Its "extra memberships" picker offers every other kind that
   is enabled in the settings.
 
@@ -177,7 +179,7 @@ Keys with a variable list their variables in braces. The default text is in the 
 | `simulator.person`                 | Person                                                                 |
 | `simulator.personPlaceholder`      | Search for a person                                                    |
 | `simulator.memberships`            | Extra memberships                                                      |
-| `simulator.membershipsPlaceholder` | Add a group or role                                                    |
+| `simulator.membershipsPlaceholder` | Add a membership                                                       |
 | `simulator.noMatches`              | No matches                                                             |
 | `simulator.remove`                 | Remove {label}                                                         |
 | `simulator.results`                | Results                                                                |

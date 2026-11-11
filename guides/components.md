@@ -86,10 +86,10 @@ category.
 
 | Prop            | Type                                        | Notes                                                                                                                                                                                 |
 | --------------- | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `config`        | `RaciConfig`                                | Needs a subject kind for the person (`user` unless you set `personKind`).                                                                                                             |
+| `config`        | `RaciConfig`                                | Needs a subject kind for the person (`user`, else your first kind, unless you set `personKind`).                                                                                      |
 | `ruleSet`       | `RuleSet`                                   | The rules to evaluate.                                                                                                                                                                |
 | `categoryId`    | `string`                                    | The category to check, chosen by your app. Without it the simulator shows the empty-category state (`simulator.emptyCategory`). `config.resources` only supplies labels and the walk. |
-| `personKind`    | `string`                                    | Optional. The subject kind the person is picked from. Default `"user"`.                                                                                                               |
+| `personKind`    | `string`                                    | Optional. The subject kind the person is picked from. Default `"user"`, else first kind.                                                                                              |
 | `settings`      | `Partial<RaciSettings>`                     | Optional. `visibleActions` picks and orders the rows; `enabledSubjectKinds` limits the memberships picker; `density` applies.                                                         |
 | `className`     | `string`                                    | Optional.                                                                                                                                                                             |
 | `variant`       | `SimulatorVariant`                          | Optional. `"list"` (default), `"boxes"` or `"strips"`. See Variants.                                                                                                                  |
@@ -99,7 +99,7 @@ category.
 
 What it does:
 
-- The person is one pick from the `personKind` kind (default `user`). That kind is always offered
+- The person is one pick from the `personKind` kind (default `user`, else the first kind in the config). That kind is always offered
   in the person picker, even when `enabledSubjectKinds` leaves it out. The person's subjects are that pick plus every
   membership added (groups, roles or any other enabled kind), de-duplicated, in the order picked.
 - For each visible action it runs `decide()` with your `ruleSet` and `config.actions` and shows

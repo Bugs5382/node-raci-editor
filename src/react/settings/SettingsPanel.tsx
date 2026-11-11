@@ -124,31 +124,34 @@ export const SettingsPanel = ({
         </ol>
       </fieldset>
 
-      <fieldset className="raci-settings__group">
-        <legend>{t("settings.kinds.legend")}</legend>
-        <p className="raci-settings__hint">{t("settings.kinds.hint")}</p>
-        {lastKind ? (
-          <p id={kindsHintId} className="raci-settings__hint raci-settings__hint--warn">
-            {t("settings.kinds.lastHint")}
-          </p>
-        ) : null}
-        {config.subjectKinds.map((k) => {
-          const checked = value.enabledSubjectKinds.includes(k.kind);
-          const guarded = checked && lastKind;
-          return (
-            <label key={k.kind} className="raci-settings__check">
-              <input
-                type="checkbox"
-                checked={checked}
-                disabled={guarded}
-                aria-describedby={guarded ? kindsHintId : undefined}
-                onChange={() => emit(toggleKind(value, k.kind))}
-              />
-              <span>{k.label}</span>
-            </label>
-          );
-        })}
-      </fieldset>
+      {/* With one kind there is nothing to choose, so the section is left out. */}
+      {config.subjectKinds.length > 1 ? (
+        <fieldset className="raci-settings__group">
+          <legend>{t("settings.kinds.legend")}</legend>
+          <p className="raci-settings__hint">{t("settings.kinds.hint")}</p>
+          {lastKind ? (
+            <p id={kindsHintId} className="raci-settings__hint raci-settings__hint--warn">
+              {t("settings.kinds.lastHint")}
+            </p>
+          ) : null}
+          {config.subjectKinds.map((k) => {
+            const checked = value.enabledSubjectKinds.includes(k.kind);
+            const guarded = checked && lastKind;
+            return (
+              <label key={k.kind} className="raci-settings__check">
+                <input
+                  type="checkbox"
+                  checked={checked}
+                  disabled={guarded}
+                  aria-describedby={guarded ? kindsHintId : undefined}
+                  onChange={() => emit(toggleKind(value, k.kind))}
+                />
+                <span>{k.label}</span>
+              </label>
+            );
+          })}
+        </fieldset>
+      ) : null}
 
       <fieldset className="raci-settings__group">
         <legend>{t("settings.behavior.legend")}</legend>

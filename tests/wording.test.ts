@@ -89,6 +89,15 @@ describe("wording: the package shows, the host enforces", () => {
     expect(simulatorStrings["simulator.denied"]).toBe("Would be denied");
   });
 
+  it("the README and configuration guide say subjects are whatever kinds the app has", () => {
+    for (const file of ["README.md", "guides/configuration.md"]) {
+      const text = readFileSync(join(root, file), "utf8");
+      expect(text).toContain(
+        "Subjects are whatever kinds your app has (user, group, role, team, department, service account, ...); the package assumes none of them.",
+      );
+    }
+  });
+
   it("the README says the host enforces and decide() is a helper the host may call", () => {
     const readme = readFileSync(join(root, "README.md"), "utf8");
     expect(readme).toMatch(/the host enforces/i);
