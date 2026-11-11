@@ -22,15 +22,27 @@
         "default": "./dist/index.cjs"
       }
     },
+    "./demo": {
+      "import": {
+        "types": "./dist/demo.d.mts",
+        "default": "./dist/demo.mjs"
+      },
+      "require": {
+        "types": "./dist/demo.d.cts",
+        "default": "./dist/demo.cjs"
+      }
+    },
+    "./demo.css": "./dist/demo.css",
     "./styles.css": "./dist/styles.css",
     "./vectors/decide.json": "./vectors/decide.json"
   },
   "files": [
+    "bin",
     "dist",
     "vectors"
   ],
   "config": {
-    "packMaxUnpackedBytes": 400000,
+    "packMaxUnpackedBytes": 600000,
     "packMaxGrowthPercent": 25
   },
   "engines": {
@@ -45,7 +57,7 @@
     "url": "https://github.com/Bugs5382/node-raci-editor/issues"
   },
   "scripts": {
-    "build": "tsdown && node scripts/buildCss.mjs",
+    "build": "tsdown && node scripts/buildCss.mjs && npm run demo:build",
     "check:pack": "node scripts/checkPack.mjs",
     "check:pack:growth": "node scripts/checkPackGrowth.mjs",
     "check:install": "node scripts/checkInstall.mjs",
@@ -88,5 +100,8 @@
     "typescript": "^5.7.2",
     "vite": "^8.3.2",
     "vitest": "^5.0.3"
+  },
+  "bin": {
+    "raci-editor-demo": "./bin/raci-editor-demo.mjs"
   }
 }

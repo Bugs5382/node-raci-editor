@@ -280,3 +280,17 @@ export const presets: Preset[] = [
 ];
 
 export const presetById = (id: string): Preset => presets.find((p) => p.id === id) ?? presets[0]!;
+
+/** A fresh copy of a rule set, so a host can change it without touching the sample. */
+const cloneRuleSet = (ruleSet: RuleSet): RuleSet => structuredClone(ruleSet);
+
+/**
+ * The demo presets: a name, a `RaciConfig`, a seed `RuleSet` and the category shown first. The
+ * array and every seed are new on each call; the configs are shared and should not be changed.
+ */
+export const demoPresets = (): Preset[] =>
+  presets.map((p) => ({ ...p, seed: cloneRuleSet(p.seed) }));
+
+/** A fresh sample `RuleSet` for a preset id (the first preset when omitted or unknown). */
+export const demoRuleSet = (presetId?: string): RuleSet =>
+  cloneRuleSet(presetById(presetId ?? presets[0]!.id).seed);

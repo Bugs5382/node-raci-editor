@@ -1,9 +1,10 @@
 import { defineConfig } from "tsdown";
 
-// The JavaScript and declarations are built here; dist/styles.css is written by
-// scripts/buildCss.mjs right after (npm run build), which inlines the @imports.
+// The JavaScript and declarations are built here (the library and the ./demo
+// subpath); dist/styles.css and dist/demo.css are written by scripts/buildCss.mjs
+// right after (npm run build), which inlines the @imports.
 export default defineConfig({
-  entry: ["src/index.ts"],
+  entry: { index: "src/index.ts", demo: "src/demo/index.ts" },
   format: ["esm", "cjs"],
   dts: true,
   clean: true,

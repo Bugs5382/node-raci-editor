@@ -1,8 +1,8 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { App } from "./App";
-import { presetById } from "./data";
+import { RaciDemo } from "./RaciDemo";
+import { demoRuleSet, presetById } from "./data";
 import { serializeRuleSet } from "./io";
 
 const shownJson = () => JSON.parse(screen.getByTestId("demo-json").textContent ?? "{}");
@@ -15,7 +15,7 @@ beforeEach(() => {
 describe("theme and brand", () => {
   it("sets data-theme on the wrapper only, and persists it", async () => {
     const user = userEvent.setup();
-    render(<App />);
+    render(<RaciDemo />);
     expect(appRoot()).not.toHaveAttribute("data-theme");
     await user.click(screen.getByRole("button", { name: "Dark" }));
     expect(appRoot()).toHaveAttribute("data-theme", "dark");
@@ -30,14 +30,14 @@ describe("theme and brand", () => {
 
   it("restores the saved theme", () => {
     window.localStorage.setItem("raci-demo-theme", "dark");
-    render(<App />);
+    render(<RaciDemo />);
     expect(appRoot()).toHaveAttribute("data-theme", "dark");
     expect(screen.getByRole("button", { name: "Dark" })).toHaveAttribute("aria-pressed", "true");
   });
 
   it("toggles the brand override class", async () => {
     const user = userEvent.setup();
-    render(<App />);
+    render(<RaciDemo />);
     await user.click(screen.getByRole("checkbox", { name: "Brand override" }));
     expect(appRoot()).toHaveClass("demo-brand");
     await user.click(screen.getByRole("checkbox", { name: "Brand override" }));
@@ -48,7 +48,7 @@ describe("theme and brand", () => {
 describe("presets", () => {
   it("switches configuration, tree, strings and rules", async () => {
     const user = userEvent.setup();
-    render(<App />);
+    render(<RaciDemo />);
     expect(screen.getByRole("columnheader", { name: "Manage" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Payroll" })).toBeInTheDocument();
     await user.selectOptions(screen.getByRole("combobox", { name: "Preset" }), "other");
@@ -64,7 +64,7 @@ describe("presets", () => {
 describe("tree selection", () => {
   it("updates the category shown by the editor", async () => {
     const user = userEvent.setup();
-    render(<App />);
+    render(<RaciDemo />);
     expect(screen.getByTestId("demo-category")).toHaveTextContent("Rules for Payroll");
     expect(screen.getByText("Carol Diaz")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Reports" }));
@@ -78,7 +78,7 @@ describe("tree selection", () => {
 describe("tabs", () => {
   it("shows editor, simulator and settings, with arrow key navigation", async () => {
     const user = userEvent.setup();
-    render(<App />);
+    render(<RaciDemo />);
     expect(screen.getByRole("tab", { name: "Editor" })).toHaveAttribute("aria-selected", "true");
     await user.click(screen.getByRole("tab", { name: "Simulator" }));
     expect(document.querySelector(".raci-simulator")).toBeInTheDocument();
@@ -97,7 +97,7 @@ describe("tabs", () => {
 describe("rule set data", () => {
   it("edits live JSON and resets to the sample", async () => {
     const user = userEvent.setup();
-    render(<App />);
+    render(<RaciDemo />);
     const seed = presetById("org").seed;
     expect(shownJson()).toEqual(seed);
     await user.click(screen.getByRole("checkbox", { name: /Stop inheriting/ }));
@@ -116,7 +116,7 @@ describe("rule set data", () => {
     });
     URL.revokeObjectURL = vi.fn();
     const click = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
-    render(<App />);
+    render(<RaciDemo />);
     await user.click(screen.getByRole("checkbox", { name: /Stop inheriting/ }));
     const edited = shownJson();
     await user.click(screen.getByRole("button", { name: "Download JSON" }));
@@ -135,7 +135,7 @@ describe("rule set data", () => {
 
   it("reports an invalid upload and keeps the rules", async () => {
     const user = userEvent.setup();
-    render(<App />);
+    render(<RaciDemo />);
     const before = shownJson();
     const input = screen.getByLabelText("Upload rule set JSON");
     await user.upload(input, new File(["nope"], "bad.json", { type: "application/json" }));
@@ -150,7 +150,7 @@ describe("rule set data", () => {
   });
 
   it("ignores an upload with no file", () => {
-    render(<App />);
+    render(<RaciDemo />);
     const input = screen.getByLabelText("Upload rule set JSON");
     fireEvent.change(input, { target: { files: [] } });
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
@@ -158,7 +158,7 @@ describe("rule set data", () => {
 
   it("copies the JSON, or says it cannot", async () => {
     const user = userEvent.setup();
-    render(<App />);
+    render(<RaciDemo />);
     const write = vi.fn().mockResolvedValue(undefined);
     Object.defineProperty(navigator, "clipboard", {
       value: { writeText: write },
@@ -171,5 +171,46 @@ describe("rule set data", () => {
     write.mockRejectedValue(new Error("no"));
     await user.click(screen.getByRole("button", { name: "Copy JSON" }));
     expect(await screen.findByText(/Copy is not available/)).toBeInTheDocument();
+  });
+});
+
+describe("props", () => {
+  it("applies className to the root next to the built-in classes", () => {
+    render(<RaciDemo className="host-wrap" />);
+    expect(appRoot()).toHaveClass("host-wrap", "raci-root", "demo-app");
+  });
+
+  it("starts on the preset named by initialPreset", () => {
+    render(<RaciDemo initialPreset="other" />);
+    expect(screen.getByRole("columnheader", { name: "Publish" })).toBeInTheDocument();
+    expect(screen.getByRole("combobox", { name: "Preset" })).toHaveValue("other");
+    expect(shownJson()).toEqual(demoRuleSet("other"));
+  });
+
+  it("falls back to the first preset for an unknown initialPreset", () => {
+    render(<RaciDemo initialPreset="nope" />);
+    expect(screen.getByRole("combobox", { name: "Preset" })).toHaveValue("org");
+  });
+
+  it("starts on initialTheme, ahead of the saved choice", () => {
+    window.localStorage.setItem("raci-demo-theme", "light");
+    render(<RaciDemo initialTheme="dark" />);
+    expect(appRoot()).toHaveAttribute("data-theme", "dark");
+    expect(screen.getByRole("button", { name: "Dark" })).toHaveAttribute("aria-pressed", "true");
+  });
+
+  it("keeps two instances independent, with distinct tab ids", async () => {
+    const user = userEvent.setup();
+    render(
+      <>
+        <RaciDemo />
+        <RaciDemo initialPreset="other" />
+      </>,
+    );
+    const tabs = screen.getAllByRole("tab", { name: "Simulator" });
+    expect(tabs).toHaveLength(2);
+    expect(tabs[0]!.id).not.toBe(tabs[1]!.id);
+    await user.click(tabs[0]!);
+    expect(document.querySelectorAll(".raci-simulator")).toHaveLength(1);
   });
 });

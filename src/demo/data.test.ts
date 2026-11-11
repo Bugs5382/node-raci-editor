@@ -1,7 +1,16 @@
 import { describe, expect, it, vi } from "vitest";
 import { decide } from "@/index";
 import type { Person } from "@/index";
-import { memoryKind, nodeIds, nodeLabel, parentsOf, presetById, presets } from "./data";
+import {
+  demoPresets,
+  demoRuleSet,
+  memoryKind,
+  nodeIds,
+  nodeLabel,
+  parentsOf,
+  presetById,
+  presets,
+} from "./data";
 import { parseRuleSet, readTheme, serializeRuleSet, writeTheme } from "./io";
 
 const person = (...subjects: string[]): Person => ({ subjects });
@@ -154,5 +163,26 @@ describe("theme storage", () => {
     expect(() => writeTheme("light")).not.toThrow();
     get.mockRestore();
     set.mockRestore();
+  });
+});
+
+describe("public builders", () => {
+  it("lists both presets with their seed and first category", () => {
+    const list = demoPresets();
+    expect(list.map((p) => p.id)).toEqual(["org", "other"]);
+    expect(list[0]!.seed).toEqual(presetById("org").seed);
+    expect(list[1]!.initialCategory).toBe("drafts");
+  });
+
+  it("hands out fresh rule sets that can be changed freely", () => {
+    const a = demoRuleSet("org");
+    a.categories.payroll!.entries.length = 0;
+    expect(demoRuleSet("org").categories.payroll!.entries).toHaveLength(3);
+    expect(demoPresets()[0]!.seed).not.toBe(demoPresets()[0]!.seed);
+  });
+
+  it("defaults to the first preset and falls back for an unknown id", () => {
+    expect(demoRuleSet()).toEqual(presetById("org").seed);
+    expect(demoRuleSet("nope")).toEqual(presetById("org").seed);
   });
 });

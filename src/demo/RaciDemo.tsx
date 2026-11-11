@@ -1,13 +1,13 @@
-import { useMemo, useRef, useState } from "react";
+import { useId, useMemo, useRef, useState } from "react";
 import type { ChangeEvent, KeyboardEvent, RefObject } from "react";
 import { defaultSettings } from "@/core/types";
 import type { RaciSettings, ResourceNode, RuleSet } from "@/core/types";
-import { RulesEditor, Simulator, SettingsPanel } from "@/index";
+import { RulesEditor } from "@/react/editor/index";
+import { SettingsPanel } from "@/react/settings/index";
+import { Simulator } from "@/react/simulator/Simulator";
 import { nodeLabel, presetById, presets } from "./data";
 import { parseRuleSet, readTheme, serializeRuleSet, writeTheme } from "./io";
 import type { ThemeChoice } from "./io";
-import "./brand-override.css";
-import "./demo.css";
 
 type TabId = "editor" | "simulator" | "settings";
 const tabs: { id: TabId; label: string }[] = [
@@ -50,6 +50,9 @@ const Tree = ({
 );
 
 const Workbench = ({ presetId }: { presetId: string }) => {
+  const uid = useId();
+  const tabId = (id: TabId) => `${uid}-tab-${id}`;
+  const panelId = `${uid}-panel`;
   const preset = presetById(presetId);
   const { config } = preset;
   const [ruleSet, setRuleSet] = useState<RuleSet>(preset.seed);
@@ -106,7 +109,7 @@ const Workbench = ({ presetId }: { presetId: string }) => {
     e.preventDefault();
     const next = tabs[(index + step + tabs.length) % tabs.length]!;
     setTab(next.id);
-    document.getElementById(`demo-tab-${next.id}`)?.focus();
+    document.getElementById(tabId(next.id))?.focus();
   };
 
   return (
@@ -126,9 +129,9 @@ const Workbench = ({ presetId }: { presetId: string }) => {
               key={t.id}
               type="button"
               role="tab"
-              id={`demo-tab-${t.id}`}
+              id={tabId(t.id)}
               aria-selected={tab === t.id}
-              aria-controls="demo-panel"
+              aria-controls={panelId}
               tabIndex={tab === t.id ? 0 : -1}
               className="demo-tab"
               onClick={() => setTab(t.id)}
@@ -138,12 +141,7 @@ const Workbench = ({ presetId }: { presetId: string }) => {
             </button>
           ))}
         </div>
-        <div
-          role="tabpanel"
-          id="demo-panel"
-          aria-labelledby={`demo-tab-${tab}`}
-          className="demo-panel"
-        >
+        <div role="tabpanel" id={panelId} aria-labelledby={tabId(tab)} className="demo-panel">
           {tab === "editor" && (
             <RulesEditor
               config={config}
@@ -214,10 +212,26 @@ const Workbench = ({ presetId }: { presetId: string }) => {
   );
 };
 
-export const App = () => {
-  const [theme, setTheme] = useState<ThemeChoice>(readTheme);
+/** Props of {@link RaciDemo}. All are optional. */
+export interface RaciDemoProps {
+  /** Extra class name(s) for the root element, next to `raci-root` and `demo-app`. */
+  className?: string;
+  /** Preset shown first, `"org"` (default) or `"other"`. An unknown id falls back to `"org"`. */
+  initialPreset?: string;
+  /** Theme chosen first. When omitted the last saved choice is used, else `"system"`. */
+  initialTheme?: ThemeChoice;
+}
+
+/**
+ * A ready-to-render demo: a resource tree, the rules editor, simulator and settings panel in tabs,
+ * the rule set as JSON (copy, download, upload), a light/dark/system theme switch and a brand
+ * override toggle. Import `node-raci-editor/styles.css` and `node-raci-editor/demo.css` first.
+ * The wrapper sets `data-theme`, so the host page is not touched.
+ */
+export const RaciDemo = ({ className, initialPreset, initialTheme }: RaciDemoProps = {}) => {
+  const [theme, setTheme] = useState<ThemeChoice>(() => initialTheme ?? readTheme());
   const [brand, setBrand] = useState(false);
-  const [presetId, setPresetId] = useState(presets[0]!.id);
+  const [presetId, setPresetId] = useState(() => presetById(initialPreset ?? "").id);
   const dataTheme = theme === "system" ? undefined : theme;
 
   const chooseTheme = (next: ThemeChoice) => {
@@ -227,7 +241,9 @@ export const App = () => {
 
   return (
     <div
-      className={["raci-root", "demo-app", brand ? "demo-brand" : ""].filter(Boolean).join(" ")}
+      className={["raci-root", "demo-app", brand ? "demo-brand" : "", className ?? ""]
+        .filter(Boolean)
+        .join(" ")}
       data-theme={dataTheme}
     >
       <header className="demo-header">

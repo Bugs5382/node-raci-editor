@@ -22,6 +22,8 @@ mind before changing it:
 
 - Entry point: `node-raci-editor` (everything is exported from `src/index.ts`).
 - Stylesheet: `import "node-raci-editor/styles.css"` (built to `dist/styles.css`).
+- Demo: `import { RaciDemo } from "node-raci-editor/demo"` plus `node-raci-editor/demo.css`;
+  `npx raci-editor-demo` serves the packaged static page. See `guides/demo.md`.
 - Peer dependencies: `react` and `react-dom`, version 18 or newer.
 - Test vectors for `decide()` ship as `vectors/decide.json` (also importable as
   `node-raci-editor/vectors/decide.json`). Go and mock implementations run the same file.
@@ -40,7 +42,11 @@ mind before changing it:
 - `src/react/` - the React components; tests run in jsdom.
 - `src/styles/` - `index.css` imports `tokens.css` and the component sheets (`components.css`,
   `editor.css`, `simulator.css`, `settings.css`); built to `dist/styles.css`.
-- `demo/` - a Vite app that imports the package source through the `@/` alias (not published).
+- `src/demo/` - `RaciDemo`, the sample data (`demoPresets`, `demoRuleSet`) and `demo.css` /
+  `brand-override.css`; published as the `node-raci-editor/demo` subpath and `node-raci-editor/demo.css`.
+  Tests are beside it (jsdom).
+- `demo/` - a thin Vite shell that mounts `RaciDemo`; `npm run build` builds it to `dist/demo-site`,
+  which ships with the `bin/raci-editor-demo.mjs` command (stdlib http server, default port 5179).
 - `tests/` - cross-module tests; `docs-snippets.test.tsx` runs the code shown in the README and guides.
 - `vectors/` - shared `decide()` test vectors (published) and their format in `vectors/README.md`.
 - `guides/` - the documentation; `README.md` links to each guide.
@@ -56,7 +62,7 @@ mind before changing it:
 - Lint: `npm run lint` (Oxlint, shared config from `@bugs5382/node-oxlint-config`; `lint:fix`)
 - Format: `npm run format` / `npm run format:check` (oxfmt); there is no ESLint or Prettier
 - Types: `npm run typecheck` (covers `src`, `demo` and `tests`)
-- Demo: `npm run demo:dev` (port 5179) and `npm run demo:build`
+- Demo: `npm run demo:dev` (port 5179) and `npm run demo:build` (to `dist/demo-site`, run by `build`)
 - Package checks (npm packages), after a build: `npm run check:pack` (contents and ceiling),
   `npm run check:pack:growth` (growth against the last release), `npm run check:install`
   (install the tarball, import ESM and CJS); see CLAUDE.md "npm package contents"
