@@ -69,6 +69,96 @@ interface ActionDef {
     "Would be allowed" and "Would be denied", an obligation reads "Required" and "Not required".
 - Options of the `"ordered"` model, set with `createOrderedModel(options)` (the registered `"ordered"` has the defaults): `ownerKinds` (the subject kinds that may own a category; default `["user"]`, empty switches owners off), `implicitSubjects` (default the built-in Everyone), `ownerActions`, and `superusers: { subjects, actions }` (the root seat: subjects that always have the listed Read, Author and Manage, sensitive included, whatever any row says, like owners but host-supplied and not tied to a category; off unless set. Approve and Acknowledge are never exempt, even if listed, and follow the rows for root like anyone else; a site administrator who is not root follows the rows too). A deny that names such a subject is ignored when deciding, and the decision reports it as `configuredBlock` so the simulator can show it. A cell answers only its own action: Manage no longer answers Read or Author at its row position, though an allowed Manage still gives both. Manage in a host's config usually implies Read and Author only; list `implies` as you want it.
 
+## Examples
+
+Two complete setups to copy. The first has no directory of people at all; the second is a help desk
+on the ordered model, with owners, Everyone as a normal row, short labels in two column groups, an
+Acknowledge obligation that needs Read, and the root seat.
+
+```tsx
+import { createOrderedModel, registerModel } from "node-raci-editor";
+import type { RaciConfig as ExampleConfig, RuleSet as ExampleRules } from "node-raci-editor";
+
+// 1. Capabilities only: no users, groups or roles. The host resolves "can:ack" and "can:edit" for
+//    whoever is asking, and `contexts` are the named askers the simulator offers.
+export const capabilityConfig: ExampleConfig = {
+  actions: [
+    { id: "read", label: "Read" },
+    { id: "edit", label: "Edit", implies: ["read"] },
+    { id: "ack", label: "Acknowledge" },
+  ],
+  subjectKinds: [],
+  matchers: [
+    { id: "can:edit", label: "Can edit", group: "Access" },
+    { id: "can:ack", label: "Can acknowledge", group: "Duties" },
+  ],
+  contexts: [
+    { id: "hire", label: "New hire", subjects: ["can:ack"] },
+    { id: "guest", label: "Guest", subjects: [] },
+  ],
+  resources: [{ id: "policies", label: "Policies", children: [{ id: "leave", label: "Leave" }] }],
+};
+
+// 2. A help desk on the ordered model: first matching row from the top wins, owners always have
+//    the action, and Everyone is an ordinary row. Short labels, two column groups, and an
+//    Acknowledge obligation that needs Read. The root seat (the subject `role:root`, which the host
+//    gives to one account) always has Read, Author and Manage; Approve and Acknowledge follow rows.
+registerModel(
+  createOrderedModel({
+    id: "desk",
+    label: "Help desk",
+    superusers: { subjects: ["role:root"], actions: ["r", "a", "m"] },
+  }),
+);
+
+export const deskConfig: ExampleConfig = {
+  actions: [
+    { id: "r", label: "Read", shortLabel: "R", group: "permissions" },
+    { id: "a", label: "Author", shortLabel: "A", implies: ["r"], group: "permissions" },
+    { id: "m", label: "Manage", shortLabel: "M", implies: ["a", "r"], group: "obligations" },
+    {
+      id: "ack",
+      label: "Acknowledge",
+      shortLabel: "ACK",
+      kind: "obligation",
+      requires: ["r"],
+      group: "obligations",
+    },
+  ],
+  subjectKinds: [
+    { kind: "user", label: "Person", search: () => [{ id: "user:lena", label: "Lena" }] },
+    { kind: "group", label: "Team", search: () => [{ id: "group:agents", label: "Agents" }] },
+  ],
+  groups: [
+    { id: "permissions", label: "Permissions" },
+    { id: "obligations", label: "Obligations" },
+  ],
+  resources: [
+    { id: "support", label: "Support", children: [{ id: "escalated", label: "Escalated" }] },
+  ],
+};
+
+export const deskRules: ExampleRules = {
+  model: "desk",
+  parents: { escalated: "support" },
+  categories: {
+    support: {
+      owners: ["user:lena"], // inherited by every category below
+      entries: [
+        { subject: "everyone:*", action: "r", effect: "allow" },
+        { subject: "everyone:*", action: "ack", effect: "allow" },
+      ],
+    },
+    escalated: {
+      entries: [
+        { subject: "group:agents", action: "r", effect: "deny" }, // row order is the rule
+        { subject: "role:root", action: "r", effect: "deny" }, // saved, never applied to root
+      ],
+    },
+  },
+};
+```
+
 ## Cell appearance
 
 Whoever uses the package can set how the cells look, in two places. Both are optional; nothing
@@ -190,7 +280,7 @@ The node ids are the category ids in your `RuleSet`. The tree is used for labels
 `decide()` follows `ruleSet.parents`, so keep `parents` in step with the tree you pass here.
 
 The package ships no tree component: your app renders its own tree (navigation, a file browser,
-whatever fits) and passes the nodes in. The demo's tree is internal to the demo and not exported.
+whatever fits) and passes the nodes in.
 
 ## Settings
 

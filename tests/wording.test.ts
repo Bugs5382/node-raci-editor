@@ -45,8 +45,6 @@ const docFiles = [
   "AGENTS.md",
   "package.json",
   "vectors/README.md",
-  "demo/index.html",
-  "bin/raci-editor-demo.mjs",
   ...walk(join(root, "guides")).map((f) => relative(root, f)),
 ].map((f) => join(root, f));
 

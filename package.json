@@ -22,17 +22,6 @@
         "default": "./dist/index.cjs"
       }
     },
-    "./demo": {
-      "import": {
-        "types": "./dist/demo.d.mts",
-        "default": "./dist/demo.mjs"
-      },
-      "require": {
-        "types": "./dist/demo.d.cts",
-        "default": "./dist/demo.cjs"
-      }
-    },
-    "./demo.css": "./dist/demo.css",
     "./styles.css": "./dist/styles.css",
     "./vectors/decide.json": "./dist/vectors/nearest.json",
     "./vectors/nearest.json": "./dist/vectors/nearest.json",
@@ -43,7 +32,7 @@
     "dist"
   ],
   "config": {
-    "packMaxUnpackedBytes": 910000,
+    "packMaxUnpackedBytes": 480000,
     "packMaxGrowthPercent": 25
   },
   "engines": {
@@ -58,13 +47,11 @@
     "url": "https://github.com/Bugs5382/node-raci-editor/issues"
   },
   "scripts": {
-    "build": "tsdown && node scripts/buildCss.mjs && node scripts/buildVectors.mjs && npm run demo:build",
+    "build": "tsdown && node scripts/buildCss.mjs && node scripts/buildVectors.mjs",
     "check:pack": "node scripts/checkPack.mjs",
     "check:pack:growth": "node scripts/checkPackGrowth.mjs",
     "check:install": "node scripts/checkInstall.mjs",
     "clean": "rm -rf dist docs coverage",
-    "demo:build": "vite build --config demo/vite.config.ts",
-    "demo:dev": "vite --config demo/vite.config.ts",
     "dev": "tsdown --watch",
     "docs": "typedoc",
     "format": "oxfmt",
@@ -101,8 +88,5 @@
     "typescript": "^5.7.2",
     "vite": "^8.3.2",
     "vitest": "^5.0.3"
-  },
-  "bin": {
-    "raci-editor-demo": "./bin/raci-editor-demo.mjs"
   }
 }

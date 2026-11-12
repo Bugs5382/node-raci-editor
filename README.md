@@ -76,31 +76,11 @@ export const App = () => {
 Type a name in the editor's search box, pick Alice, and click a cell to cycle it: not set, allow,
 deny. The simulator picks the person from the `user` kind, or from your first kind when you have none.
 
-## 🎬 Demo
-
-A complete, ready-to-render demo ships in the package as a real export: a resource tree, the editor,
-simulator and settings in tabs, the rules as JSON, a theme switch and a brand-override toggle, with
-sample data for two unrelated apps.
-
-```tsx
-import "node-raci-editor/styles.css";
-import "node-raci-editor/demo.css";
-import { RaciDemo } from "node-raci-editor/demo";
-
-export const DemoPage = () => <RaciDemo initialPreset="other" initialTheme="dark" />;
-```
-
-It is a separate subpath and stylesheet, so an app that does not import them pays nothing. To see it
-without writing any code, run the packaged static demo (plain Node, nothing is opened for you):
-
-```bash
-npx raci-editor-demo --port 5179   # prints http://127.0.0.1:5179/
-```
+## 🌳 The resource tree
 
 The package ships no tree component: the host renders its own resource tree and passes the nodes
-(`ResourceNode[]` and `RuleSet.parents`) in; the demo's tree is internal to the demo.
-
-See [Demo](guides/demo.md) for the props and the sample data builders.
+(`ResourceNode[]` and `RuleSet.parents`) in. See [Getting started](guides/getting-started.md) for a
+complete host example.
 
 ## 🧭 How a host app uses it
 
@@ -220,7 +200,6 @@ export const HostCellEditor = (props: RulesEditorProps) => (
 | [Test vectors](guides/test-vectors.md)          | The shared `decide()` vectors, with a TypeScript runner and a Go sketch.                              |
 | [Extending](guides/extending.md)                | Adding an action, a subject kind or a settings preset, and layering a token override.                 |
 | [Theming](guides/theming.md)                    | Every `--raci-*` token, light and dark, and how to override them.                                     |
-| [Demo](guides/demo.md)                          | `RaciDemo`, its sample data and the `raci-editor-demo` command.                                       |
 | [Rule models (design)](guides/models-design.md) | Design for pluggable rule models: `nearest`, `ordered`, vectors per model and the order of work.      |
 | [Architecture](guides/architecture.md)          | The layout for contributors.                                                                          |
 

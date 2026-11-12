@@ -429,17 +429,17 @@ Editor and simulator options:
 
 Audit of the current code, for this section and PR C:
 
-| Place                            | Finding                                                                              | Action                                                      |
-| -------------------------------- | ------------------------------------------------------------------------------------ | ----------------------------------------------------------- |
-| `core` (decide, models, vectors) | No action or role word compared or built in.                                         | None                                                        |
-| `react` components               | Every visible word goes through the string tables; no literal English in the markup. | None                                                        |
-| String defaults                  | "Person", "allow", "deny", "not set", "included" are defaults, all overridable.      | Document each key; add the new keys above                   |
-| Column header                    | Shows the label or id only; no short label, no header mode.                          | Add `shortLabel` and `headerMode` in PR C                   |
-| Cell glyphs                      | Check, cross and dash are fixed in one icon component.                               | Add the `glyphs` override in PR C                           |
-| Subject labels                   | The built-in subject would show as its raw id.                                       | Label from `editor.everyone` in PR C                        |
-| Owners block                     | Does not exist yet.                                                                  | Label and help from strings in PR C                         |
-| Result words                     | One pair of words for every action.                                                  | Per action and per kind in PR D                             |
-| Demo data                        | Role and action words appear in the sample presets only.                             | Demo only; add a preset with the short labels R A M APV ACK |
+| Place                            | Finding                                                                              | Action                                                                |
+| -------------------------------- | ------------------------------------------------------------------------------------ | --------------------------------------------------------------------- |
+| `core` (decide, models, vectors) | No action or role word compared or built in.                                         | None                                                                  |
+| `react` components               | Every visible word goes through the string tables; no literal English in the markup. | None                                                                  |
+| String defaults                  | "Person", "allow", "deny", "not set", "included" are defaults, all overridable.      | Document each key; add the new keys above                             |
+| Column header                    | Shows the label or id only; no short label, no header mode.                          | Add `shortLabel` and `headerMode` in PR C                             |
+| Cell glyphs                      | Check, cross and dash are fixed in one icon component.                               | Add the `glyphs` override in PR C                                     |
+| Subject labels                   | The built-in subject would show as its raw id.                                       | Label from `editor.everyone` in PR C                                  |
+| Owners block                     | Does not exist yet.                                                                  | Label and help from strings in PR C                                   |
+| Result words                     | One pair of words for every action.                                                  | Per action and per kind in PR D                                       |
+| Sample data                      | Role and action words appear in the examples only.                                   | Examples only; see Configuration, "Examples" (short labels R A M ACK) |
 
 A test renders the grid with custom ids, labels and short labels (including a preset that uses
 short labels such as R, A, M, APV and ACK) and checks the header text in each mode, the tooltip
@@ -473,7 +473,7 @@ package gives no meaning to any kind or id except the one built-in, `everyone:*`
   (`editor.kind.*`, `simulator.context`, `simulator.contextPlaceholder`), each overridable, and the
   code never compares a kind or a label to a word. The default of the context label becomes
   neutral ("Context").
-- **Demo.** A preset with only capability matchers (no users, groups or roles): rows such as
+- **Example.** A setup with only capability matchers (no users, groups or roles): rows such as
   `can:ack` and `has:approve`, named contexts instead of people, no owners.
 - **Tests.** The capability preset runs end to end: through `decide()` (the vectors gain a
   matcher-only case), through the editor (rows, no kind chooser, no search, flat choices) and
@@ -513,7 +513,7 @@ Behaviour:
   `editor.discardTitle`, `editor.discardBody`, `editor.readOnlyNote`) comes from `config.strings`.
 - **Tests.** View mode cannot change anything (no click, key or drop changes the rules, and no
   `onChange` fires); Cancel restores the copy; Save emits `onSave` once; leaving with changes
-  confirms; sizes are the same in both modes. The demo has a switch for both starts (default edit).
+  confirms; sizes are the same in both modes. A host picks the start (default edit).
 
 ### 4.4 Cell appearance is the host's and the user's to set
 
@@ -556,7 +556,7 @@ word), so a colour pair that makes the text unreadable is only flagged in the pr
 **Tests.** A custom glyph and custom colours render; settings round-trip (emit, store, pass back,
 same cells); an oversized glyph or a long word leaves the box size and the centring unchanged
 (jsdom for structure, headless Chromium for the measured sizes); invalid input is normalized. The
-demo gets a preset with custom cells, and the review gets one item for it.
+the guides get an example with custom cells.
 
 ## 5. What the `Simulator` adapts
 
@@ -710,7 +710,7 @@ Estimates in working days, one developer, including tests and docs for the item.
 | 3    | `"ordered"` evaluate (rows, chain, owners, implies, requires, trace), pools, validate and its vectors           | 4    |
 | 4    | Editor: view and edit mode (1.5); names, matchers, cell appearance and context picker (3.5); ordered editor (3) | 8    |
 | 5    | Simulator: wording by kind, pool and obligation lists, trace steps, `gatedBy`                                   | 2    |
-| 6    | Docs, an `"ordered"` demo preset, and guides                                                                    | 1.5  |
+| 6    | Docs, an `"ordered"` example, and guides                                                                        | 1.5  |
 
 Total: about 19 days. A Go port of the runner is outside this estimate, about 1 day per model.
 
@@ -725,14 +725,14 @@ Recommended order and PR split, after the initial build merges:
    - C1: view and edit mode (4.3). Applies to every model; needs nothing else.
    - C2: names, matchers and cell appearance (4.1, 4.2 and 4.4): short labels and header mode, kind
      grouping, `cellStates` and the Cells section of the settings panel, generic matchers, the
-     context picker, the demo presets (short labels; capabilities only; custom cells). Applies to
+     context picker, the examples (short labels; capabilities only; custom cells). Applies to
      every model; needs nothing else. If it grows too large it splits again into names and
      matchers, and cell appearance.
    - C3: the `"ordered"` editor: row ordering (up, down, drag), green/red/empty cells, inherited
      rows, the owners editor. Needs B and C1.
 4. PR D, step 5: the simulator's wording by kind, pool and obligation lists. Needs B; its list view
    shares C's labels, so it follows C.
-5. PR E, step 6: docs and demo preset. Last, so it describes what shipped.
+5. PR E, step 6: docs and examples. Last, so it describes what shipped.
 
 Each PR keeps `npm test`, lint, format and the wording test green, keeps `vectors/nearest.json`
 verdicts unchanged and adds only optional fields.

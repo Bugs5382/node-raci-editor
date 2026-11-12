@@ -231,9 +231,6 @@ export const HostCellEditor = (props: RulesEditorProps) => (
 );
 ```
 
-The demo has a Cell variant switch (box, marks, custom) and exports `demoRenderCell`, a sample host
-cell, from `node-raci-editor/demo`.
-
 ## Headings and groups
 
 - **`headerMode`.** `"full"` shows each action's label, `"short"` its `shortLabel`, and `"auto"` (the
