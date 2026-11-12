@@ -48,10 +48,12 @@ export interface OrderedOptions {
   /** The actions owners always have. Default: each action's `ownerHas`, else every non-obligation action. */
   ownerActions?: string[];
   /**
-   * Subjects that always have the listed actions, whatever any row says: nothing can take it away,
-   * as for owners, but supplied by the host and not tied to a category. Off unless configured.
-   * An action not listed (an obligation, say) follows the rows like anyone else's. A deny that
-   * would have applied is ignored but reported as `configuredBlock` on the decision.
+   * The root seat: subjects that always have the listed actions, whatever any row says. Nothing
+   * can take it away, as for owners, but it is supplied by the host and not tied to a category.
+   * Off unless configured. Only access actions (Read, Author, Manage) can be listed to any effect:
+   * an obligation (Approve, Acknowledge) is never exempt, even when listed, and follows the rows
+   * like anyone else's. A deny that would have applied is ignored but reported as
+   * `configuredBlock` on the decision.
    */
   superusers?: { subjects: string[]; actions: string[] };
 }
@@ -116,13 +118,19 @@ export const createOrderedModel = (options: OrderedOptions = {}): RaciModel => {
       const def = byId.get(id);
       return def?.ownerHas ?? def?.kind !== "obligation";
     };
+    // Approve and Acknowledge are never global for the seat, whatever the host lists.
+    const superuserHas = (id: string): boolean =>
+      options.superusers?.actions.includes(id) === true &&
+      byId.get(id)?.kind !== "obligation" &&
+      id !== "approve" &&
+      id !== "ack";
     const covers = (from: string, to: string): boolean => closure(from, byId).has(to);
 
     // One action, no gating. `record` adds owner and category steps to the trace. `rulesOnly`
     // leaves the superuser seat out, to find the entry that would have denied it.
     const core = (act: string, record: boolean, rulesOnly = false): Decision => {
-      if (!rulesOnly && options.superusers?.actions.includes(act)) {
-        const matched = options.superusers.subjects.find((s) => subjects.has(s));
+      if (!rulesOnly && superuserHas(act)) {
+        const matched = options.superusers?.subjects.find((s) => subjects.has(s));
         if (matched !== undefined) {
           if (record) trace.push({ category, matches: [], kind: "superuser", matched });
           return { allowed: true, reason: "superuser", path: [category] };
