@@ -32,6 +32,31 @@ export interface ActionResult {
   decision: Decision;
   /** One sentence: the package wording, or the host's own text. */
   reasonText: string;
+  /** What decided, in words ("row #2 of Door entry", "owner of Building"); absent when nothing did. */
+  decidedByText?: string;
+}
+
+/** One line of a pool list: a person with the reason they are listed. */
+export interface PoolListItem {
+  /** The person's id as the host gave it. */
+  person: string;
+  /** The person's label, or the everyone text for the built-in Everyone row. */
+  label: string;
+  /** Why they are listed ("owner of Building", "row #2 of Door entry"). */
+  reason: string;
+  /** True for the built-in Everyone row, which stands for all people at once. */
+  everyone: boolean;
+}
+
+/** A titled pool or obligation list for the selected category, ready to draw. */
+export interface PoolListView {
+  id: string;
+  /** The action the list is for. */
+  action: string;
+  /** "Who can Approve", the host's label, or the string for an obligation. */
+  title: string;
+  /** The people, owners first. Empty means nobody. */
+  items: PoolListItem[];
 }
 
 /** What a built-in view and the `renderResults` slot receive. */
@@ -40,6 +65,8 @@ export interface SimulatorViewProps {
   category: string;
   /** One result per visible action, in display order. */
   results: ActionResult[];
+  /** The pool and obligation lists from the `lists` prop; empty when none was given or the host evaluates. */
+  lists: PoolListView[];
   status: "idle" | "loading" | "error" | "ready";
   /** Set when the status is `error`. */
   retry?: () => void;

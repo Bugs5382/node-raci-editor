@@ -212,6 +212,7 @@ category.
 | `renderResults` | `(view: SimulatorViewProps) => ReactNode`   | Optional. Replaces the results region only.                                                                                                                                           |
 | `evaluate`      | `(q) => Promise<{ decision, reasonText? }>` | Optional. Host-side evaluation; `decide()` is not run. See Evaluating on your server.                                                                                                 |
 | `show`          | `{ memberships?: boolean }`                 | Optional. Set `memberships` to `false` to hide the memberships picker.                                                                                                                |
+| `lists`         | `SimulatorList[]`                           | Optional. Pool and obligation lists for the selected category. See Pool and obligation lists.                                                                                         |
 
 What it does:
 
@@ -224,6 +225,62 @@ What it does:
 - With no person it asks you to choose one; with no categories or no visible actions it says so.
 
 To change the category, pass another `categoryId`; the results follow it.
+
+### Wording by action kind
+
+An access action reads "Would be allowed" or "Would be denied". An action with `kind: "obligation"`
+reads "Required" or "Not required", and its reason sentence starts the same way ("Required by ...",
+"Not required: ..."). Set `outcome: { allowed, denied }` on an action to use your own words for it
+in every view. Otherwise the words come from the strings `simulator.access.allowed`,
+`simulator.access.denied`, `simulator.obligation.allowed` and `simulator.obligation.denied`; the
+older `simulator.allowed` and `simulator.denied` keep working as the access words. The `Decision`
+is the same either way.
+
+### Decided by
+
+Next to the reason, each result says what decided it, in text:
+
+- the deciding row, as its position and category: "row #2 of Door entry" (rows are counted from 1)
+- "owner of Building" when an owner of the category, or of one above it, decided
+- "always has this action" when a subject you listed in `superusers` decided
+- "needs Read first" when a required action was not allowed
+- "given by Author" when a higher action gave this one
+
+The list view shows it under the reason, the boxes view in the Decided by box and the strips view
+as a second muted line. It is shown for the `"ordered"` model, whose rows are numbered; the
+`"nearest"` model keeps its entry display. Every phrase is a string (`simulator.by.*`) you can
+change.
+
+### Pool and obligation lists
+
+`lists` adds titled lists below the results, for questions the rows alone do not answer: who can
+approve here, who must acknowledge. Each item is `{ id, action, label?, people }`, where `people`
+is an array of `{ id, subjects }` (`PoolPerson`): the people you want considered and the matchers
+that apply to each. The package does not know who exists, so you supply them. For the selected
+category the simulator runs `actionPool` with the rule set's model and lists the people the action
+answers allowed for, owners first, each with the reason ("owner of Building", "row #2 of Door
+entry"). People are labelled through your subject kinds' `resolve`, else by their `id`. When the
+deciding row is the built-in Everyone row the list shows one line, "Everyone", instead of names;
+an empty result reads "Nobody". The title is `label`, else "Who can Approve" (or "Who must
+Acknowledge" for an obligation), from the strings `simulator.list.access` and
+`simulator.list.obligation`.
+
+```tsx
+<Simulator
+  config={config}
+  ruleSet={ruleSet}
+  categoryId="door"
+  lists={[
+    { id: "approvers", action: "approve", people },
+    { id: "acknowledge", action: "ack", label: "Must acknowledge", people },
+  ]}
+/>
+```
+
+The lists do not depend on the chosen person or on the view. They are computed with the same model
+as the results, and they are not shown when `evaluate` is set (your server answers, so supply
+lists from there). With `renderResults` the built-in lists are not drawn; the same data arrives as
+`view.lists`. Each list is a heading (`h3`) and a real list, and the reason is text, not colour.
 
 ### Variants
 
@@ -249,7 +306,7 @@ labels of the rows come from `config.actions` and `settings.visibleActions`.
 empty states and the loading and error states stay in the package; the function is called once the
 results are ready. `view` is a `SimulatorViewProps`: `person`, `category`, `results` (one
 `ActionResult` of `action`, `decision` and `reasonText` per visible action), `status`, `retry`,
-`labelOf`, `subjectLabel` and `t`.
+`lists` (a `PoolListView` per entry of the `lists` prop: `id`, `action`, `title` and `items` with `person`, `label`, `reason` and `everyone`), `labelOf`, `subjectLabel` and `t`. Each result also carries `decidedByText` when something decided.
 
 ### Evaluating on your server
 
