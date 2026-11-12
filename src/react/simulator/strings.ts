@@ -57,6 +57,8 @@ export const simulatorStrings: Record<string, string> = {
   "simulator.reason.stoppedFor": "{verdict}: no rule matched, and inheriting stopped at {category}",
   "simulator.reason.owner": "{verdict}: an owner of this category or of one above it",
   "simulator.reason.superuser": "{verdict}: this subject always has this action",
+  "simulator.reason.superuserBlocked":
+    "{verdict}: this subject always has this action; {subject} ({action}) in {category} would have denied it",
   "simulator.reason.requires": "{verdict}: needs {action} first",
   "simulator.reason.default": "Would be denied: no rule matched (default deny)",
   "simulator.reason.defaultFor": "{verdict}: no rule matched (default deny)",

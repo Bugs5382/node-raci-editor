@@ -1,6 +1,6 @@
 # Shared decide() test vectors
 
-The vector files are language-neutral sets of test cases for the access decision. The TypeScript package, a mock server and a Go implementation all run the same files, so they must agree. `decide()` is a pure evaluation helper the host may call; the host enforces.
+The vector files are language-neutral sets of test cases for the access decision. The TypeScript package, a mock server and a Go implementation all run the same files, so they must agree. `ordered.json` is self-contained: its actions, options, cases and pools are everything a runner needs. `decide()` is a pure evaluation helper the host may call; the host enforces.
 
 ## Files per model
 
@@ -74,19 +74,28 @@ An entry matches when `entry.subject` is one of the person's subjects and the as
 `ordered.json` adds optional fields; a runner for another model ignores them.
 
 - Actions may carry `kind`, `requires`, `ownerHas` and `outcome`.
-- A file may carry `options` for the model that runs it. `ordered.json` sets `superusers`: `{ "subjects": ["role:admin"], "actions": ["read", "author", "manage"] }`, so a person with the `role:admin` subject always has those actions. A runner builds the model with those options before running the cases.
+- A file may carry `options` for the model that runs it. `ordered.json` sets `superusers`: `{ "subjects": ["role:root"], "actions": ["read", "author", "approve", "manage"] }`, the root seat: a person with the `role:root` subject always has those actions. The override follows the seat, never a name. The host gives a person the role `root` when, and only when, they hold the root seat; a user id or username `root` means nothing to the engine, and a person with another id but the role `root` is exempt. After a transfer the host simply moves the role; the vectors do not model transfers. Acknowledge is not listed, so root follows the category's Ack rows like anyone else (through a person row or a group). A runner builds the model with those options before running the cases. A site administrator who is not root (`role:admin` in the cases) is an ordinary person; break-glass access is a host concern, not something the engine offers.
 - A category may carry `owners` (subjects of the kinds the model allows; `"user"` by default).
 - A `person` may leave `id` empty and list extra matchers in `subjects` (for example `can:ack`), added after the derived ones. The built-in subject `everyone:*` is added by the model.
 - `expect.reason` also takes `"owner"`, `"superuser"` and `"requires"`; `expect.gatedBy` names the required action that was not allowed. When an owner is what allows it, `decidedBy` is `null`.
+- `expect.configuredBlock` is `{ category, subject, action, effect }` and only appears with reason `"superuser"`: the entry that would have denied root if root were subject to the rules. The decision is still an allow and `decidedBy` stays `null`. Absent means no entry would have denied. This field is additive, so the file `version` stays 1.
 - A case with a `pending` field follows an open question in the design guide (the number of the difference). None are pending.
 - `pools` is a list of `{ name, ruleSet, people, category, action, expect }`: who the action answers allowed for, owners first, each as `{ person, reason, category, row?, everyone? }`. `row` is the 0-based position of the deciding row in its category.
 
 ### Algorithm of the ordered model
 
 1. An unknown asked action is a default deny with an empty path. The person's subjects gain the built-in `everyone:*`.
-1b. If the option `superusers` is set, the action is in its `actions` and one of its `subjects` is among the person's subjects, allow with reason `superuser`, whatever any row says. An action not listed (an obligation, say) is not covered.
+1b. If the option `superusers` is set, the action is in its `actions` and one of its `subjects` is among the person's subjects, allow with reason `superuser`, whatever any row says, and a deny that would have applied is ignored. An action not listed (Ack, say) is not covered. When rows would have denied, the decision reports the first such entry as `configuredBlock`.
 2. If the action is one owners have (`ownerHas`, else any action that is not an obligation) and a category in the chain lists an owner of an allowed kind who is among the subjects, allow with reason `owner`. Owners are checked before every row.
-3. Otherwise walk the chain, the category then its parents (a repeat ends the walk; there is no `"*"` category and `stopInheriting` is ignored). Group each category's entries into rows by subject, in order of first appearance. The first row whose subject matches and that has a cell for the asked action (or, failing that, a cell on an action that implies it) decides: allow or deny. A cell on the asked action beats an implied cell in the same row. Rows with no such cell are skipped.
-4. If the answer is not an allow, an allowed higher action gives it: any other action that implies the asked one (directly or through others) and is itself allowed by a row or an owner makes the answer an allow, decided by that higher action's entry, even over an explicit deny of the lower action. Author gives Read whatever a row says about Read. It only goes down, never sideways or up, and a denied higher action gives nothing.
+3. Otherwise walk the chain, the category then its parents (a repeat ends the walk; there is no `"*"` category and `stopInheriting` is ignored). Group each category's entries into rows by subject, in order of first appearance. The first row whose subject matches and that has a cell for the asked action decides: allow or deny. A cell answers only its own action, so a Manage cell does not answer Read or Author at its row position. Rows with no cell for the asked action are skipped.
+4. If the answer is not an allow, an allowed higher action gives it: any other action that implies the asked one (directly or through others) and is itself allowed by a row or an owner makes the answer an allow, decided by that higher action's entry, even over an explicit deny of the lower action. Author gives Read whatever a row says about Read, and an allowed Manage gives Read and Author (never Approve or Ack). It only goes down, never sideways or up, and a denied higher action gives nothing.
 5. Otherwise no row decided: default deny.
 6. If the answer is an allow from a row and the action lists `requires`, each required action is answered by steps 2 to 5 (so a Read given by Author counts); if any is denied the answer is a deny with reason `requires` and `gatedBy`.
+
+### Default category
+
+A host that creates a category seeds it with one Everyone row allowing Read. The vectors pin what that seed does: everyone can Read, nobody can do anything else, and an Ack row added later passes the Read requirement. The seed itself is a host concern; the engine never adds rows.
+
+## Go engines
+
+The Steward Go services run the ordered model from this same `ordered.json`, through [Bugs5382/go-authz](https://github.com/Bugs5382/go-authz), the second runner next to this package. Both must pass every case and pool, including `configuredBlock`. A runner reads `options` before the cases, and a field it does not know is a failure to report, not to ignore.

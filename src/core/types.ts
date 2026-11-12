@@ -163,6 +163,11 @@ export interface Decision {
   stoppedAt?: string;
   /** The required action that was not allowed, when reason is "requires". */
   gatedBy?: string;
+  /**
+   * When reason is "superuser": the category and entry that would have denied it had the superuser
+   * been subject to the rules. Absent when no entry would have. The decision is still an allow.
+   */
+  configuredBlock?: { category: string; entry: Entry };
   /** One step per visited category, nearest first. Only present when `decide()` was asked for it. */
   trace?: TraceStep[];
 }
