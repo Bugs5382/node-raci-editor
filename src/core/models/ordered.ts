@@ -50,7 +50,8 @@ export interface OrderedOptions {
   /**
    * Subjects that always have the listed actions, whatever any row says: nothing can take it away,
    * as for owners, but supplied by the host and not tied to a category. Off unless configured.
-   * An action not listed (an obligation, say) follows the rows like anyone else's.
+   * An action not listed (an obligation, say) follows the rows like anyone else's. A deny that
+   * would have applied is ignored but reported as `configuredBlock` on the decision.
    */
   superusers?: { subjects: string[]; actions: string[] };
 }
@@ -83,9 +84,9 @@ const rowsOf = (entries: Entry[]): Row[] => {
 /**
  * Build an "ordered" model. Per action, rows are read from the top of the effective list (the
  * category's own rows, then its parent's, and so on); the first row that matches and has a green
- * or red cell for the action decides, and an empty cell is skipped. Owners are checked before any
- * row. `implies` widens what a cell covers, and an allowed higher action gives the lower ones even
- * over an explicit deny of the lower one; `requires` narrows a final verdict. A pure evaluation
+ * or red cell for the action decides, and an empty cell is skipped: a cell answers only its own
+ * action. Owners are checked before any row. An allowed higher action gives the lower ones it
+ * `implies` even over an explicit deny of the lower one; `requires` narrows a final verdict. A pure evaluation
  * helper the host may call; the host enforces.
  */
 export const createOrderedModel = (options: OrderedOptions = {}): RaciModel => {
@@ -115,19 +116,12 @@ export const createOrderedModel = (options: OrderedOptions = {}): RaciModel => {
       const def = byId.get(id);
       return def?.ownerHas ?? def?.kind !== "obligation";
     };
-    const closures = new Map<string, Set<string>>();
-    const covers = (from: string, to: string): boolean => {
-      let c = closures.get(from);
-      if (!c) {
-        c = closure(from, byId);
-        closures.set(from, c);
-      }
-      return c.has(to);
-    };
+    const covers = (from: string, to: string): boolean => closure(from, byId).has(to);
 
-    // One action, no gating. `record` adds owner and category steps to the trace.
-    const core = (act: string, record: boolean): Decision => {
-      if (options.superusers?.actions.includes(act)) {
+    // One action, no gating. `record` adds owner and category steps to the trace. `rulesOnly`
+    // leaves the superuser seat out, to find the entry that would have denied it.
+    const core = (act: string, record: boolean, rulesOnly = false): Decision => {
+      if (!rulesOnly && options.superusers?.actions.includes(act)) {
         const matched = options.superusers.subjects.find((s) => subjects.has(s));
         if (matched !== undefined) {
           if (record) trace.push({ category, matches: [], kind: "superuser", matched });
@@ -153,13 +147,12 @@ export const createOrderedModel = (options: OrderedOptions = {}): RaciModel => {
         const hits: TraceMatch[] = [];
         rowsOf(ruleSet.categories[cat]?.entries ?? []).forEach((row, rowIndex) => {
           if (!subjects.has(row.subject)) return;
-          const direct = row.items.find((it) => it.entry.action === act);
-          const hit = direct ?? row.items.find((it) => covers(it.entry.action, act));
+          const hit = row.items.find((it) => it.entry.action === act);
           if (hit) {
             hits.push({
               entry: hit.entry,
               index: hit.index,
-              via: direct ? "direct" : "implied",
+              via: "direct",
               decisive: false,
               row: rowIndex,
             });
@@ -183,22 +176,26 @@ export const createOrderedModel = (options: OrderedOptions = {}): RaciModel => {
     // An allowed higher action gives every action it implies, even over an explicit deny of the
     // lower one: Author gives Read whatever a row says about Read. Only downward, and only from
     // what a row or an owner allows (no chaining through other gifts).
-    const confer = (act: string, record: boolean): Decision | undefined => {
+    const confer = (act: string, record: boolean, rulesOnly = false): Decision | undefined => {
       for (const higher of actions) {
         if (higher.id === act || !covers(higher.id, act)) continue;
-        const d = core(higher.id, false);
+        const d = core(higher.id, false, rulesOnly);
         if (!d.allowed) continue;
         if (record) trace.push({ category, matches: [], kind: "confer", action: higher.id });
         return { ...d };
       }
       return undefined;
     };
-    const answer = (act: string, record: boolean): Decision => {
-      const d = core(act, record);
-      return d.allowed ? d : (confer(act, record) ?? d);
+    const answer = (act: string, record: boolean, rulesOnly = false): Decision => {
+      const d = core(act, record, rulesOnly);
+      return d.allowed ? d : (confer(act, record, rulesOnly) ?? d);
     };
 
     const decision = answer(action, true);
+    if (decision.reason === "superuser") {
+      const rules = answer(action, false, true);
+      if (!rules.allowed && rules.decidedBy) decision.configuredBlock = rules.decidedBy;
+    }
     if (decision.allowed && decision.reason === "entry") {
       for (const required of byId.get(action)?.requires ?? []) {
         const gate = answer(required, false);

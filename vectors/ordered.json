@@ -1301,6 +1301,941 @@
       }
     },
     {
+      "name": "root: Read stays allowed over a Read deny that names root and the deny is reported",
+      "ruleSet": {
+        "categories": {
+          "c": {
+            "entries": [
+              {
+                "subject": "user:root",
+                "action": "read",
+                "effect": "deny"
+              }
+            ]
+          }
+        },
+        "parents": {}
+      },
+      "person": {
+        "id": "root",
+        "groups": [],
+        "roles": []
+      },
+      "category": "c",
+      "action": "read",
+      "expect": {
+        "allowed": true,
+        "reason": "superuser",
+        "decidedBy": null,
+        "configuredBlock": {
+          "category": "c",
+          "subject": "user:root",
+          "action": "read",
+          "effect": "deny"
+        }
+      }
+    },
+    {
+      "name": "root: Manage stays allowed over an Everyone deny and the deny is reported",
+      "ruleSet": {
+        "categories": {
+          "c": {
+            "entries": [
+              {
+                "subject": "everyone:*",
+                "action": "manage",
+                "effect": "deny"
+              }
+            ]
+          }
+        },
+        "parents": {}
+      },
+      "person": {
+        "id": "root",
+        "groups": [],
+        "roles": []
+      },
+      "category": "c",
+      "action": "manage",
+      "expect": {
+        "allowed": true,
+        "reason": "superuser",
+        "decidedBy": null,
+        "configuredBlock": {
+          "category": "c",
+          "subject": "everyone:*",
+          "action": "manage",
+          "effect": "deny"
+        }
+      }
+    },
+    {
+      "name": "root: Approve is allowed with no row",
+      "ruleSet": {
+        "categories": {
+          "c": {
+            "entries": []
+          }
+        },
+        "parents": {}
+      },
+      "person": {
+        "id": "root",
+        "groups": [],
+        "roles": []
+      },
+      "category": "c",
+      "action": "approve",
+      "expect": {
+        "allowed": true,
+        "reason": "superuser",
+        "decidedBy": null
+      }
+    },
+    {
+      "name": "root: an Approve deny that names root is ignored and reported",
+      "ruleSet": {
+        "categories": {
+          "c": {
+            "entries": [
+              {
+                "subject": "user:root",
+                "action": "approve",
+                "effect": "deny"
+              }
+            ]
+          }
+        },
+        "parents": {}
+      },
+      "person": {
+        "id": "root",
+        "groups": [],
+        "roles": []
+      },
+      "category": "c",
+      "action": "approve",
+      "expect": {
+        "allowed": true,
+        "reason": "superuser",
+        "decidedBy": null,
+        "configuredBlock": {
+          "category": "c",
+          "subject": "user:root",
+          "action": "approve",
+          "effect": "deny"
+        }
+      }
+    },
+    {
+      "name": "root: Author is allowed and nothing is reported when no row denies",
+      "ruleSet": {
+        "categories": {
+          "c": {
+            "entries": [
+              {
+                "subject": "user:root",
+                "action": "author",
+                "effect": "allow"
+              }
+            ]
+          }
+        },
+        "parents": {}
+      },
+      "person": {
+        "id": "root",
+        "groups": [],
+        "roles": []
+      },
+      "category": "c",
+      "action": "author",
+      "expect": {
+        "allowed": true,
+        "reason": "superuser",
+        "decidedBy": null
+      }
+    },
+    {
+      "name": "root: the blocked entry is the one that would have decided, not a later one",
+      "ruleSet": {
+        "categories": {
+          "c": {
+            "entries": [
+              {
+                "subject": "group:x",
+                "action": "author",
+                "effect": "deny"
+              },
+              {
+                "subject": "user:root",
+                "action": "author",
+                "effect": "deny"
+              }
+            ]
+          }
+        },
+        "parents": {}
+      },
+      "person": {
+        "id": "root",
+        "groups": [
+          "x"
+        ],
+        "roles": []
+      },
+      "category": "c",
+      "action": "author",
+      "expect": {
+        "allowed": true,
+        "reason": "superuser",
+        "decidedBy": null,
+        "configuredBlock": {
+          "category": "c",
+          "subject": "group:x",
+          "action": "author",
+          "effect": "deny"
+        }
+      }
+    },
+    {
+      "name": "root: Ack follows the rows, an Ack allow for a group root is in",
+      "ruleSet": {
+        "categories": {
+          "c": {
+            "entries": [
+              {
+                "subject": "group:it",
+                "action": "read",
+                "effect": "allow"
+              },
+              {
+                "subject": "group:it",
+                "action": "ack",
+                "effect": "allow"
+              }
+            ]
+          }
+        },
+        "parents": {}
+      },
+      "person": {
+        "id": "root",
+        "groups": [
+          "it"
+        ],
+        "roles": []
+      },
+      "category": "c",
+      "action": "ack",
+      "expect": {
+        "allowed": true,
+        "reason": "entry",
+        "decidedBy": {
+          "category": "c",
+          "subject": "group:it",
+          "action": "ack",
+          "effect": "allow"
+        }
+      }
+    },
+    {
+      "name": "root: Ack follows the rows, an Ack deny for a group root is in",
+      "ruleSet": {
+        "categories": {
+          "c": {
+            "entries": [
+              {
+                "subject": "group:it",
+                "action": "ack",
+                "effect": "deny"
+              },
+              {
+                "subject": "everyone:*",
+                "action": "ack",
+                "effect": "allow"
+              }
+            ]
+          }
+        },
+        "parents": {}
+      },
+      "person": {
+        "id": "root",
+        "groups": [
+          "it"
+        ],
+        "roles": []
+      },
+      "category": "c",
+      "action": "ack",
+      "expect": {
+        "allowed": false,
+        "reason": "entry",
+        "decidedBy": {
+          "category": "c",
+          "subject": "group:it",
+          "action": "ack",
+          "effect": "deny"
+        }
+      }
+    },
+    {
+      "name": "root: Ack with no row is a default deny",
+      "ruleSet": {
+        "categories": {
+          "c": {
+            "entries": []
+          }
+        },
+        "parents": {}
+      },
+      "person": {
+        "id": "root",
+        "groups": [],
+        "roles": []
+      },
+      "category": "c",
+      "action": "ack",
+      "expect": {
+        "allowed": false,
+        "reason": "default-deny",
+        "decidedBy": null
+      }
+    },
+    {
+      "name": "root: a person row for root decides Ack",
+      "ruleSet": {
+        "categories": {
+          "c": {
+            "entries": [
+              {
+                "subject": "user:root",
+                "action": "ack",
+                "effect": "allow"
+              }
+            ]
+          }
+        },
+        "parents": {}
+      },
+      "person": {
+        "id": "root",
+        "groups": [],
+        "roles": []
+      },
+      "category": "c",
+      "action": "ack",
+      "expect": {
+        "allowed": true,
+        "reason": "entry",
+        "decidedBy": {
+          "category": "c",
+          "subject": "user:root",
+          "action": "ack",
+          "effect": "allow"
+        }
+      }
+    },
+    {
+      "name": "root: a root Ack passes the Read requirement because root always has Read",
+      "ruleSet": {
+        "categories": {
+          "c": {
+            "entries": [
+              {
+                "subject": "user:root",
+                "action": "read",
+                "effect": "deny"
+              },
+              {
+                "subject": "user:root",
+                "action": "ack",
+                "effect": "allow"
+              }
+            ]
+          }
+        },
+        "parents": {}
+      },
+      "person": {
+        "id": "root",
+        "groups": [],
+        "roles": []
+      },
+      "category": "c",
+      "action": "ack",
+      "expect": {
+        "allowed": true,
+        "reason": "entry",
+        "decidedBy": {
+          "category": "c",
+          "subject": "user:root",
+          "action": "ack",
+          "effect": "allow"
+        }
+      }
+    },
+    {
+      "name": "site admin: a non-root site admin follows a Read deny",
+      "ruleSet": {
+        "categories": {
+          "c": {
+            "entries": [
+              {
+                "subject": "role:admin",
+                "action": "read",
+                "effect": "deny"
+              }
+            ]
+          }
+        },
+        "parents": {}
+      },
+      "person": {
+        "id": "d",
+        "groups": [],
+        "roles": [
+          "admin"
+        ]
+      },
+      "category": "c",
+      "action": "read",
+      "expect": {
+        "allowed": false,
+        "reason": "entry",
+        "decidedBy": {
+          "category": "c",
+          "subject": "role:admin",
+          "action": "read",
+          "effect": "deny"
+        }
+      }
+    },
+    {
+      "name": "site admin: a non-root site admin gets Approve only from a row",
+      "ruleSet": {
+        "categories": {
+          "c": {
+            "entries": []
+          }
+        },
+        "parents": {}
+      },
+      "person": {
+        "id": "d",
+        "groups": [],
+        "roles": [
+          "admin"
+        ]
+      },
+      "category": "c",
+      "action": "approve",
+      "expect": {
+        "allowed": false,
+        "reason": "default-deny",
+        "decidedBy": null
+      }
+    },
+    {
+      "name": "site admin: a non-root site admin follows a Manage deny",
+      "ruleSet": {
+        "categories": {
+          "c": {
+            "entries": [
+              {
+                "subject": "everyone:*",
+                "action": "manage",
+                "effect": "deny"
+              }
+            ]
+          }
+        },
+        "parents": {}
+      },
+      "person": {
+        "id": "d",
+        "groups": [],
+        "roles": [
+          "admin"
+        ]
+      },
+      "category": "c",
+      "action": "manage",
+      "expect": {
+        "allowed": false,
+        "reason": "entry",
+        "decidedBy": {
+          "category": "c",
+          "subject": "everyone:*",
+          "action": "manage",
+          "effect": "deny"
+        }
+      }
+    },
+    {
+      "name": "strict: a red Manage row above an Author allow does not deny Author",
+      "ruleSet": {
+        "categories": {
+          "c": {
+            "entries": [
+              {
+                "subject": "user:d",
+                "action": "manage",
+                "effect": "deny"
+              },
+              {
+                "subject": "group:f",
+                "action": "author",
+                "effect": "allow"
+              }
+            ]
+          }
+        },
+        "parents": {}
+      },
+      "person": {
+        "id": "d",
+        "groups": [
+          "f"
+        ],
+        "roles": []
+      },
+      "category": "c",
+      "action": "author",
+      "expect": {
+        "allowed": true,
+        "reason": "entry",
+        "decidedBy": {
+          "category": "c",
+          "subject": "group:f",
+          "action": "author",
+          "effect": "allow"
+        }
+      }
+    },
+    {
+      "name": "strict: a red Manage row above a Read allow does not deny Read",
+      "ruleSet": {
+        "categories": {
+          "c": {
+            "entries": [
+              {
+                "subject": "user:d",
+                "action": "manage",
+                "effect": "deny"
+              },
+              {
+                "subject": "group:f",
+                "action": "read",
+                "effect": "allow"
+              }
+            ]
+          }
+        },
+        "parents": {}
+      },
+      "person": {
+        "id": "d",
+        "groups": [
+          "f"
+        ],
+        "roles": []
+      },
+      "category": "c",
+      "action": "read",
+      "expect": {
+        "allowed": true,
+        "reason": "entry",
+        "decidedBy": {
+          "category": "c",
+          "subject": "group:f",
+          "action": "read",
+          "effect": "allow"
+        }
+      }
+    },
+    {
+      "name": "strict: a red Manage row still denies Manage",
+      "ruleSet": {
+        "categories": {
+          "c": {
+            "entries": [
+              {
+                "subject": "user:d",
+                "action": "manage",
+                "effect": "deny"
+              },
+              {
+                "subject": "group:f",
+                "action": "manage",
+                "effect": "allow"
+              }
+            ]
+          }
+        },
+        "parents": {}
+      },
+      "person": {
+        "id": "d",
+        "groups": [
+          "f"
+        ],
+        "roles": []
+      },
+      "category": "c",
+      "action": "manage",
+      "expect": {
+        "allowed": false,
+        "reason": "entry",
+        "decidedBy": {
+          "category": "c",
+          "subject": "user:d",
+          "action": "manage",
+          "effect": "deny"
+        }
+      }
+    },
+    {
+      "name": "strict: a green Manage row above an Author allow still answers Author through Manage",
+      "ruleSet": {
+        "categories": {
+          "c": {
+            "entries": [
+              {
+                "subject": "user:d",
+                "action": "manage",
+                "effect": "allow"
+              },
+              {
+                "subject": "group:f",
+                "action": "author",
+                "effect": "deny"
+              }
+            ]
+          }
+        },
+        "parents": {}
+      },
+      "person": {
+        "id": "d",
+        "groups": [
+          "f"
+        ],
+        "roles": []
+      },
+      "category": "c",
+      "action": "author",
+      "expect": {
+        "allowed": true,
+        "reason": "entry",
+        "decidedBy": {
+          "category": "c",
+          "subject": "user:d",
+          "action": "manage",
+          "effect": "allow"
+        }
+      }
+    },
+    {
+      "name": "strict: a Manage cell alone gives no Read when it is denied",
+      "ruleSet": {
+        "categories": {
+          "c": {
+            "entries": [
+              {
+                "subject": "user:d",
+                "action": "manage",
+                "effect": "deny"
+              }
+            ]
+          }
+        },
+        "parents": {}
+      },
+      "person": {
+        "id": "d",
+        "groups": [],
+        "roles": []
+      },
+      "category": "c",
+      "action": "read",
+      "expect": {
+        "allowed": false,
+        "reason": "default-deny",
+        "decidedBy": null
+      }
+    },
+    {
+      "name": "requires: a Read deny turns Ack off, a conferred Read does not",
+      "ruleSet": {
+        "categories": {
+          "c": {
+            "entries": [
+              {
+                "subject": "user:d",
+                "action": "read",
+                "effect": "deny"
+              },
+              {
+                "subject": "user:d",
+                "action": "ack",
+                "effect": "allow"
+              }
+            ]
+          }
+        },
+        "parents": {}
+      },
+      "person": {
+        "id": "d",
+        "groups": [],
+        "roles": []
+      },
+      "category": "c",
+      "action": "ack",
+      "expect": {
+        "allowed": false,
+        "reason": "requires",
+        "decidedBy": null,
+        "gatedBy": "read"
+      }
+    },
+    {
+      "name": "requires: Manage allowed confers Read so Ack passes over a Read deny",
+      "ruleSet": {
+        "categories": {
+          "c": {
+            "entries": [
+              {
+                "subject": "user:d",
+                "action": "read",
+                "effect": "deny"
+              },
+              {
+                "subject": "user:d",
+                "action": "manage",
+                "effect": "allow"
+              },
+              {
+                "subject": "user:d",
+                "action": "ack",
+                "effect": "allow"
+              }
+            ]
+          }
+        },
+        "parents": {}
+      },
+      "person": {
+        "id": "d",
+        "groups": [],
+        "roles": []
+      },
+      "category": "c",
+      "action": "ack",
+      "expect": {
+        "allowed": true,
+        "reason": "entry",
+        "decidedBy": {
+          "category": "c",
+          "subject": "user:d",
+          "action": "ack",
+          "effect": "allow"
+        }
+      }
+    },
+    {
+      "name": "default: a new category seeded with an Everyone Read allow, read",
+      "ruleSet": {
+        "categories": {
+          "seed": {
+            "entries": [
+              {
+                "subject": "everyone:*",
+                "action": "read",
+                "effect": "allow"
+              }
+            ]
+          }
+        },
+        "parents": {}
+      },
+      "person": {
+        "id": "nobody",
+        "groups": [],
+        "roles": []
+      },
+      "category": "seed",
+      "action": "read",
+      "expect": {
+        "allowed": true,
+        "reason": "entry",
+        "decidedBy": {
+          "category": "seed",
+          "subject": "everyone:*",
+          "action": "read",
+          "effect": "allow"
+        }
+      }
+    },
+    {
+      "name": "default: a new category seeded with an Everyone Read allow, author",
+      "ruleSet": {
+        "categories": {
+          "seed": {
+            "entries": [
+              {
+                "subject": "everyone:*",
+                "action": "read",
+                "effect": "allow"
+              }
+            ]
+          }
+        },
+        "parents": {}
+      },
+      "person": {
+        "id": "nobody",
+        "groups": [],
+        "roles": []
+      },
+      "category": "seed",
+      "action": "author",
+      "expect": {
+        "allowed": false,
+        "reason": "default-deny",
+        "decidedBy": null
+      }
+    },
+    {
+      "name": "default: a new category seeded with an Everyone Read allow, approve",
+      "ruleSet": {
+        "categories": {
+          "seed": {
+            "entries": [
+              {
+                "subject": "everyone:*",
+                "action": "read",
+                "effect": "allow"
+              }
+            ]
+          }
+        },
+        "parents": {}
+      },
+      "person": {
+        "id": "nobody",
+        "groups": [],
+        "roles": []
+      },
+      "category": "seed",
+      "action": "approve",
+      "expect": {
+        "allowed": false,
+        "reason": "default-deny",
+        "decidedBy": null
+      }
+    },
+    {
+      "name": "default: a new category seeded with an Everyone Read allow, manage",
+      "ruleSet": {
+        "categories": {
+          "seed": {
+            "entries": [
+              {
+                "subject": "everyone:*",
+                "action": "read",
+                "effect": "allow"
+              }
+            ]
+          }
+        },
+        "parents": {}
+      },
+      "person": {
+        "id": "nobody",
+        "groups": [],
+        "roles": []
+      },
+      "category": "seed",
+      "action": "manage",
+      "expect": {
+        "allowed": false,
+        "reason": "default-deny",
+        "decidedBy": null
+      }
+    },
+    {
+      "name": "default: a new category seeded with an Everyone Read allow, ack",
+      "ruleSet": {
+        "categories": {
+          "seed": {
+            "entries": [
+              {
+                "subject": "everyone:*",
+                "action": "read",
+                "effect": "allow"
+              }
+            ]
+          }
+        },
+        "parents": {}
+      },
+      "person": {
+        "id": "nobody",
+        "groups": [],
+        "roles": []
+      },
+      "category": "seed",
+      "action": "ack",
+      "expect": {
+        "allowed": false,
+        "reason": "default-deny",
+        "decidedBy": null
+      }
+    },
+    {
+      "name": "default: the seeded Everyone Read lets an Ack row pass the Read requirement",
+      "ruleSet": {
+        "categories": {
+          "seed": {
+            "entries": [
+              {
+                "subject": "everyone:*",
+                "action": "read",
+                "effect": "allow"
+              },
+              {
+                "subject": "everyone:*",
+                "action": "ack",
+                "effect": "allow"
+              }
+            ]
+          }
+        },
+        "parents": {}
+      },
+      "person": {
+        "id": "nobody",
+        "groups": [],
+        "roles": []
+      },
+      "category": "seed",
+      "action": "ack",
+      "expect": {
+        "allowed": true,
+        "reason": "entry",
+        "decidedBy": {
+          "category": "seed",
+          "subject": "everyone:*",
+          "action": "ack",
+          "effect": "allow"
+        }
+      }
+    },
+    {
       "name": "requires: ack with a read deny is denied, gated by read",
       "ruleSet": {
         "categories": {
@@ -1516,163 +2451,6 @@
         "allowed": false,
         "reason": "default-deny",
         "decidedBy": null
-      }
-    },
-    {
-      "name": "superuser: a site admin keeps Read over an explicit Read deny",
-      "ruleSet": {
-        "categories": {
-          "c": {
-            "entries": [
-              {
-                "subject": "role:admin",
-                "action": "read",
-                "effect": "deny"
-              }
-            ]
-          }
-        },
-        "parents": {}
-      },
-      "person": {
-        "id": "d",
-        "groups": [],
-        "roles": [
-          "admin"
-        ]
-      },
-      "category": "c",
-      "action": "read",
-      "expect": {
-        "allowed": true,
-        "reason": "superuser",
-        "decidedBy": null
-      }
-    },
-    {
-      "name": "superuser: a site admin keeps Manage over an Everyone deny",
-      "ruleSet": {
-        "categories": {
-          "c": {
-            "entries": [
-              {
-                "subject": "everyone:*",
-                "action": "manage",
-                "effect": "deny"
-              }
-            ]
-          }
-        },
-        "parents": {}
-      },
-      "person": {
-        "id": "d",
-        "groups": [],
-        "roles": [
-          "admin"
-        ]
-      },
-      "category": "c",
-      "action": "manage",
-      "expect": {
-        "allowed": true,
-        "reason": "superuser",
-        "decidedBy": null
-      }
-    },
-    {
-      "name": "superuser: a site admin does not get Approve from being one",
-      "ruleSet": {
-        "categories": {
-          "c": {
-            "entries": []
-          }
-        },
-        "parents": {}
-      },
-      "person": {
-        "id": "d",
-        "groups": [],
-        "roles": [
-          "admin"
-        ]
-      },
-      "category": "c",
-      "action": "approve",
-      "expect": {
-        "allowed": false,
-        "reason": "default-deny",
-        "decidedBy": null
-      }
-    },
-    {
-      "name": "superuser: an explicit Approve deny holds for a site admin",
-      "ruleSet": {
-        "categories": {
-          "c": {
-            "entries": [
-              {
-                "subject": "role:admin",
-                "action": "approve",
-                "effect": "deny"
-              }
-            ]
-          }
-        },
-        "parents": {}
-      },
-      "person": {
-        "id": "d",
-        "groups": [],
-        "roles": [
-          "admin"
-        ]
-      },
-      "category": "c",
-      "action": "approve",
-      "expect": {
-        "allowed": false,
-        "reason": "entry",
-        "decidedBy": {
-          "category": "c",
-          "subject": "role:admin",
-          "action": "approve",
-          "effect": "deny"
-        }
-      }
-    },
-    {
-      "name": "superuser: a site admin is not a superuser for an unlisted subject",
-      "ruleSet": {
-        "categories": {
-          "c": {
-            "entries": [
-              {
-                "subject": "user:d",
-                "action": "read",
-                "effect": "deny"
-              }
-            ]
-          }
-        },
-        "parents": {}
-      },
-      "person": {
-        "id": "d",
-        "groups": [],
-        "roles": []
-      },
-      "category": "c",
-      "action": "read",
-      "expect": {
-        "allowed": false,
-        "reason": "entry",
-        "decidedBy": {
-          "category": "c",
-          "subject": "user:d",
-          "action": "read",
-          "effect": "deny"
-        }
       }
     },
     {
@@ -1924,11 +2702,12 @@
   "options": {
     "superusers": {
       "subjects": [
-        "role:admin"
+        "user:root"
       ],
       "actions": [
         "read",
         "author",
+        "approve",
         "manage"
       ]
     }

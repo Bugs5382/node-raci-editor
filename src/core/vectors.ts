@@ -48,10 +48,12 @@ export interface VectorCase {
   action: string;
   expect: {
     allowed: boolean;
-    reason: "entry" | "default-deny" | "owner" | "requires";
+    reason: "entry" | "default-deny" | "owner" | "requires" | "superuser";
     decidedBy: VectorDecidedBy | null;
     /** For reason `"requires"`, the required action that was not allowed. */
     gatedBy?: string;
+    /** For reason `"superuser"`, the entry that would have denied it. Absent when none would. */
+    configuredBlock?: VectorDecidedBy;
   };
   /** Set (to the difference number in the design guide) when the case follows an open question. */
   pending?: string;

@@ -87,6 +87,15 @@ describe("vector files per model", () => {
           expect(decision.allowed).toBe(tc.expect.allowed);
           expect(decision.reason).toBe(tc.expect.reason);
           expect(decision.gatedBy).toBe(tc.expect.gatedBy);
+          if (tc.expect.configuredBlock === undefined) {
+            expect(decision.configuredBlock).toBeUndefined();
+          } else {
+            const { category, subject, action, effect } = tc.expect.configuredBlock;
+            expect(decision.configuredBlock).toEqual({
+              category,
+              entry: { subject, action, effect },
+            });
+          }
           if (tc.expect.decidedBy === null) {
             expect(decision.decidedBy).toBeUndefined();
           } else {
