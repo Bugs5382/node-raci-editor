@@ -52,6 +52,20 @@ describe("cell state ids", () => {
 });
 
 describe("normalizeCells", () => {
+  it("skips a state that is not an object", () => {
+    const { value, issues } = normalizeCells({ states: { allow: "yes" } });
+    expect(value).toEqual({});
+    expect(issues).toEqual([]);
+  });
+
+  it("drops an invalid border width and reports it, and an empty shape holds nothing", () => {
+    const { value, issues } = normalizeCells({
+      states: { allow: { shape: { borderWidth: "9px" } }, deny: { shape: {} } },
+    });
+    expect(value).toEqual({});
+    expect(issues.map((i) => i.path)).toEqual(["states/allow/shape/borderWidth"]);
+  });
+
   it("keeps valid values and reports nothing", () => {
     const input = {
       size: { width: 48, height: 32 },
@@ -131,6 +145,15 @@ describe("normalizeCells", () => {
 });
 
 describe("resolveCellStyle", () => {
+  it("lays a settings shape over the host's shape field by field", () => {
+    const style = resolveCellStyle(
+      "allow",
+      { allow: { shape: { radius: "4px", borderStyle: "solid" } } },
+      { states: { allow: { shape: { radius: "50%" } } } },
+    );
+    expect(style.shape).toEqual({ radius: "50%", borderStyle: "solid" });
+  });
+
   it("overlays settings on the host config, field by field", () => {
     const style = resolveCellStyle(
       "allow",
