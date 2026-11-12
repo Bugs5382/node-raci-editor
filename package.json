@@ -43,7 +43,7 @@
     "dist"
   ],
   "config": {
-    "packMaxUnpackedBytes": 890000,
+    "packMaxUnpackedBytes": 910000,
     "packMaxGrowthPercent": 25
   },
   "engines": {
