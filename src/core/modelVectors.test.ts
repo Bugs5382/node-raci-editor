@@ -24,7 +24,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { actionPool } from "./pools.js";
 import { createOrderedModel } from "./models/ordered.js";
-import { getModel } from "./registry.js";
+import { getModel, listModels, registerModel } from "./registry.js";
 import { vectorSubjects } from "./vectors.js";
 import type { VectorFile } from "./vectors.js";
 
@@ -57,6 +57,11 @@ describe("vector files per model", () => {
         expect(getModel(id).id).toBe(id);
       });
 
+      // The pools run on the same model as the cases: with the file's options when it has any.
+      const poolModel = file.options ? `${id}-vectors-pools` : id;
+      if (file.options && !listModels().some((m) => m.id === poolModel)) {
+        registerModel(createOrderedModel({ ...file.options, id: poolModel }));
+      }
       for (const pool of file.pools ?? []) {
         it(pool.name, () => {
           expect(
@@ -66,7 +71,7 @@ describe("vector files per model", () => {
               category: pool.category,
               people: pool.people,
               action: pool.action,
-              model: id,
+              model: poolModel,
             }),
           ).toEqual(pool.expect);
         });

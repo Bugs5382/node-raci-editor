@@ -207,12 +207,10 @@ Algorithm for one question (`person`, `action`, `category`), numbered:
    1b. Superusers. If the model option `superusers` is set, the action is in its `actions` and one of its
    `subjects` is among the asker's subjects, answer allowed, reason `superuser`, and stop, whatever any
    row says. It is host-supplied, not tied to a category, and off unless configured. This is the root
-   seat: a host lists the subject that marks the seat holder (for example `role:root`, given to whoever holds the seat, never matched on a username) for Read, Author, Approve and Manage. An action it does not list
-   (Acknowledge, say) follows the rows, so an Everyone row or a group row still covers root. A deny
+   seat: a host lists the subject that marks the seat holder (for example `role:root`, given to whoever holds the seat, never matched on a username) for Read (sensitive included), Author and Manage. Approve and Acknowledge are never global: the engine ignores them even if listed, so they follow the rows for root like anyone else, and an Everyone row or a group row still covers root. A deny
    cell that names root can be configured and is ignored when deciding; the decision then carries
    `configuredBlock`, the category and entry that would have denied, so the simulator can show it.
-   A site administrator who is not the root seat is an ordinary person and follows the rows; any
-   break-glass access is the host's concern, not an engine feature.
+   A site administrator who is not the root seat (there is exactly one root) is an ordinary person and follows the rows, so the rows can keep them out; they unblock themselves by editing the rules in the backend, which the host logs. That is the host's concern, not an engine feature.
 2. Owners. If the action is one owners have and any category in the chain lists
    an owner that is in `subjects`, answer allowed, reason `owner`, and stop. Which actions owners have is each
    action's `ownerHas`; it defaults to true except for an obligation, so owners are not required to
@@ -272,13 +270,13 @@ The consultant has `user:vciso` and `everyone:*` only (he is not in the IT group
 
 Example 2, a person who reaches a duty through a group. Rows of `it-policies`:
 
-| #   | Subject    | Read | Author | Ack   |
-| --- | ---------- | ---- | ------ | ----- |
-| 1   | user:shane |      | green  |       |
-| 2   | group:it   |      |        | green |
+| #   | Subject  | Read | Author | Ack   |
+| --- | -------- | ---- | ------ | ----- |
+| 1   | user:sam |      | green  |       |
+| 2   | group:it |      |        | green |
 
-Shane is in `group:it`. Ack: row 1's Ack cell is empty, so it is skipped (Author does not imply
-Ack); row 2 speaks: green, so the answer is allowed. Requires: Read for Shane is covered by row 1's
+Sam is in `group:it`. Ack: row 1's Ack cell is empty, so it is skipped (Author does not imply
+Ack); row 2 speaks: green, so the answer is allowed. Requires: Read for Sam is covered by row 1's
 Author cell (Author implies Read): allowed. Result: required, decided by row 2. A person who is
 not in the group and has no other row gets `default-deny`: not required.
 
@@ -651,7 +649,7 @@ Cases for `ordered` (at least 24, by group):
 - Order: (1) a red row above a green row denies; (2) the same rows swapped allow; (3) a row whose
   cell for the asked action is empty is skipped for it; (4) a Manage cell does not answer Read or
   Author at its row position, so a red Manage above an Author allow leaves Author allowed.
-- Per action: (5) Shane reaches Ack through the IT group row (example 2); (6) the consultant's red
+- Per action: (5) Sam reaches Ack through the IT group row (example 2); (6) the consultant's red
   Ack at the top denies Ack (example 1); (7) the same row moved below the Everyone row requires Ack;
   (8) the consultant's empty Approve is denied by default.
 - Everyone: (9) an Everyone row matches a person with no other subject.

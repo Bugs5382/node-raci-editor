@@ -32,7 +32,7 @@ import type { SimulatorProps } from "@/react/simulator/Simulator";
 registerModel(
   createOrderedModel({
     id: "ordered-admins",
-    superusers: { subjects: ["group:admins"], actions: ["read", "author", "approve"] },
+    superusers: { subjects: ["group:admins"], actions: ["read", "author"] },
   }),
 );
 
@@ -278,7 +278,7 @@ describe("pool lists", () => {
       lists: [
         {
           id: "appr",
-          action: "approve",
+          action: "read",
           people: [
             { id: "user:carol", subjects: ["user:carol"] },
             { id: "user:olga", subjects: ["user:olga"] },
@@ -287,7 +287,7 @@ describe("pool lists", () => {
         },
       ],
     });
-    const items = within(listed("Who can Approve")).getAllByRole("listitem");
+    const items = within(listed("Who can Read")).getAllByRole("listitem");
     expect(items).toHaveLength(3);
     expect(items[0]).toHaveTextContent("Olga Park");
     expect(items[1]).toHaveTextContent("Bob Ray");

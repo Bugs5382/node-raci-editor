@@ -476,7 +476,7 @@ describe("an allowed higher action gives the lower one, even over a deny", () =>
 describe("root (the superuser seat), off unless configured", () => {
   const su = createOrderedModel({
     id: "ordered-su",
-    superusers: { subjects: ["role:root"], actions: ["read", "author", "approve", "manage"] },
+    superusers: { subjects: ["role:root"], actions: ["read", "author", "manage"] },
   });
   const ask2 = (set: RuleSet, subjects: string[], action: string) =>
     su.evaluate({ ruleSet: set, actions, person: { subjects }, category: "c", action });
@@ -505,7 +505,7 @@ describe("root (the superuser seat), off unless configured", () => {
     expect(ask2(set, [...root, "group:x"], "author").decision.configuredBlock?.entry.subject).toBe(
       "group:x",
     );
-    expect(ask2(rs([]), root, "approve").decision.configuredBlock).toBeUndefined();
+    expect(ask2(rs([]), root, "manage").decision.configuredBlock).toBeUndefined();
     expect(ask2(rs([e("role:root", "author", "allow")]), root, "author").decision).toMatchObject({
       allowed: true,
       reason: "superuser",
@@ -513,6 +513,30 @@ describe("root (the superuser seat), off unless configured", () => {
     expect(
       ask2(rs([e("role:root", "author", "allow")]), root, "author").decision.configuredBlock,
     ).toBeUndefined();
+  });
+  it("never covers Approve or Ack, even when the host lists them: they follow the rows", () => {
+    const listed = createOrderedModel({
+      id: "ordered-su-listed",
+      superusers: { subjects: ["role:root"], actions: ["read", "approve", "ack", "manage"] },
+    });
+    const ask3 = (set: RuleSet, subjects: string[], action: string) =>
+      listed.evaluate({ ruleSet: set, actions, person: { subjects }, category: "c", action });
+    expect(ask3(rs([]), root, "approve").decision).toMatchObject({
+      allowed: false,
+      reason: "default-deny",
+    });
+    expect(ask3(rs([]), root, "approve").decision.configuredBlock).toBeUndefined();
+    const denied = rs([e("role:root", "approve", "deny"), e(EVERYONE, "approve", "allow")]);
+    expect(ask3(denied, root, "approve").decision).toMatchObject({
+      allowed: false,
+      reason: "entry",
+    });
+    expect(ask3(rs([e("role:root", "approve", "allow")]), root, "approve").decision).toMatchObject({
+      allowed: true,
+      reason: "entry",
+    });
+    expect(ask3(rs([]), root, "ack").decision.reason).toBe("default-deny");
+    expect(ask3(rs([]), root, "read").decision.reason).toBe("superuser");
   });
   it("records a superuser step", () => {
     const { trace } = ask2(rs([]), root, "read");
