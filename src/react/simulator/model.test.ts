@@ -153,13 +153,13 @@ describe("explainDecision for the ordered model's reasons", () => {
           path: ["fin"],
           configuredBlock: {
             category: "fin",
-            entry: { subject: "user:root", action: "read", effect: "deny" },
+            entry: { subject: "role:root", action: "read", effect: "deny" },
           },
         },
         ctx,
       ),
     ).toBe(
-      'simulator.reason.superuserBlocked|{"verdict":"simulator.allowed|{}","subject":"user:root","action":"<read>","category":"FIN"}',
+      'simulator.reason.superuserBlocked|{"verdict":"simulator.allowed|{}","subject":"role:root","action":"<read>","category":"FIN"}',
     );
     expect(
       explainDecision({ allowed: false, reason: "requires", gatedBy: "read", path: ["fin"] }, ctx),

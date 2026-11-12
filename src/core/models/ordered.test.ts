@@ -476,24 +476,24 @@ describe("an allowed higher action gives the lower one, even over a deny", () =>
 describe("root (the superuser seat), off unless configured", () => {
   const su = createOrderedModel({
     id: "ordered-su",
-    superusers: { subjects: ["user:root"], actions: ["read", "author", "approve", "manage"] },
+    superusers: { subjects: ["role:root"], actions: ["read", "author", "approve", "manage"] },
   });
   const ask2 = (set: RuleSet, subjects: string[], action: string) =>
     su.evaluate({ ruleSet: set, actions, person: { subjects }, category: "c", action });
-  const root = ["user:root"];
+  const root = ["role:root"];
 
   it("is off in the built-in model", () => {
-    const set = rs([e("user:root", "read", "deny")]);
+    const set = rs([e("role:root", "read", "deny")]);
     expect(ask(set, root, "read").allowed).toBe(false);
     expect(ask(set, root, "read").configuredBlock).toBeUndefined();
   });
   it("ignores a deny that names root, and reports it", () => {
-    const set = rs([e("user:root", "read", "deny"), e(EVERYONE, "manage", "deny")]);
+    const set = rs([e("role:root", "read", "deny"), e(EVERYONE, "manage", "deny")]);
     const read = ask2(set, root, "read").decision;
     expect(read).toMatchObject({
       allowed: true,
       reason: "superuser",
-      configuredBlock: { category: "c", entry: e("user:root", "read", "deny") },
+      configuredBlock: { category: "c", entry: e("role:root", "read", "deny") },
     });
     expect(read.decidedBy).toBeUndefined();
     expect(ask2(set, root, "manage").decision.configuredBlock?.entry).toEqual(
@@ -501,22 +501,22 @@ describe("root (the superuser seat), off unless configured", () => {
     );
   });
   it("reports the first denying row, and nothing when no row would deny", () => {
-    const set = rs([e("group:x", "author", "deny"), e("user:root", "author", "deny")]);
+    const set = rs([e("group:x", "author", "deny"), e("role:root", "author", "deny")]);
     expect(ask2(set, [...root, "group:x"], "author").decision.configuredBlock?.entry.subject).toBe(
       "group:x",
     );
     expect(ask2(rs([]), root, "approve").decision.configuredBlock).toBeUndefined();
-    expect(ask2(rs([e("user:root", "author", "allow")]), root, "author").decision).toMatchObject({
+    expect(ask2(rs([e("role:root", "author", "allow")]), root, "author").decision).toMatchObject({
       allowed: true,
       reason: "superuser",
     });
     expect(
-      ask2(rs([e("user:root", "author", "allow")]), root, "author").decision.configuredBlock,
+      ask2(rs([e("role:root", "author", "allow")]), root, "author").decision.configuredBlock,
     ).toBeUndefined();
   });
   it("records a superuser step", () => {
     const { trace } = ask2(rs([]), root, "read");
-    expect(trace[0]).toMatchObject({ kind: "superuser", matched: "user:root" });
+    expect(trace[0]).toMatchObject({ kind: "superuser", matched: "role:root" });
   });
   it("does not cover Ack: it follows the rows, through a group", () => {
     const set = rs([

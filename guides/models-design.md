@@ -207,7 +207,7 @@ Algorithm for one question (`person`, `action`, `category`), numbered:
    1b. Superusers. If the model option `superusers` is set, the action is in its `actions` and one of its
    `subjects` is among the asker's subjects, answer allowed, reason `superuser`, and stop, whatever any
    row says. It is host-supplied, not tied to a category, and off unless configured. This is the root
-   seat: a host lists its root subject for Read, Author, Approve and Manage. An action it does not list
+   seat: a host lists the subject that marks the seat holder (for example `role:root`, given to whoever holds the seat, never matched on a username) for Read, Author, Approve and Manage. An action it does not list
    (Acknowledge, say) follows the rows, so an Everyone row or a group row still covers root. A deny
    cell that names root can be configured and is ignored when deciding; the decision then carries
    `configuredBlock`, the category and entry that would have denied, so the simulator can show it.

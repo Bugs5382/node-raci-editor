@@ -1307,7 +1307,7 @@
           "c": {
             "entries": [
               {
-                "subject": "user:root",
+                "subject": "role:root",
                 "action": "read",
                 "effect": "deny"
               }
@@ -1317,9 +1317,11 @@
         "parents": {}
       },
       "person": {
-        "id": "root",
+        "id": "ann",
         "groups": [],
-        "roles": []
+        "roles": [
+          "root"
+        ]
       },
       "category": "c",
       "action": "read",
@@ -1329,7 +1331,7 @@
         "decidedBy": null,
         "configuredBlock": {
           "category": "c",
-          "subject": "user:root",
+          "subject": "role:root",
           "action": "read",
           "effect": "deny"
         }
@@ -1352,9 +1354,11 @@
         "parents": {}
       },
       "person": {
-        "id": "root",
+        "id": "ann",
         "groups": [],
-        "roles": []
+        "roles": [
+          "root"
+        ]
       },
       "category": "c",
       "action": "manage",
@@ -1381,9 +1385,11 @@
         "parents": {}
       },
       "person": {
-        "id": "root",
+        "id": "ann",
         "groups": [],
-        "roles": []
+        "roles": [
+          "root"
+        ]
       },
       "category": "c",
       "action": "approve",
@@ -1400,7 +1406,7 @@
           "c": {
             "entries": [
               {
-                "subject": "user:root",
+                "subject": "role:root",
                 "action": "approve",
                 "effect": "deny"
               }
@@ -1410,9 +1416,11 @@
         "parents": {}
       },
       "person": {
-        "id": "root",
+        "id": "ann",
         "groups": [],
-        "roles": []
+        "roles": [
+          "root"
+        ]
       },
       "category": "c",
       "action": "approve",
@@ -1422,7 +1430,7 @@
         "decidedBy": null,
         "configuredBlock": {
           "category": "c",
-          "subject": "user:root",
+          "subject": "role:root",
           "action": "approve",
           "effect": "deny"
         }
@@ -1435,7 +1443,7 @@
           "c": {
             "entries": [
               {
-                "subject": "user:root",
+                "subject": "role:root",
                 "action": "author",
                 "effect": "allow"
               }
@@ -1445,9 +1453,11 @@
         "parents": {}
       },
       "person": {
-        "id": "root",
+        "id": "ann",
         "groups": [],
-        "roles": []
+        "roles": [
+          "root"
+        ]
       },
       "category": "c",
       "action": "author",
@@ -1469,7 +1479,7 @@
                 "effect": "deny"
               },
               {
-                "subject": "user:root",
+                "subject": "role:root",
                 "action": "author",
                 "effect": "deny"
               }
@@ -1479,11 +1489,13 @@
         "parents": {}
       },
       "person": {
-        "id": "root",
+        "id": "ann",
         "groups": [
           "x"
         ],
-        "roles": []
+        "roles": [
+          "root"
+        ]
       },
       "category": "c",
       "action": "author",
@@ -1521,11 +1533,13 @@
         "parents": {}
       },
       "person": {
-        "id": "root",
+        "id": "ann",
         "groups": [
           "it"
         ],
-        "roles": []
+        "roles": [
+          "root"
+        ]
       },
       "category": "c",
       "action": "ack",
@@ -1562,11 +1576,13 @@
         "parents": {}
       },
       "person": {
-        "id": "root",
+        "id": "ann",
         "groups": [
           "it"
         ],
-        "roles": []
+        "roles": [
+          "root"
+        ]
       },
       "category": "c",
       "action": "ack",
@@ -1592,9 +1608,11 @@
         "parents": {}
       },
       "person": {
-        "id": "root",
+        "id": "ann",
         "groups": [],
-        "roles": []
+        "roles": [
+          "root"
+        ]
       },
       "category": "c",
       "action": "ack",
@@ -1611,7 +1629,7 @@
           "c": {
             "entries": [
               {
-                "subject": "user:root",
+                "subject": "role:root",
                 "action": "ack",
                 "effect": "allow"
               }
@@ -1621,9 +1639,11 @@
         "parents": {}
       },
       "person": {
-        "id": "root",
+        "id": "ann",
         "groups": [],
-        "roles": []
+        "roles": [
+          "root"
+        ]
       },
       "category": "c",
       "action": "ack",
@@ -1632,7 +1652,7 @@
         "reason": "entry",
         "decidedBy": {
           "category": "c",
-          "subject": "user:root",
+          "subject": "role:root",
           "action": "ack",
           "effect": "allow"
         }
@@ -1645,14 +1665,50 @@
           "c": {
             "entries": [
               {
-                "subject": "user:root",
+                "subject": "role:root",
                 "action": "read",
                 "effect": "deny"
               },
               {
-                "subject": "user:root",
+                "subject": "role:root",
                 "action": "ack",
                 "effect": "allow"
+              }
+            ]
+          }
+        },
+        "parents": {}
+      },
+      "person": {
+        "id": "ann",
+        "groups": [],
+        "roles": [
+          "root"
+        ]
+      },
+      "category": "c",
+      "action": "ack",
+      "expect": {
+        "allowed": true,
+        "reason": "entry",
+        "decidedBy": {
+          "category": "c",
+          "subject": "role:root",
+          "action": "ack",
+          "effect": "allow"
+        }
+      }
+    },
+    {
+      "name": "root: a person whose id is root but who lacks the root role follows the rules",
+      "ruleSet": {
+        "categories": {
+          "c": {
+            "entries": [
+              {
+                "subject": "role:root",
+                "action": "read",
+                "effect": "deny"
               }
             ]
           }
@@ -1665,15 +1721,83 @@
         "roles": []
       },
       "category": "c",
-      "action": "ack",
+      "action": "read",
       "expect": {
-        "allowed": true,
+        "allowed": false,
+        "reason": "default-deny",
+        "decidedBy": null
+      }
+    },
+    {
+      "name": "root: a person whose id is root and who has a Read deny row follows it without the root role",
+      "ruleSet": {
+        "categories": {
+          "c": {
+            "entries": [
+              {
+                "subject": "user:root",
+                "action": "read",
+                "effect": "deny"
+              }
+            ]
+          }
+        },
+        "parents": {}
+      },
+      "person": {
+        "id": "root",
+        "groups": [],
+        "roles": [
+          "admin"
+        ]
+      },
+      "category": "c",
+      "action": "read",
+      "expect": {
+        "allowed": false,
         "reason": "entry",
         "decidedBy": {
           "category": "c",
           "subject": "user:root",
-          "action": "ack",
-          "effect": "allow"
+          "action": "read",
+          "effect": "deny"
+        }
+      }
+    },
+    {
+      "name": "root: a person with another id but the root role is exempt",
+      "ruleSet": {
+        "categories": {
+          "c": {
+            "entries": [
+              {
+                "subject": "user:bob",
+                "action": "read",
+                "effect": "deny"
+              }
+            ]
+          }
+        },
+        "parents": {}
+      },
+      "person": {
+        "id": "bob",
+        "groups": [],
+        "roles": [
+          "root"
+        ]
+      },
+      "category": "c",
+      "action": "read",
+      "expect": {
+        "allowed": true,
+        "reason": "superuser",
+        "decidedBy": null,
+        "configuredBlock": {
+          "category": "c",
+          "subject": "user:bob",
+          "action": "read",
+          "effect": "deny"
         }
       }
     },
@@ -2702,7 +2826,7 @@
   "options": {
     "superusers": {
       "subjects": [
-        "user:root"
+        "role:root"
       ],
       "actions": [
         "read",
