@@ -6,6 +6,7 @@
 
 #### 🚀 Features
 
+- feat(core): root seat covers read, author and manage only; approve and ack follow the rows @Bugs5382 (#51)
 - feat(simulator): wording by kind, decided-by reasons and pool lists @Bugs5382 (#39)
 - feat(core): strict per-action Manage and root cases in the ordered vectors @Bugs5382 (#46)
 - feat(editor): generic subject matchers and a context picker @Bugs5382 (#36)
