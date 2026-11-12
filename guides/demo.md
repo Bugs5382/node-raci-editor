@@ -50,8 +50,9 @@ All optional.
   Read, Author, Approve; Obligations: Manage, Acknowledge) and the built-in Everyone subject, and a
   Heading labels switch (auto, full, short).
   The preset also runs on the ordered model (the rule set names the model `demo-ordered`): the
-  simulator evaluates with it, a site administrator (the Role "Site administrator", added as an extra
-  membership) always has Read, Author and Manage whatever a row says but not Approve or Acknowledge,
+  simulator evaluates with it, the root seat (the Role "Root (site seat)", added as an extra
+  membership) always has Read, Author, Manage and Approve whatever a row says, even a row that
+  names root (the simulator then names that row as set aside), but not Acknowledge,
   and the IT category has an owner who approves through the owner list. The simulator explains each
   of those reasons.
 - An Editor start switch in the Editor tab: editable (default) or read-only (starts read-only; Edit, Save and

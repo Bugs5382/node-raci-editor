@@ -328,7 +328,7 @@ const shortPeople: SubjectOption[] = [
   { id: "user:omar", label: "Omar Haddad", detail: "omar@example.test" },
   { id: "user:tess", label: "Tess Walker", detail: "tess@example.test" },
 ];
-const shortAdmins: SubjectOption[] = [{ id: "role:admin", label: "Site administrator" }];
+const shortAdmins: SubjectOption[] = [{ id: "role:root", label: "Root (site seat)" }];
 const shortTeams: SubjectOption[] = [
   { id: "group:secops", label: "Security operations" },
   { id: "group:finance", label: "Finance team" },
@@ -367,7 +367,14 @@ const shortConfig: RaciConfig = {
       implies: ["r"],
       group: "permissions",
     },
-    { id: "ack", label: "Acknowledge", shortLabel: "ACK", group: "obligations" },
+    {
+      id: "ack",
+      label: "Acknowledge",
+      shortLabel: "ACK",
+      kind: "obligation",
+      requires: ["r"],
+      group: "obligations",
+    },
   ],
   subjectKinds: [
     memoryKind("user", "Person", shortPeople),
@@ -384,17 +391,18 @@ const shortConfig: RaciConfig = {
 };
 
 /**
- * The "ordered" model for this preset, with site administrators (the `role:admin` subject) who
- * always have Read, Author and Manage, whatever any row says. Approve and Acknowledge are left
- * out on purpose: they follow the rows. The demo's simulator evaluates with it.
+ * The "ordered" model for this preset, with the root seat (the `role:root` subject, which the host
+ * gives to whoever holds the seat) who always has Read, Author, Manage and Approve, whatever any
+ * row says, even a row that names root. Acknowledge is left out on purpose: it follows the rows.
+ * The demo's simulator evaluates with it.
  */
 const SHORT_MODEL_ID = "demo-ordered";
 if (!listModels().some((m) => m.id === SHORT_MODEL_ID)) {
   registerModel(
     createOrderedModel({
       id: SHORT_MODEL_ID,
-      label: "Ordered rows with site administrators",
-      superusers: { subjects: ["role:admin"], actions: ["r", "a", "m"] },
+      label: "Ordered rows with a root seat",
+      superusers: { subjects: ["role:root"], actions: ["r", "a", "m", "apv"] },
     }),
   );
 }
@@ -413,7 +421,12 @@ const shortSeed: RuleSet = {
       owners: ["user:omar"],
       entries: [{ subject: "group:secops", action: "m", effect: "allow" }],
     },
-    networks: { entries: [{ subject: "group:finance", action: "r", effect: "deny" }] },
+    networks: {
+      entries: [
+        { subject: "group:finance", action: "r", effect: "deny" },
+        { subject: "role:root", action: "r", effect: "deny" },
+      ],
+    },
     access: {
       entries: [
         { subject: "user:ines", action: "r", effect: "allow" },

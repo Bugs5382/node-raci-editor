@@ -356,21 +356,22 @@ describe("the ordered rules preset", () => {
 });
 
 describe("the short-labels preset on the ordered model", () => {
-  it("explains a site administrator in the simulator", async () => {
+  it("explains the root seat in the simulator", async () => {
     const user = userEvent.setup();
     render(<RaciDemo initialPreset="short" />);
     await user.click(screen.getByRole("tab", { name: "Simulator" }));
     await user.type(screen.getByRole("combobox", { name: "Person" }), "Ines");
     await user.click(await screen.findByRole("option", { name: /Ines Moreau/ }, { timeout: 2000 }));
-    await user.type(screen.getByRole("combobox", { name: "Extra memberships" }), "Site");
+    await user.type(screen.getByRole("combobox", { name: "Extra memberships" }), "Root");
     await user.click(
-      await screen.findByRole("option", { name: /Site administrator/ }, { timeout: 2000 }),
+      await screen.findByRole("option", { name: /Root \(site seat\)/ }, { timeout: 2000 }),
     );
     const manage = screen.getByRole("rowheader", { name: "Manage" }).closest("tr") as HTMLElement;
     expect(manage).toHaveTextContent("Would be allowed");
     expect(manage).toHaveTextContent("always has this action");
     const approve = screen.getByRole("rowheader", { name: "Approve" }).closest("tr") as HTMLElement;
-    expect(approve).toHaveTextContent("Would be denied");
+    expect(approve).toHaveTextContent("Would be allowed");
+    expect(approve).toHaveTextContent("always has this action");
   });
 });
 

@@ -94,7 +94,7 @@ describe("seed validity", () => {
     expect(ask("disputes", "read", "user:x", "group:contractors")).toBe(false);
   });
 
-  it("runs the short-labels preset on the ordered model, with site administrators for Read, Author and Manage", () => {
+  it("runs the short-labels preset on the ordered model, with a root seat for Read, Author, Manage and Approve", () => {
     const { config, seed } = presetById("short");
     expect(seed.model).toBe("demo-ordered");
     expect(getModel("demo-ordered").capabilities.superuser).toBe(true);
@@ -110,19 +110,23 @@ describe("seed validity", () => {
     expect(ask("access", "r", "user:tess").allowed).toBe(true);
     expect(ask("access", "ack", "user:tess").allowed).toBe(true);
     expect(ask("access", "ack", "user:ines").allowed).toBe(false);
-    // A finance deny on Read in networks, which a site administrator keeps over.
+    // A finance deny on Read in networks, which the root seat keeps over.
     expect(ask("networks", "r", "group:finance").allowed).toBe(false);
-    expect(ask("networks", "r", "group:finance", "role:admin")).toMatchObject({
+    expect(ask("networks", "r", "group:finance", "role:root")).toMatchObject({
       allowed: true,
       reason: "superuser",
     });
-    // The administrator's list is Read, Author and Manage: Approve and Acknowledge follow the rows.
-    expect(ask("access", "m", "role:admin").reason).toBe("superuser");
-    expect(ask("access", "apv", "role:admin")).toMatchObject({
-      allowed: false,
-      reason: "default-deny",
+    // A row that names root is configured but never applied; the decision reports it as blocked.
+    expect(ask("networks", "r", "role:root").configuredBlock).toMatchObject({
+      category: "networks",
     });
-    expect(ask("access", "ack", "role:admin")).toMatchObject({ allowed: true, reason: "entry" });
+    // Root has Read, Author, Manage and Approve everywhere; Acknowledge follows the rows.
+    expect(ask("access", "m", "role:root").reason).toBe("superuser");
+    expect(ask("access", "apv", "role:root")).toMatchObject({
+      allowed: true,
+      reason: "superuser",
+    });
+    expect(ask("access", "ack", "role:root")).toMatchObject({ allowed: true, reason: "entry" });
     // An owner of IT, inherited into Door entry, approves through the owner list.
     expect(ask("access", "apv", "user:omar")).toMatchObject({ allowed: true, reason: "owner" });
     expect(ask("access", "apv", "user:tess").allowed).toBe(false);
