@@ -887,6 +887,7 @@ export const RulesEditor = (props: RulesEditorProps) => {
                         type="button"
                         className="raci-button raci-button--quiet"
                         aria-label={t("editor.removeLabel", { subject: label })}
+                        title={t("editor.removeLabel", { subject: label })}
                         disabled={viewing}
                         onClick={() => {
                           setAdded((prev) => ({
@@ -896,7 +897,7 @@ export const RulesEditor = (props: RulesEditorProps) => {
                           onChange(removeSubject(ruleSet, categoryId, subject));
                         }}
                       >
-                        {t("editor.remove")}
+                        <EffectIcon effect="deny" />
                       </button>
                     </td>
                   )}

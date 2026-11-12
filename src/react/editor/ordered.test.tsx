@@ -697,3 +697,18 @@ describe("stylesheet: a row keeps its height wherever it is", () => {
     );
   });
 });
+
+describe("the remove control of a row", () => {
+  it("is an X with the subject in its name, not the word Remove", () => {
+    render(<RulesEditor {...base()} />);
+    const buttons = within(screen.getAllByRole("table")[0]!).getAllByRole("button", {
+      name: /^Remove /,
+    });
+    expect(buttons.length).toBeGreaterThan(0);
+    for (const b of buttons) {
+      expect(b.textContent).toBe("");
+      expect(b.querySelector("svg")).not.toBeNull();
+      expect(b).toHaveAttribute("title", b.getAttribute("aria-label"));
+    }
+  });
+});
