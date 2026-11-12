@@ -23,21 +23,11 @@ OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 /** The public entry points export no tree component: the host renders its own tree. */
 import { describe, expect, it } from "vitest";
 import * as library from "@/index";
-import * as demo from "@/demo/index";
 
 describe("public surface", () => {
   it("exports no tree component or tree helper", () => {
-    for (const name of [...Object.keys(library), ...Object.keys(demo)]) {
+    for (const name of Object.keys(library)) {
       expect(name).not.toMatch(/tree/i);
     }
-  });
-
-  it("keeps the demo surface to the component, the data builders and the sample cell", () => {
-    expect(Object.keys(demo).sort()).toEqual([
-      "RaciDemo",
-      "demoPresets",
-      "demoRenderCell",
-      "demoRuleSet",
-    ]);
   });
 });

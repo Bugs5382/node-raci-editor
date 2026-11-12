@@ -575,6 +575,18 @@ describe("root (the superuser seat), off unless configured", () => {
   });
 });
 
+describe("ownerKinds on the model", () => {
+  it("is published for the editor, and left out by nearest", () => {
+    expect(getModel("ordered").ownerKinds).toEqual(["user"]);
+    expect(createOrderedModel({ ownerKinds: ["user", "group"] }).ownerKinds).toEqual([
+      "user",
+      "group",
+    ]);
+    expect(createOrderedModel({ ownerKinds: [] }).ownerKinds).toEqual([]);
+    expect(getModel("nearest").ownerKinds).toBeUndefined();
+  });
+});
+
 describe("the remaining branches of the ordered model", () => {
   it("a subject with no kind is not an owner and is reported", () => {
     const set: RuleSet = {

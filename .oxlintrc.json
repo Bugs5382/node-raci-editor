@@ -1,7 +1,7 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
   "extends": ["./node_modules/@bugs5382/node-oxlint-config/configs/base.json"],
-  "ignorePatterns": ["dist/**", "coverage/**", "docs/**", "demo/dist/**", "src/generated/**"],
+  "ignorePatterns": ["dist/**", "coverage/**", "docs/**", "src/generated/**"],
   "overrides": [
     {
       "files": ["**/*.{js,mjs,cjs,ts,tsx,jsx}"],

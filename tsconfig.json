@@ -19,6 +19,6 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["src", "demo", "tests", "tsdown.config.ts", "vitest.config.mts", "oxfmt.config.ts"],
+  "include": ["src", "tests", "tsdown.config.ts", "vitest.config.mts", "oxfmt.config.ts"],
   "exclude": ["node_modules", "dist", "coverage", "docs"]
 }

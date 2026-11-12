@@ -69,6 +69,96 @@ interface ActionDef {
     "Would be allowed" and "Would be denied", an obligation reads "Required" and "Not required".
 - Options of the `"ordered"` model, set with `createOrderedModel(options)` (the registered `"ordered"` has the defaults): `ownerKinds` (the subject kinds that may own a category; default `["user"]`, empty switches owners off), `implicitSubjects` (default the built-in Everyone), `ownerActions`, and `superusers: { subjects, actions }` (the root seat: subjects that always have the listed Read, Author and Manage, sensitive included, whatever any row says, like owners but host-supplied and not tied to a category; off unless set. Approve and Acknowledge are never exempt, even if listed, and follow the rows for root like anyone else; a site administrator who is not root follows the rows too). A deny that names such a subject is ignored when deciding, and the decision reports it as `configuredBlock` so the simulator can show it. A cell answers only its own action: Manage no longer answers Read or Author at its row position, though an allowed Manage still gives both. Manage in a host's config usually implies Read and Author only; list `implies` as you want it.
 
+## Examples
+
+Two complete setups to copy. The first has no directory of people at all; the second is a help desk
+on the ordered model, with owners, Everyone as a normal row, short labels in two column groups, an
+Acknowledge obligation that needs Read, and the root seat.
+
+```tsx
+import { createOrderedModel, registerModel } from "node-raci-editor";
+import type { RaciConfig as ExampleConfig, RuleSet as ExampleRules } from "node-raci-editor";
+
+// 1. Capabilities only: no users, groups or roles. The host resolves "can:ack" and "can:edit" for
+//    whoever is asking, and `contexts` are the named askers the simulator offers.
+export const capabilityConfig: ExampleConfig = {
+  actions: [
+    { id: "read", label: "Read" },
+    { id: "edit", label: "Edit", implies: ["read"] },
+    { id: "ack", label: "Acknowledge" },
+  ],
+  subjectKinds: [],
+  matchers: [
+    { id: "can:edit", label: "Can edit", group: "Access" },
+    { id: "can:ack", label: "Can acknowledge", group: "Duties" },
+  ],
+  contexts: [
+    { id: "hire", label: "New hire", subjects: ["can:ack"] },
+    { id: "guest", label: "Guest", subjects: [] },
+  ],
+  resources: [{ id: "policies", label: "Policies", children: [{ id: "leave", label: "Leave" }] }],
+};
+
+// 2. A help desk on the ordered model: first matching row from the top wins, owners always have
+//    the action, and Everyone is an ordinary row. Short labels, two column groups, and an
+//    Acknowledge obligation that needs Read. The root seat (the subject `role:root`, which the host
+//    gives to one account) always has Read, Author and Manage; Approve and Acknowledge follow rows.
+registerModel(
+  createOrderedModel({
+    id: "desk",
+    label: "Help desk",
+    superusers: { subjects: ["role:root"], actions: ["r", "a", "m"] },
+  }),
+);
+
+export const deskConfig: ExampleConfig = {
+  actions: [
+    { id: "r", label: "Read", shortLabel: "R", group: "permissions" },
+    { id: "a", label: "Author", shortLabel: "A", implies: ["r"], group: "permissions" },
+    { id: "m", label: "Manage", shortLabel: "M", implies: ["a", "r"], group: "obligations" },
+    {
+      id: "ack",
+      label: "Acknowledge",
+      shortLabel: "ACK",
+      kind: "obligation",
+      requires: ["r"],
+      group: "obligations",
+    },
+  ],
+  subjectKinds: [
+    { kind: "user", label: "Person", search: () => [{ id: "user:lena", label: "Lena" }] },
+    { kind: "group", label: "Team", search: () => [{ id: "group:agents", label: "Agents" }] },
+  ],
+  groups: [
+    { id: "permissions", label: "Permissions" },
+    { id: "obligations", label: "Obligations" },
+  ],
+  resources: [
+    { id: "support", label: "Support", children: [{ id: "escalated", label: "Escalated" }] },
+  ],
+};
+
+export const deskRules: ExampleRules = {
+  model: "desk",
+  parents: { escalated: "support" },
+  categories: {
+    support: {
+      owners: ["user:lena"], // inherited by every category below
+      entries: [
+        { subject: "everyone:*", action: "r", effect: "allow" },
+        { subject: "everyone:*", action: "ack", effect: "allow" },
+      ],
+    },
+    escalated: {
+      entries: [
+        { subject: "group:agents", action: "r", effect: "deny" }, // row order is the rule
+        { subject: "role:root", action: "r", effect: "deny" }, // saved, never applied to root
+      ],
+    },
+  },
+};
+```
+
 ## Cell appearance
 
 Whoever uses the package can set how the cells look, in two places. Both are optional; nothing
@@ -190,7 +280,7 @@ The node ids are the category ids in your `RuleSet`. The tree is used for labels
 `decide()` follows `ruleSet.parents`, so keep `parents` in step with the tree you pass here.
 
 The package ships no tree component: your app renders its own tree (navigation, a file browser,
-whatever fits) and passes the nodes in. The demo's tree is internal to the demo and not exported.
+whatever fits) and passes the nodes in.
 
 ## Settings
 
@@ -243,41 +333,64 @@ Keys with a variable list their variables in braces. The default text is in the 
 
 ### Rules editor (`editor.*`)
 
-| Key                         | Default                                                                   |
-| --------------------------- | ------------------------------------------------------------------------- |
-| `editor.title`              | Rules for {category} (the heading; {category} is the resource path)       |
-| `editor.pathSeparator`      | " / " (between the labels of the path)                                    |
-| `editor.subject`            | Subject                                                                   |
-| `editor.empty`              | No subjects have rules in this category yet.                              |
-| `editor.allow`              | allow (spoken state in a cell's label)                                    |
-| `editor.deny`               | deny                                                                      |
-| `editor.blank`              | not set                                                                   |
-| `editor.allowText`          | Allow (visible text in a cell)                                            |
-| `editor.denyText`           | Deny                                                                      |
-| `editor.blankText`          | Not set                                                                   |
-| `editor.included`           | included                                                                  |
-| `editor.includedVia`        | Included by {action}                                                      |
-| `editor.cellLabel`          | {subject}, {action}: {state}                                              |
-| `editor.cellLabelIncluded`  | {subject}, {action}: {state}, included by {via}                           |
-| `editor.remove`             | Remove                                                                    |
-| `editor.removeLabel`        | Remove {subject}                                                          |
-| `editor.stopInheriting`     | Stop inheriting                                                           |
-| `editor.stopInheritingHelp` | Ignore rules from parent categories and the all-categories rules.         |
-| `editor.inheritanceStopped` | Inheritance stops at this category.                                       |
-| `editor.inheritedFrom`      | Inherited from {resource}                                                 |
-| `editor.allCategories`      | All categories                                                            |
-| `editor.inheritedNote`      | Read-only. Change these in their own category.                            |
-| `editor.addSubject`         | Add subject                                                               |
-| `editor.kind`               | Subject type                                                              |
-| `editor.search`             | Search                                                                    |
-| `editor.searchPlaceholder`  | Search by name                                                            |
-| `editor.searching`          | Searching...                                                              |
-| `editor.noResults`          | No matches.                                                               |
-| `editor.searchError`        | Search failed. Try again.                                                 |
-| `editor.confirmDenyTitle`   | Confirm deny                                                              |
-| `editor.confirmDenyBody`    | Deny {action} for {subject}? A deny overrides any allow in this category. |
-| `editor.confirm`            | Deny (the confirm button)                                                 |
-| `editor.cancel`             | Cancel                                                                    |
+| Key                         | Default                                                                    |
+| --------------------------- | -------------------------------------------------------------------------- |
+| `editor.title`              | Rules for {category} (the heading; {category} is the resource path)        |
+| `editor.pathSeparator`      | " / " (between the labels of the path)                                     |
+| `editor.subject`            | Subject                                                                    |
+| `editor.empty`              | No subjects have rules in this category yet.                               |
+| `editor.allow`              | allow (spoken state in a cell's label)                                     |
+| `editor.deny`               | deny                                                                       |
+| `editor.blank`              | not set                                                                    |
+| `editor.allowText`          | Allow (visible text in a cell)                                             |
+| `editor.denyText`           | Deny                                                                       |
+| `editor.blankText`          | Not set                                                                    |
+| `editor.included`           | included                                                                   |
+| `editor.includedVia`        | Included by {action}                                                       |
+| `editor.cellLabel`          | {subject}, {action}: {state}                                               |
+| `editor.cellLabelIncluded`  | {subject}, {action}: {state}, included by {via}                            |
+| `editor.remove`             | Remove                                                                     |
+| `editor.removeLabel`        | Remove {subject}                                                           |
+| `editor.stopInheriting`     | Stop inheriting                                                            |
+| `editor.stopInheritingHelp` | Ignore rules from parent categories and the all-categories rules.          |
+| `editor.inheritanceStopped` | Inheritance stops at this category.                                        |
+| `editor.inheritedFrom`      | Inherited from {resource}                                                  |
+| `editor.allCategories`      | All categories                                                             |
+| `editor.inheritedNote`      | Read-only. Change these in their own category.                             |
+| `editor.addSubject`         | Add subject                                                                |
+| `editor.kind`               | Subject type                                                               |
+| `editor.search`             | Search                                                                     |
+| `editor.searchPlaceholder`  | Search by name                                                             |
+| `editor.searching`          | Searching...                                                               |
+| `editor.noResults`          | No matches.                                                                |
+| `editor.searchError`        | Search failed. Try again.                                                  |
+| `editor.confirmDenyTitle`   | Confirm deny                                                               |
+| `editor.confirmDenyBody`    | Deny {action} for {subject}? A deny overrides any allow in this category.  |
+| `editor.confirm`            | Deny (the confirm button)                                                  |
+| `editor.cancel`             | Cancel                                                                     |
+| `editor.rank`               | # (heading of the row numbers; ordered models)                             |
+| `editor.rankLabel`          | Row order (hidden heading of the move controls)                            |
+| `editor.fromCategory`       | from {category} (inherited rows and owners)                                |
+| `editor.moveUp`             | Move {subject} up                                                          |
+| `editor.moveDown`           | Move {subject} down                                                        |
+| `editor.dragHandle`         | Reorder {subject} (the drag handle's name)                                 |
+| `editor.dragPicked`         | Picked up {subject}, position {position} of {total}. Use the arrow keys... |
+| `editor.dragMoved`          | {subject} moved to position {position} of {total}.                         |
+| `editor.dragDropped`        | {subject} dropped at position {position} of {total}.                       |
+| `editor.dragCancelled`      | Move cancelled. {subject} is back at position {position} of {total}.       |
+| `editor.legend`             | Legend                                                                     |
+| `editor.owners`             | Owners (the heading of the owners area; rename it for your product)        |
+| `editor.ownersHelp`         | Owners always have their actions and are not affected by any row.          |
+| `editor.noOwners`           | No owners.                                                                 |
+| `editor.removeOwner`        | Remove {subject} from owners                                               |
+| `editor.addOwner`           | Add owner                                                                  |
+| `editor.searchOwner`        | Search owners                                                              |
+| `legend.allow`              | Allow                                                                      |
+| `legend.deny`               | Deny                                                                       |
+| `legend.own`                | Own                                                                        |
+| `legend.blank`              | Not set, skipped                                                           |
+| `legend.inherited`          | From a parent category                                                     |
+| `legend.locked`             | Locked                                                                     |
 
 ### Simulator (`simulator.*`)
 

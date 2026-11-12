@@ -26,12 +26,7 @@ import { defineConfig } from "vitest/config";
 
 const alias = { "@": fileURLToPath(new URL("src", import.meta.url)) };
 
-const domTests = [
-  "src/react/**/*.test.{ts,tsx}",
-  "src/**/*.test.tsx",
-  "tests/**/*.test.tsx",
-  "src/demo/**/*.test.{ts,tsx}",
-];
+const domTests = ["src/react/**/*.test.{ts,tsx}", "src/**/*.test.tsx", "tests/**/*.test.tsx"];
 
 export default defineConfig({
   test: {

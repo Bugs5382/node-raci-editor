@@ -80,6 +80,66 @@ What each piece does here:
 - `settings` holds display choices (which action columns, density, confirm before deny). The editor
   and the simulator read them, and `SettingsPanel` edits them.
 
+## A host app around it
+
+The package has no tree component, no storage and no theme switch: they are yours. This wraps the three
+components with a resource list built from your tree, the rules saved as JSON, and a theme switch
+(`data-theme` on a `raci-root` element, see [Theming](theming.md)).
+
+```tsx
+import { useMemo, useState as useHostState } from "react";
+import { RulesEditor as HostRulesEditor, Simulator as HostSimulator } from "node-raci-editor";
+import type { RaciConfig as HostConfig, ResourceNode } from "node-raci-editor";
+import type { RuleSet as HostRuleSet } from "node-raci-editor";
+
+// The package has no tree component: render your own, pass the nodes in, and keep `parents` in step.
+const parentsOf = (nodes: ResourceNode[], parent?: string, out: Record<string, string> = {}) => {
+  for (const node of nodes) {
+    if (parent) out[node.id] = parent;
+    parentsOf(node.children ?? [], node.id, out);
+  }
+  return out;
+};
+
+const idsOf = (nodes: ResourceNode[]): string[] =>
+  nodes.flatMap((node) => [node.id, ...idsOf(node.children ?? [])]);
+
+export const HostApp = ({ config, saved }: { config: HostConfig; saved?: string }) => {
+  const [ruleSet, setRuleSet] = useHostState<HostRuleSet>(() =>
+    saved
+      ? (JSON.parse(saved) as HostRuleSet)
+      : { categories: {}, parents: parentsOf(config.resources) },
+  );
+  const [categoryId, setCategoryId] = useHostState(config.resources[0]?.id ?? "");
+  const [theme, setTheme] = useHostState<"light" | "dark">("light");
+  const json = useMemo(() => JSON.stringify(ruleSet, null, 2), [ruleSet]);
+  return (
+    <div className="raci-root" data-theme={theme}>
+      <select
+        aria-label="Resource"
+        value={categoryId}
+        onChange={(e) => setCategoryId(e.target.value)}
+      >
+        {idsOf(config.resources).map((id) => (
+          <option key={id}>{id}</option>
+        ))}
+      </select>
+      <button type="button" onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
+        Theme: {theme}
+      </button>
+      <HostRulesEditor
+        config={config}
+        ruleSet={ruleSet}
+        categoryId={categoryId}
+        onChange={setRuleSet}
+      />
+      <HostSimulator config={config} ruleSet={ruleSet} categoryId={categoryId} />
+      <textarea aria-label="Rules as JSON" readOnly value={json} />
+    </div>
+  );
+};
+```
+
 ## What to wire to your own data
 
 1. **Actions.** List the verbs your product has and say which include which. See

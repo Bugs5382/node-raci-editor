@@ -87,6 +87,11 @@ export interface RaciModel {
   /** Per-category fields the model reads, so the editor knows which controls to draw. */
   categoryOptions: ReadonlyArray<"stopInheriting" | "precedence" | "owners">;
   capabilities: ModelCapabilities;
+  /**
+   * The subject kinds that may own a category, for models with owners. The editor offers only
+   * these in its owners picker. Left undefined, every kind is offered.
+   */
+  ownerKinds?: readonly string[];
   /** Pure evaluation of one question. A preview only; the host enforces. */
   evaluate(input: ModelInput): ModelResult;
   /** Check a rule set before it is shown or saved. */

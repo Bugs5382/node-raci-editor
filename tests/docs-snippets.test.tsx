@@ -146,13 +146,143 @@ export const compact = (base: RaciConfig) => ({
 });
 // snippet:end extending
 
-// snippet:start demo
-import "@/styles/index.css";
-import "@/demo/index.css";
-import { RaciDemo } from "@/demo/index";
+// snippet:start host
+import { useMemo, useState as useHostState } from "react";
+import { RulesEditor as HostRulesEditor, Simulator as HostSimulator } from "@/index";
+import type { RaciConfig as HostConfig, ResourceNode } from "@/index";
+import type { RuleSet as HostRuleSet } from "@/index";
 
-export const DemoPage = () => <RaciDemo initialPreset="other" initialTheme="dark" />;
-// snippet:end demo
+// The package has no tree component: render your own, pass the nodes in, and keep `parents` in step.
+const parentsOf = (nodes: ResourceNode[], parent?: string, out: Record<string, string> = {}) => {
+  for (const node of nodes) {
+    if (parent) out[node.id] = parent;
+    parentsOf(node.children ?? [], node.id, out);
+  }
+  return out;
+};
+
+const idsOf = (nodes: ResourceNode[]): string[] =>
+  nodes.flatMap((node) => [node.id, ...idsOf(node.children ?? [])]);
+
+export const HostApp = ({ config, saved }: { config: HostConfig; saved?: string }) => {
+  const [ruleSet, setRuleSet] = useHostState<HostRuleSet>(() =>
+    saved
+      ? (JSON.parse(saved) as HostRuleSet)
+      : { categories: {}, parents: parentsOf(config.resources) },
+  );
+  const [categoryId, setCategoryId] = useHostState(config.resources[0]?.id ?? "");
+  const [theme, setTheme] = useHostState<"light" | "dark">("light");
+  const json = useMemo(() => JSON.stringify(ruleSet, null, 2), [ruleSet]);
+  return (
+    <div className="raci-root" data-theme={theme}>
+      <select
+        aria-label="Resource"
+        value={categoryId}
+        onChange={(e) => setCategoryId(e.target.value)}
+      >
+        {idsOf(config.resources).map((id) => (
+          <option key={id}>{id}</option>
+        ))}
+      </select>
+      <button type="button" onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
+        Theme: {theme}
+      </button>
+      <HostRulesEditor
+        config={config}
+        ruleSet={ruleSet}
+        categoryId={categoryId}
+        onChange={setRuleSet}
+      />
+      <HostSimulator config={config} ruleSet={ruleSet} categoryId={categoryId} />
+      <textarea aria-label="Rules as JSON" readOnly value={json} />
+    </div>
+  );
+};
+// snippet:end host
+
+// snippet:start examples
+import { createOrderedModel, registerModel } from "@/index";
+import type { RaciConfig as ExampleConfig, RuleSet as ExampleRules } from "@/index";
+
+// 1. Capabilities only: no users, groups or roles. The host resolves "can:ack" and "can:edit" for
+//    whoever is asking, and `contexts` are the named askers the simulator offers.
+export const capabilityConfig: ExampleConfig = {
+  actions: [
+    { id: "read", label: "Read" },
+    { id: "edit", label: "Edit", implies: ["read"] },
+    { id: "ack", label: "Acknowledge" },
+  ],
+  subjectKinds: [],
+  matchers: [
+    { id: "can:edit", label: "Can edit", group: "Access" },
+    { id: "can:ack", label: "Can acknowledge", group: "Duties" },
+  ],
+  contexts: [
+    { id: "hire", label: "New hire", subjects: ["can:ack"] },
+    { id: "guest", label: "Guest", subjects: [] },
+  ],
+  resources: [{ id: "policies", label: "Policies", children: [{ id: "leave", label: "Leave" }] }],
+};
+
+// 2. A help desk on the ordered model: first matching row from the top wins, owners always have
+//    the action, and Everyone is an ordinary row. Short labels, two column groups, and an
+//    Acknowledge obligation that needs Read. The root seat (the subject `role:root`, which the host
+//    gives to one account) always has Read, Author and Manage; Approve and Acknowledge follow rows.
+registerModel(
+  createOrderedModel({
+    id: "desk",
+    label: "Help desk",
+    superusers: { subjects: ["role:root"], actions: ["r", "a", "m"] },
+  }),
+);
+
+export const deskConfig: ExampleConfig = {
+  actions: [
+    { id: "r", label: "Read", shortLabel: "R", group: "permissions" },
+    { id: "a", label: "Author", shortLabel: "A", implies: ["r"], group: "permissions" },
+    { id: "m", label: "Manage", shortLabel: "M", implies: ["a", "r"], group: "obligations" },
+    {
+      id: "ack",
+      label: "Acknowledge",
+      shortLabel: "ACK",
+      kind: "obligation",
+      requires: ["r"],
+      group: "obligations",
+    },
+  ],
+  subjectKinds: [
+    { kind: "user", label: "Person", search: () => [{ id: "user:lena", label: "Lena" }] },
+    { kind: "group", label: "Team", search: () => [{ id: "group:agents", label: "Agents" }] },
+  ],
+  groups: [
+    { id: "permissions", label: "Permissions" },
+    { id: "obligations", label: "Obligations" },
+  ],
+  resources: [
+    { id: "support", label: "Support", children: [{ id: "escalated", label: "Escalated" }] },
+  ],
+};
+
+export const deskRules: ExampleRules = {
+  model: "desk",
+  parents: { escalated: "support" },
+  categories: {
+    support: {
+      owners: ["user:lena"], // inherited by every category below
+      entries: [
+        { subject: "everyone:*", action: "r", effect: "allow" },
+        { subject: "everyone:*", action: "ack", effect: "allow" },
+      ],
+    },
+    escalated: {
+      entries: [
+        { subject: "group:agents", action: "r", effect: "deny" }, // row order is the rule
+        { subject: "role:root", action: "r", effect: "deny" }, // saved, never applied to root
+      ],
+    },
+  },
+};
+// snippet:end examples
 
 // snippet:start cells
 import type { RenderCellProps, RulesEditorProps } from "@/index";
@@ -181,8 +311,6 @@ export const HostCellEditor = (props: RulesEditorProps) => (
 // snippet:end cells
 
 const SPECIFIERS: [string, string][] = [
-  ['"@/demo/index.css"', '"node-raci-editor/demo.css"'],
-  ['"@/demo/index"', '"node-raci-editor/demo"'],
   ['"@/styles/index.css"', '"node-raci-editor/styles.css"'],
   ['"../vectors/decide.json"', '"node-raci-editor/vectors/decide.json"'],
   ['"@/index"', '"node-raci-editor"'],
@@ -222,11 +350,42 @@ describe("quick start", () => {
   });
 });
 
-describe("demo", () => {
-  it("renders the packaged demo on the chosen preset and theme", () => {
-    const { container } = render(<DemoPage />);
-    expect(screen.getByRole("columnheader", { name: "Publish" })).toBeInTheDocument();
-    expect(container.querySelector(".demo-app")).toHaveAttribute("data-theme", "dark");
+describe("host app", () => {
+  it("renders the editor, the simulator and the JSON together and switches the theme", async () => {
+    const user = userEvent.setup();
+    const { container } = render(<HostApp config={deskConfig} />);
+    expect(screen.getByRole("region", { name: /^Rules for / })).toBeInTheDocument();
+    expect(screen.getByLabelText("Rules as JSON")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Theme: light" }));
+    expect(container.querySelector(".raci-root")).toHaveAttribute("data-theme", "dark");
+  });
+});
+
+describe("examples", () => {
+  it("shows the short labels and both column groups of the help desk", () => {
+    render(
+      <RulesEditor
+        config={deskConfig}
+        ruleSet={deskRules}
+        categoryId="escalated"
+        onChange={() => {}}
+        headerMode="short"
+      />,
+    );
+    expect(screen.getByRole("columnheader", { name: /Acknowledge/ })).toBeInTheDocument();
+    expect(screen.getByText("Permissions")).toBeInTheDocument();
+    expect(screen.getByText("Obligations")).toBeInTheDocument();
+  });
+  it("renders the capabilities-only setup without a subject search", () => {
+    render(
+      <RulesEditor
+        config={capabilityConfig}
+        ruleSet={{ categories: {}, parents: {} }}
+        categoryId="leave"
+        onChange={() => {}}
+      />,
+    );
+    expect(screen.queryByPlaceholderText("Search by name")).toBeNull();
   });
 });
 
@@ -273,8 +432,8 @@ describe("docs", () => {
     ["quickstart", "guides/getting-started.md"],
     ["runner", "guides/test-vectors.md"],
     ["extending", "guides/extending.md"],
-    ["demo", "README.md"],
-    ["demo", "guides/demo.md"],
+    ["host", "guides/getting-started.md"],
+    ["examples", "guides/configuration.md"],
     ["cells", "guides/components.md"],
     ["cells", "README.md"],
   ])("shows the %s snippet verbatim in %s", (name, file) => {

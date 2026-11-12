@@ -30,11 +30,8 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import process from "node:process";
 
-// Each stylesheet the package exports: the library, and the optional demo.
-const builds = [
-  { entry: "src/styles/index.css", output: "dist/styles.css" },
-  { entry: "src/demo/index.css", output: "dist/demo.css" },
-];
+// Each stylesheet the package exports: the library.
+const builds = [{ entry: "src/styles/index.css", output: "dist/styles.css" }];
 const IMPORT = /^\s*@import\s+(?:url\()?["']([^"']+)["']\)?\s*;\s*$/gm;
 
 const inline = (file, seen) => {
