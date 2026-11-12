@@ -65,6 +65,7 @@ const allowed: RegExp[] = [
   /doesn't enforce/gi,
   /\bSecurity\b/g,
   /"security"/g,
+  /\[Bugs5382\/go-authz\]\(https:\/\/github\.com\/Bugs5382\/go-authz\)/g,
 ];
 
 const denied: [string, RegExp][] = [

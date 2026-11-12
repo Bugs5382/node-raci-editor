@@ -1,11 +1,12 @@
 # node-raci-editor
 
-## v1.0.0 - 2026-11-11
+## v1.0.0 - 2026-11-12
 
 ### What Changed 👀
 
 #### 🚀 Features
 
+- feat(core): strict per-action Manage and root cases in the ordered vectors @Bugs5382 (#46)
 - feat(editor): generic subject matchers and a context picker @Bugs5382 (#36)
 - feat(editor): configurable cell appearance, sizes and a Cells settings section @Bugs5382 (#34)
 - feat(editor): short labels, header mode and grouped action columns @Bugs5382 (#32)

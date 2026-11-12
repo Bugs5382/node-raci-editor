@@ -5,7 +5,9 @@ Status: PR A (steps 1 and 2) is implemented: the `RaciModel` interface, the regi
 per-model vector files (`vectors/nearest.json`, with `vectors/decide.json` kept as its alias). There
 is no behaviour change. In this step `ModelInput` is the `decide()` input as it is, `describeEntry`
 takes the entry only (no label functions yet) and the editor and simulator do not read models.
-Everything from step 3 on, including `"ordered"`, is still design only. Tracked in issue #15.
+The `"ordered"` model is built: `createOrderedModel`, the registered `"ordered"`, `actionPool` and the
+`vectors/ordered.json` file exist and are tested. The editor and simulator work for it is still design
+only, as is the rest of this text. Tracked in issue #15.
 
 The `"ordered"` sections were rewritten to match the owner's description of the original firewall
 editor and the behaviour of the one running
@@ -187,8 +189,8 @@ Terms:
   subject's entries, one per action, kept next to each other; the row order is the entry order.
 - A subject matches a person when it is in the person's `subjects` or is `everyone:*`, which every
   person has. `everyone:*` is a convention; the model option `implicitSubjects` can name others.
-- A row **speaks to** an action only when its cell for that action (or for an action that implies it,
-  see step 4) is green or red. An empty cell means "not matching": the row is skipped for that
+- A row **speaks to** an action only when its own cell for that action is green or red. A cell for
+  another action never answers it, however the actions imply each other (see step 4). An empty cell means "not matching": the row is skipped for that
   action, so the walk goes on down.
 - The **effective list** of a category is its own rows in order, then its parent's rows, then the
   grandparent's, and so on. Inherited rows are always shown, read-only, and are never switched off;
@@ -204,8 +206,13 @@ Algorithm for one question (`person`, `action`, `category`), numbered:
    person plus the implicit subjects.
    1b. Superusers. If the model option `superusers` is set, the action is in its `actions` and one of its
    `subjects` is among the asker's subjects, answer allowed, reason `superuser`, and stop, whatever any
-   row says. It is host-supplied, not tied to a category, and off unless configured. An action it does
-   not list (an obligation, say) follows the rows, so an Everyone row still covers a site administrator.
+   row says. It is host-supplied, not tied to a category, and off unless configured. This is the root
+   seat: a host lists the subject that marks the seat holder (for example `role:root`, given to whoever holds the seat, never matched on a username) for Read, Author, Approve and Manage. An action it does not list
+   (Acknowledge, say) follows the rows, so an Everyone row or a group row still covers root. A deny
+   cell that names root can be configured and is ignored when deciding; the decision then carries
+   `configuredBlock`, the category and entry that would have denied, so the simulator can show it.
+   A site administrator who is not the root seat is an ordinary person and follows the rows; any
+   break-glass access is the host's concern, not an engine feature.
 2. Owners. If the action is one owners have and any category in the chain lists
    an owner that is in `subjects`, answer allowed, reason `owner`, and stop. Which actions owners have is each
    action's `ownerHas`; it defaults to true except for an obligation, so owners are not required to
@@ -213,10 +220,10 @@ Algorithm for one question (`person`, `action`, `category`), numbered:
    so no row, however far up, can deny them.
 3. Rows. Walk the effective list top down. The first row whose subject matches and that speaks to
    the action decides: green allows, red denies. Empty cells are skipped.
-4. Implies. A cell on action `X` also speaks to every action `X` implies (Author and Approve
-   imply Read, Manage implies Author and Read, never Approve or Acknowledge), with the same colour. Rows are
-   read in order, so position decides between rows. `implies` widens what a cell covers, and an
-   allowed higher action also gives the lower ones even over an explicit deny of the lower one:
+4. Implies. A cell answers only its own action: a Manage cell, red or green, does not answer Read or
+   Author at its row position. `implies` only works downward from an allow: an allowed higher action
+   also gives the lower ones even over an explicit deny of the lower one (Author and Approve imply
+   Read, Manage implies Author and Read, never Approve or Acknowledge):
    if the answer for an action is not an allow, any other action that implies it and is itself
    allowed (by a row or an owner) makes it an allow, decided by that action's entry. Author gives
    Read whatever a row says about Read. This only goes down: Author does not give Approve, and a
@@ -642,8 +649,8 @@ vectors/
 Cases for `ordered` (at least 24, by group):
 
 - Order: (1) a red row above a green row denies; (2) the same rows swapped allow; (3) a row whose
-  cell for the asked action is empty is skipped for it; (4) a cell on the asked action beats an
-  implied cell in the same row.
+  cell for the asked action is empty is skipped for it; (4) a Manage cell does not answer Read or
+  Author at its row position, so a red Manage above an Author allow leaves Author allowed.
 - Per action: (5) Shane reaches Ack through the IT group row (example 2); (6) the consultant's red
   Ack at the top denies Ack (example 1); (7) the same row moved below the Everyone row requires Ack;
   (8) the consultant's empty Approve is denied by default.

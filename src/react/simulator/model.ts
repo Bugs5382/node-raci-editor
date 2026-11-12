@@ -87,7 +87,16 @@ export const explainDecision = (decision: Decision, ctx: ReasonContext): string 
   }
   const verdict = t(decision.allowed ? "simulator.allowed" : "simulator.denied");
   if (decision.reason === "owner") return t("simulator.reason.owner", { verdict });
-  if (decision.reason === "superuser") return t("simulator.reason.superuser", { verdict });
+  if (decision.reason === "superuser") {
+    const denial = decision.configuredBlock;
+    if (!denial) return t("simulator.reason.superuser", { verdict });
+    return t("simulator.reason.superuserBlocked", {
+      verdict,
+      subject: ctx.subjectLabel(denial.entry.subject),
+      action: ctx.actionLabel(denial.entry.action),
+      category: ctx.categoryLabel(denial.category),
+    });
+  }
   if (decision.reason === "requires") {
     return t("simulator.reason.requires", {
       verdict,
