@@ -370,8 +370,7 @@ describe("the short-labels preset on the ordered model", () => {
     expect(manage).toHaveTextContent("Would be allowed");
     expect(manage).toHaveTextContent("always has this action");
     const approve = screen.getByRole("rowheader", { name: "Approve" }).closest("tr") as HTMLElement;
-    expect(approve).toHaveTextContent("Would be allowed");
-    expect(approve).toHaveTextContent("always has this action");
+    expect(approve).toHaveTextContent("Would be denied");
   });
 });
 

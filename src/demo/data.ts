@@ -392,8 +392,9 @@ const shortConfig: RaciConfig = {
 
 /**
  * The "ordered" model for this preset, with the root seat (the `role:root` subject, which the host
- * gives to whoever holds the seat) who always has Read, Author, Manage and Approve, whatever any
- * row says, even a row that names root. Acknowledge is left out on purpose: it follows the rows.
+ * gives to whoever holds the seat) who always has Read, Author and Manage, whatever any
+ * row says, even a row that names root. Approve and Acknowledge are left out on purpose: they
+ * follow the rows.
  * The demo's simulator evaluates with it.
  */
 const SHORT_MODEL_ID = "demo-ordered";
@@ -402,7 +403,7 @@ if (!listModels().some((m) => m.id === SHORT_MODEL_ID)) {
     createOrderedModel({
       id: SHORT_MODEL_ID,
       label: "Ordered rows with a root seat",
-      superusers: { subjects: ["role:root"], actions: ["r", "a", "m", "apv"] },
+      superusers: { subjects: ["role:root"], actions: ["r", "a", "m"] },
     }),
   );
 }

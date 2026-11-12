@@ -94,7 +94,7 @@ describe("seed validity", () => {
     expect(ask("disputes", "read", "user:x", "group:contractors")).toBe(false);
   });
 
-  it("runs the short-labels preset on the ordered model, with a root seat for Read, Author, Manage and Approve", () => {
+  it("runs the short-labels preset on the ordered model, with a root seat for Read, Author and Manage", () => {
     const { config, seed } = presetById("short");
     expect(seed.model).toBe("demo-ordered");
     expect(getModel("demo-ordered").capabilities.superuser).toBe(true);
@@ -120,11 +120,11 @@ describe("seed validity", () => {
     expect(ask("networks", "r", "role:root").configuredBlock).toMatchObject({
       category: "networks",
     });
-    // Root has Read, Author, Manage and Approve everywhere; Acknowledge follows the rows.
+    // Root has Read, Author and Manage everywhere; Approve and Acknowledge follow the rows.
     expect(ask("access", "m", "role:root").reason).toBe("superuser");
     expect(ask("access", "apv", "role:root")).toMatchObject({
-      allowed: true,
-      reason: "superuser",
+      allowed: false,
+      reason: "default-deny",
     });
     expect(ask("access", "ack", "role:root")).toMatchObject({ allowed: true, reason: "entry" });
     // An owner of IT, inherited into Door entry, approves through the owner list.
