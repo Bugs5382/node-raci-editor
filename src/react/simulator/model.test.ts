@@ -146,6 +146,22 @@ describe("explainDecision for the ordered model's reasons", () => {
       'simulator.reason.superuser|{"verdict":"simulator.allowed|{}"}',
     );
     expect(
+      explainDecision(
+        {
+          allowed: true,
+          reason: "superuser",
+          path: ["fin"],
+          configuredBlock: {
+            category: "fin",
+            entry: { subject: "role:root", action: "read", effect: "deny" },
+          },
+        },
+        ctx,
+      ),
+    ).toBe(
+      'simulator.reason.superuserBlocked|{"verdict":"simulator.allowed|{}","subject":"role:root","action":"<read>","category":"FIN"}',
+    );
+    expect(
       explainDecision({ allowed: false, reason: "requires", gatedBy: "read", path: ["fin"] }, ctx),
     ).toBe('simulator.reason.requires|{"verdict":"simulator.denied|{}","action":"<read>"}');
   });
