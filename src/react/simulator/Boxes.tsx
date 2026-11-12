@@ -21,6 +21,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 */
 import { useId } from "react";
+import { verdictWord } from "@/react/simulator/model";
 import type { Effect, TraceMatch } from "@/core/types";
 import type { SimulatorViewProps } from "@/react/simulator/view";
 
@@ -63,7 +64,7 @@ export const Boxes = (view: SimulatorViewProps) => {
   const uid = useId();
   return (
     <ul className="raci-boxes" aria-label={t("simulator.results")}>
-      {results.map(({ action, decision, reasonText }) => {
+      {results.map(({ action, decision, reasonText, decidedByText }) => {
         const titleId = `${uid}-${action.id}`;
         const by = decision.decidedBy;
         const steps = decision.trace;
@@ -84,9 +85,7 @@ export const Boxes = (view: SimulatorViewProps) => {
                   <h3 className="raci-box-title" id={titleId}>
                     {action.label ?? action.id}
                   </h3>
-                  <p className="raci-box-verdict">
-                    {t(decision.allowed ? "simulator.allowed" : "simulator.denied")}
-                  </p>
+                  <p className="raci-box-verdict">{verdictWord(action, decision.allowed, t)}</p>
                 </div>
               </header>
               <section className="raci-box-part raci-box-reason">
@@ -95,6 +94,7 @@ export const Boxes = (view: SimulatorViewProps) => {
               </section>
               <section className="raci-box-part raci-box-by">
                 <h4>{t("simulator.box.decidedBy")}</h4>
+                {decidedByText ? <p className="raci-box-by-text">{decidedByText}</p> : null}
                 {by ? (
                   <p>
                     <strong>{subjectLabel(by.entry.subject)}</strong>{" "}

@@ -20,12 +20,13 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 */
+import { verdictWord } from "@/react/simulator/model";
 import type { SimulatorViewProps } from "@/react/simulator/view";
 
 /** The strips view: one full-width strip per visible action with the answer and one reason line. */
 export const Strips = ({ results, t }: SimulatorViewProps) => (
   <ul className="raci-strips" aria-label={t("simulator.results")}>
-    {results.map(({ action, decision, reasonText }) => (
+    {results.map(({ action, decision, reasonText, decidedByText }) => (
       <li
         key={action.id}
         className={`raci-strip raci-strip--${decision.allowed ? "allow" : "deny"}`}
@@ -43,10 +44,15 @@ export const Strips = ({ results, t }: SimulatorViewProps) => (
           <strong className="raci-strip-title">
             {t("simulator.strip.title", {
               action: action.label ?? action.id,
-              answer: t(decision.allowed ? "simulator.strip.yes" : "simulator.strip.no"),
+              answer: verdictWord(action, decision.allowed, t, true),
             })}
           </strong>
           <p className="raci-strip-reason">{reasonText}</p>
+          {decidedByText ? (
+            <p className="raci-strip-reason raci-strip-by">
+              {t("simulator.decidedBy", { text: decidedByText })}
+            </p>
+          ) : null}
         </div>
       </li>
     ))}
