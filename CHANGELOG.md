@@ -1,11 +1,12 @@
 # node-raci-editor
 
-## v1.0.0 - 2026-11-12
+## v1.0.0 - 2026-11-13
 
 ### What Changed 👀
 
 #### 🚀 Features
 
+- feat(editor): the editor for the ordered rule model @Bugs5382 (#40)
 - feat(core): root seat covers read, author and manage only; approve and ack follow the rows @Bugs5382 (#51)
 - feat(simulator): wording by kind, decided-by reasons and pool lists @Bugs5382 (#39)
 - feat(core): strict per-action Manage and root cases in the ordered vectors @Bugs5382 (#46)
