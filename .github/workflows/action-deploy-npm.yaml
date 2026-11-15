@@ -21,7 +21,8 @@ jobs:
     timeout-minutes: 15
     needs: [test]
     # id-token: write (workflow scope) lets npm verify the OIDC token GitHub
-    # issues against the trusted publisher registered on npmjs.com -- no token.
+    # issues against the trusted publisher registered on npmjs.com. There is no
+    # token anywhere in this job.
     steps:
       - name: Download the build artifact
         uses: actions/download-artifact@v8
@@ -33,24 +34,61 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: lts/*
-          registry-url: 'https://registry.npmjs.org/'
 
-      # OIDC trusted publishing + provenance require npm >= 11.5.1 (the LTS image
-      # ships 10.x).
+      # Staged publishing needs npm >= 11.15.0 (the LTS image ships 10.x). The
+      # stage step checks the version and fails if this install did not get there.
       - name: Upgrade npm
         run: |
           npm install -g npm@latest
           npm --version
 
-      # No --token / NODE_AUTH_TOKEN: npm authenticates via the GitHub OIDC token
-      # matched against the trusted publisher on npmjs.com. Idempotent: skip if
-      # that exact version is already on the registry (partial-publish retry).
-      - name: Publish to npm
+      # Uploads the tarball with provenance to npm's stage queue. Nothing is
+      # installable until a maintainer approves it with 2FA. A version the
+      # registry already has makes npm exit 1; a zero exit with no stage id, or
+      # no trusted publisher (ENEEDAUTH), also fails the step.
+      - name: Stage on npm
+        id: stage
         run: |
-          VERSION=$(node -p "require('./package.json').version")
-          NAME=$(node -p "require('./package.json').name")
-          if npm view "${NAME}@${VERSION}" version >/dev/null 2>&1; then
-            echo "${NAME}@${VERSION} already published -- skipping."
-          else
-            npm publish --provenance --access public --ignore-scripts
+          set -euo pipefail
+
+          npm_version="$(npm --version)"
+          echo "npm ${npm_version} on node $(node --version)"
+          # npm stage arrived in npm 11.15.0.
+          if ! node -e '
+            const [major, minor] = process.argv[1].split(".").map(Number);
+            process.exit(major > 11 || (major === 11 && minor >= 15) ? 0 : 1);
+          ' "${npm_version}"; then
+            echo "::error::npm ${npm_version} has no 'npm stage'; 11.15.0 or later is required. Pin a newer npm in this job."
+            exit 1
           fi
+
+          log="${RUNNER_TEMP}/stage-publish.log"
+          if ! npm stage publish --provenance --access public --ignore-scripts 2>&1 | tee "${log}"; then
+            echo "::error::npm stage publish failed, so nothing was staged. See the npm error above."
+            exit 1
+          fi
+
+          stage_id="$(grep -oE 'staged with id [0-9a-fA-F-]{36}' "${log}" | tail -n 1 | awk '{print $4}' || true)"
+          if [ -z "${stage_id}" ]; then
+            echo "::error::npm stage publish exited 0 but reported no stage id, so there is nothing to approve. Treating this as a failed release."
+            exit 1
+          fi
+
+          echo "Confirming stage ${stage_id} is on the registry"
+          npm stage view "${stage_id}"
+
+          echo "stage-id=${stage_id}" >> "${GITHUB_OUTPUT}"
+          {
+            echo "## Staged on npm, waiting for approval"
+            echo
+            echo "Stage id: \`${stage_id}\`. Nothing is installable until a maintainer approves it with 2FA."
+            echo
+            echo '```bash'
+            echo "npm stage view ${stage_id}"
+            echo "npm stage download ${stage_id}"
+            echo "npm stage approve ${stage_id}"
+            echo "npm stage reject ${stage_id}"
+            echo '```'
+            echo
+            echo "Or review it in the Staged Packages tab on npmjs.com."
+          } >> "${GITHUB_STEP_SUMMARY}"

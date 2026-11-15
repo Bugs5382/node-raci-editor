@@ -215,6 +215,23 @@ npm run lint       # oxlint
 npm run docs       # typedoc -> docs
 ```
 
+## 🚀 Release
+
+Publishing a GitHub Release does not put the version on npm yet. The publish job runs `npm stage publish` with provenance, which uploads the package to npm's stage queue. The version stays uninstallable until a maintainer approves it with 2FA.
+
+The job needs npm 11.15.0 or later and a trusted publisher on npmjs.com for this repo with the workflow `action-deploy-npm.yaml`, set to stage-only. It uses no token. The run fails if npm is too old, the version is already on the registry, no stage id comes back, or no trusted publisher is set up (`ENEEDAUTH`).
+
+The job summary prints the stage id. To review and approve it:
+
+```bash
+npm stage view <stage-id>
+npm stage download <stage-id>   # inspect the tarball first
+npm stage approve <stage-id>    # asks for 2FA
+npm stage reject <stage-id>
+```
+
+You can also review it in the Staged Packages tab on npmjs.com.
+
 ## ⚖️ License
 
 MIT (c) 2026 Shane
